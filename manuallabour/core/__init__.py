@@ -8,7 +8,7 @@ STEP_ID = '^[a-z-A-Z][a-zA-Z0-9]*$'
 OBJ_ID = '^[a-zA-Z0-9_]*$'
 
 def validate(inst,schema_name):
-    schema = json.loads(pkgutil.get_data('manuallabour.core',schema_name))
+    schema = json.loads(pkgutil.get_data('manuallabour.core','schema/%s' % schema_name))
     jsonschema.validate(inst,schema)
 
 class StepBase(object):
@@ -38,7 +38,7 @@ class GraphStep(StepBase):
         self.duration = kwargs.pop("duration",None)
         self.waiting = kwargs.pop("waiting",timedelta())
 
-        validate(kwargs,'schema/step.json')
+        validate(kwargs,'step.json')
 
         #required
         self.title = kwargs["title"]
@@ -59,7 +59,7 @@ class Object(object):
             raise ValueError('Invalid obj_id: %s' % obj_id)
         self.obj_id = obj_id
 
-        validate(kwargs,'schema/object.json')
+        validate(kwargs,'object.json')
 
         self.name = kwargs["name"]
         self.description = kwargs.get("description","")
@@ -73,7 +73,7 @@ class ObjectReference(object):
             raise ValueError('Invalid obj_id: %s' % obj_id)
         self.obj_id = obj_id
 
-        validate(kwargs,'schema/obj_ref.json')
+        validate(kwargs,'obj_ref.json')
 
         self.optional = kwargs.get("optional",False)
         self.quantity = kwargs.get("quantity",1)
