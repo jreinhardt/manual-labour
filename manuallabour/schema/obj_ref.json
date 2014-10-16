@@ -1,0 +1,13 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "Object reference schema",
+  "description" : "Description of a object reference",
+  "type" : "object",
+  "properties" : {
+    "quantity" : {"type" : "number", "description" : "Number of instances of this object", "default" : 1},
+    "optional" : {"type" : "boolean", "description" : "If this object is strictly required", "default" : false}
+  },
+  "additionalProperties" : false
+}
+
+
