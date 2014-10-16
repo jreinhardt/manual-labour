@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
@@ -20,7 +21,10 @@ setup(
     description='Library for processing step by step instructions',
     long_description=long_description,
     install_requires = ['jsonschema'],
+    package_data = {
+        'manual' : 'core/schema/*.json'
+    },
     extras_require = {
         'graph': ['pygraphviz']
-    },
+    }
 )
