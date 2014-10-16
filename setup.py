@@ -17,7 +17,7 @@ setup(
     version=version,
     packages=find_packages(exclude=['tests','docs']),
     namespace_packages=['manuallabour'],
-    description='Tool for processing step by step instructions',
+    description='Library for processing step by step instructions',
     long_description=long_description,
     install_requires = ['jsonschema'],
     extras_require = {
