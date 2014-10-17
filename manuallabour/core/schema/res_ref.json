@@ -1,0 +1,8 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "Resource reference schema",
+  "description" : "Description of a resource reference",
+  "type" : "object",
+  "properties" : {},
+  "additionalProperties" : false
+}

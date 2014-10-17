@@ -1,0 +1,11 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "File schema",
+  "description" : "Description of a file. ",
+  "type" : "object",
+  "properties" : {
+    "filename" : {"type" : "string", "description" : "Filename of the file"}
+  },
+  "required" : ["filename"],
+  "additionalProperties" : false
+}

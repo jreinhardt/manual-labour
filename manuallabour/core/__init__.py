@@ -6,47 +6,42 @@ import re
 
 STEP_ID = '^[a-z-A-Z][a-zA-Z0-9]*$'
 OBJ_ID = '^[a-zA-Z0-9_]*$'
+RES_ID = '^[a-zA-Z0-9_]*$'
 
 def validate(inst,schema_name):
     schema = json.loads(pkgutil.get_data('manuallabour.core','schema/%s' % schema_name))
     jsonschema.validate(inst,schema)
 
-class StepBase(object):
+class Resource(object):
+    def __init__(self, res_id):
+        if re.match(RES_ID,res_id) is None:
+            raise ValueError('Invalid res_id: %s' % res_id)
+        self.res_id = res_id
+
+class File(Resource):
+    def __init__(self,res_id,**kwargs):
+        Resource.__init__(self,res_id)
+        validate(kwargs,'file.json')
+        self.filename = kwargs["filename"]
+
+class Image(Resource):
+    def __init__(self,res_id,**kwargs):
+        Resource.__init__(self,res_id)
+        validate(kwargs,'image.json')
+        self.alt = kwargs["alt"]
+        self.ext = kwargs["extension"]
+
+class ResourceReference(object):
     """
-    Baseclass for a step. It has only a single required parameter, the step_id
-    which is used to uniquely refer to this step.
+    A reference to a resource that is stored by res_id in a resource store.
     """
-    def __init__(self,step_id):
-        if re.match(STEP_ID,step_id) is None:
-            raise ValueError('Invalid step_id: %s' % step_id)
-        self.step_id = step_id
+    def __init__(self,res_id,**kwargs):
+        if re.match(RES_ID,res_id) is None:
+            raise ValueError('Invalid res_id: %s' % res_id)
+        self.res_id = res_id
 
-class GraphStep(StepBase):
-    """
-    Step used in a Graph.
-    """
-    def __init__(self,step_id,**kwargs):
-        """parameters: see schema + 
-        parts: list of ObjectReferences
-        tools: list of ObjectReferences
-        """
-        StepBase.__init__(self,step_id)
-        #local namespaces. not easily validated by schema
-        self.parts = kwargs.pop("parts",{})
-        self.tools = kwargs.pop("tools",{})
+        validate(kwargs,'res_ref.json')
 
-        self.duration = kwargs.pop("duration",None)
-        self.waiting = kwargs.pop("waiting",timedelta())
-
-        validate(kwargs,'step.json')
-
-        #required
-        self.title = kwargs["title"]
-        self.description = kwargs["description"]
-
-        #optional
-        self.attention = kwargs.get("attention",None)
-        self.assertions = kwargs.get("assertions",[])
 
 class Object(object):
     """
@@ -78,6 +73,48 @@ class ObjectReference(object):
         self.optional = kwargs.get("optional",False)
         self.quantity = kwargs.get("quantity",1)
 
+
+class StepBase(object):
+    """
+    Baseclass for a step. It has only a single required parameter, the step_id
+    which is used to uniquely refer to this step.
+    """
+    def __init__(self,step_id):
+        if re.match(STEP_ID,step_id) is None:
+            raise ValueError('Invalid step_id: %s' % step_id)
+        self.step_id = step_id
+
+class GraphStep(StepBase):
+    """
+    Step used in a Graph.
+    """
+    def __init__(self,step_id,**kwargs):
+        """parameters: see schema + 
+        parts: list of ObjectReferences
+        tools: list of ObjectReferences
+        """
+        StepBase.__init__(self,step_id)
+
+        #local namespaces. not easily validated by schema
+        self.parts = kwargs.pop("parts",{})
+        self.tools = kwargs.pop("tools",{})
+
+        self.files = kwargs.pop("files",{})
+        self.images = kwargs.pop("images",{})
+
+        self.duration = kwargs.pop("duration",None)
+        self.waiting = kwargs.pop("waiting",timedelta())
+
+        validate(kwargs,'step.json')
+
+        #required
+        self.title = kwargs["title"]
+        self.description = kwargs["description"]
+
+        #optional
+        self.attention = kwargs.get("attention",None)
+        self.assertions = kwargs.get("assertions",[])
+
 class Graph(object):
     """
     Class to hold a set of dependent steps
@@ -91,6 +128,7 @@ class Graph(object):
 
         #object and resource stores
         self.objects = {}
+        self.resources = {}
 
         self.timing = True
         """Indicates, whether all steps in this graph contain timing infos"""
@@ -127,6 +165,14 @@ class Graph(object):
             raise KeyError('ObjectID already found in graph: %s' % obj.obj_id)
         self.objects[obj.obj_id] = obj
 
+    def add_resource(self,res):
+        """
+        Add a new resource to the graph. Checks for collisions
+        """
+        if res.res_id in self.resources:
+            raise KeyError('ResourceID already found in graph: %s' % res.res_id)
+        self.resources[res.res_id] = res
+
     def to_svg(self,path):
         import pygraphviz as pgv
 
@@ -136,9 +182,13 @@ class Graph(object):
         for id, obj in self.objects.iteritems():
             graph.add_node('o_' + id,label=obj.name,shape='rectangle')
 
+        for id, res in self.resources.iteritems():
+            graph.add_node('r_' + id,label=res.res_id,shape='diamond')
+
         #Add nodes
         for id,step in self.steps.iteritems():
             graph.add_node('s_' + id,label=step.title)
+
             #add object dependencies
             for obj in step.parts.values():
                 attr = {'color' : 'blue','label' : obj.quantity}
@@ -150,6 +200,12 @@ class Graph(object):
                 if obj.optional:
                     attr['style'] = 'dashed'
                 graph.add_edge('o_' + obj.obj_id,'s_' + id,**attr)
+
+            #add resource dependencies
+            for res in step.files.values():
+                graph.add_edge('r_' + res.res_id,'s_' + id,color='orange')
+            for res in step.images.values():
+                graph.add_edge('r_' + res.res_id,'s_' + id,color='green')
 
 
         #Add step dependencies

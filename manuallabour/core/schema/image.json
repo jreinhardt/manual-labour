@@ -1,0 +1,13 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "Image schema",
+  "description" : "Description of an Image.",
+  "type" : "object",
+  "properties" : {
+    "extension" : {"type" : "string", "description" : "Extension of the image file."},
+    "alt" : {"type" : "string", "description" : "Alternative description of the image."}
+  },
+  "required" : ["extension","alt"],
+  "additionalProperties" : false
+}
+

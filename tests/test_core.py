@@ -19,6 +19,25 @@ class TestStep(unittest.TestCase):
 
         params['parts'] = [ObjectReference('nut')]
 
+class TestResources(unittest.TestCase):
+    def test_File(self):
+        f = File('asbd',filename="test.file")
+        self.assertEqual(f.res_id,'asbd')
+
+        self.assertRaises(ValueError,lambda: File('*'))
+
+        self.assertRaises(ValidationError,lambda: File('bsd'))
+        self.assertRaises(ValidationError,lambda: File('bsd',foo=2))
+
+    def test_Image(self):
+        i = Image('asbf',alt='a test image',extension='.png')
+        self.assertEqual(i.res_id,'asbf')
+
+        self.assertRaises(ValueError,lambda: Image('*'))
+
+        self.assertRaises(ValidationError, lambda: Image('sda'))
+        self.assertRaises(ValidationError, lambda: Image('sda',foo=2))
+
 class TestObjects(unittest.TestCase):
     def test_init(self):
         Object('eimer',name="Eimer")
@@ -76,22 +95,46 @@ class TestGraph(unittest.TestCase):
 
         g.add_step(s,[])
 
+    def test_add_resources(self):
+        g = Graph()
+
+        g.add_resource(Image('wds',alt="foo",extension=".png"))
+        self.assertRaises(KeyError,
+            lambda: g.add_resource(File('wds',filename="foo"))
+        )
+        g.add_resource(File('kds',filename="foo"))
+
+        s = GraphStep('b',
+            title='With objects',
+            description='Step with objects',
+            files = {'l_kds' : ObjectReference('kds')},
+            images = {'l_wds' : ObjectReference('wds')}
+        )
+
+        g.add_step(s,[])
+
+
     def test_graph(self):
         g = Graph()
 
         g.add_object(Object('nut',name="Nut"))
         g.add_object(Object('b',name="Wrench"))
 
+        g.add_resource(Image('wds',alt="foo",extension=".png"))
+        g.add_resource(File('kds',filename="foo"))
+
         g.add_step(GraphStep('a',
             title='First Step',
             description='Do this',
-            parts = {'nut' : ObjectReference('nut',optional=True)}
+            parts = {'nut' : ObjectReference('nut',optional=True)},
+            images = {'res1' : ResourceReference('wds')}
         ),[])
         g.add_step(GraphStep('b',
             title='Second Step',
             description='Do that',
             parts = {'nut' : ObjectReference('nut',quantity=2)},
-            tools = {'wr' : ObjectReference('b',)}
+            tools = {'wr' : ObjectReference('b',)},
+            files = {'res2' : ResourceReference('kds')}
         ),['a'])
 
         g.to_svg('tests/output/test.svg')
