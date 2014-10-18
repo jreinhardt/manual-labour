@@ -3,6 +3,7 @@ import pkgutil
 import json
 import jsonschema
 import re
+from os.path import abspath
 
 STEP_ID = '^[a-z-A-Z][a-zA-Z0-9]*$'
 OBJ_ID = '^[a-zA-Z0-9_]*$'
@@ -42,6 +43,102 @@ class ResourceReference(object):
 
         validate(kwargs,'res_ref.json')
 
+class ObjectStore(object):
+    """
+    Interface for data structures that can be used to lookup objects. The
+    interface does not specify how to add objects, as this is specific to
+    the requirements of the application.
+    """
+    def contains(self,key):
+        """
+        Return whether an object with the given key is stored in this
+        ObjectStore.
+        """
+        raise NotImplementedError
+    def get(self,key):
+        """
+        Return the object for this key. Raise KeyError if key is not
+        known.
+        """
+        raise NotImplementedError
+    def iter_objects(self):
+        """
+        Iterate over all (obj_id,obj) tuples
+        """
+        raise NotImplementedError
+
+class ResourceStore(object):
+    """
+    Interface for data structures that can be used to lookup resources and
+    their associated files. The interface does not specify how to add
+    objects, as this is specific to the requirements of the application.
+    """
+    def contains(self,key):
+        """
+        Return whether a resource with the given key is stored in this
+        ResourceStore.
+        """
+        raise NotImplementedError
+    def get(self,key):
+        """
+        Return the resource for this key. Raise KeyError if key is not
+        known.
+        """
+        raise NotImplementedError
+    def get_url(self,key):
+        """
+        Return a URL for the file associated with this resource. Raise
+        KeyError if key is not known.
+        """
+        raise NotImplementedError
+    def iter_resources(self):
+        """
+        Iterate over all (res_id,res,url) tuples
+        """
+        raise NotImplementedError
+
+class FileSystemResourceStore(ResourceStore):
+    """
+    Resource store for looking up resources from the file system
+    """
+    def __init__(self):
+        self.resources = {}
+        self.paths = {}
+    def contains(self,key):
+        return key in self.resources
+    def get(self,key):
+        return self.resources[key]
+    def get_url(self,key):
+        return "file://%s" % self.paths[key]
+    def iter_resources(self):
+        for id,res in self.resources.iteritems():
+            yield (id,res,self.paths[id])
+    def add_resource(self,res,path):
+        """
+        Add a new resource to the store. Checks for collisions
+        """
+        res_id = res.res_id
+        if res_id in self.resources:
+            raise KeyError('ResourceID already found in Store: %s' % id)
+        self.resources[res_id] = res
+        self.paths[res_id] = abspath(path)
+
+class MemoryObjectStore(ObjectStore):
+    def __init__(self):
+        self.objects = {}
+    def contains(self,key):
+        return key in self.objects
+    def get(self,key):
+        return self.objects[key]
+    def iter_objects(self):
+        return self.objects.iteritems()
+    def add_object(self,obj):
+        """
+        Add a new object to the store. Checks for collisions
+        """
+        if obj.obj_id in self.objects:
+            raise KeyError('ObjectID already found in store: %s' % obj.obj_id)
+        self.objects[obj.obj_id] = obj
 
 class Object(object):
     """
@@ -119,7 +216,7 @@ class Graph(object):
     """
     Class to hold a set of dependent steps
     """
-    def __init__(self):
+    def __init__(self,obj_store,res_store):
         self.steps = {}
 
         #dependency graph
@@ -127,16 +224,13 @@ class Graph(object):
         self.parents = {}
 
         #object and resource stores
-        self.objects = {}
-        self.resources = {}
+        self.objects = obj_store
+        self.resources = res_store
 
         self.timing = True
         """Indicates, whether all steps in this graph contain timing infos"""
 
     def add_step(self,step,requirements):
-        """
-        Add a new step to the graph. Checks for collisions.
-        """
         id = step.step_id
         if id in self.steps:
             raise KeyError('StepID already found in graph: %s' % id)
@@ -157,32 +251,19 @@ class Graph(object):
         if step.duration is None:
             self.timing = False
 
-    def add_object(self,obj):
-        """
-        Add a new object to the graph. Checks for collisions
-        """
-        if obj.obj_id in self.objects:
-            raise KeyError('ObjectID already found in graph: %s' % obj.obj_id)
-        self.objects[obj.obj_id] = obj
-
-    def add_resource(self,res):
-        """
-        Add a new resource to the graph. Checks for collisions
-        """
-        if res.res_id in self.resources:
-            raise KeyError('ResourceID already found in graph: %s' % res.res_id)
-        self.resources[res.res_id] = res
-
     def to_svg(self,path):
+        """
+        Render graph structure to svg file
+        """
         import pygraphviz as pgv
 
         graph = pgv.AGraph(directed=True)
 
         #Add objects
-        for id, obj in self.objects.iteritems():
+        for id, obj in self.objects.iter_objects():
             graph.add_node('o_' + id,label=obj.name,shape='rectangle')
 
-        for id, res in self.resources.iteritems():
+        for id, res, _ in self.resources.iter_resources():
             graph.add_node('r_' + id,label=res.res_id,shape='diamond')
 
         #Add nodes

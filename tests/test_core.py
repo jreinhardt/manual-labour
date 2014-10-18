@@ -1,4 +1,5 @@
 import unittest
+from urllib import urlopen
 from datetime import timedelta
 
 from jsonschema import ValidationError
@@ -54,9 +55,27 @@ class TestObjRefs(unittest.TestCase):
         self.assertEqual(obr.optional,True)
         self.assertEqual(obr.quantity,2)
 
+class TestObjectStores(unittest.TestCase):
+    def test_memory(self):
+        m = MemoryObjectStore()
+        self.assertFalse(m.contains('asdf'))
+        m.add_object(Object('asdf',name='FooBar'))
+        self.assertTrue(m.contains('asdf'))
+        self.assertEqual(m.get('asdf').name,'FooBar')
+
+class TestResourceStores(unittest.TestCase):
+    def test_filesystem(self):
+        r = FileSystemResourceStore()
+        self.assertFalse(r.contains('asdf'))
+        r.add_resource(File('asdf',filename='setup.py'),'setup.py')
+        self.assertTrue(r.contains('asdf'))
+        self.assertEqual(r.get('asdf').filename,'setup.py')
+        fid = urlopen(r.get_url('asdf'))
+        fid.close()
+
 class TestGraph(unittest.TestCase):
     def test_add_steps(self):
-        g = Graph()
+        g = Graph(MemoryObjectStore(),FileSystemResourceStore())
 
         params = {'title' : 'TestStep', 'description' : 'asd'}
         g.add_step(GraphStep('a',**params),[])
@@ -69,7 +88,7 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(g.parents['b'],['a'])
 
     def test_timing(self):
-        g = Graph()
+        g = Graph(MemoryObjectStore(),FileSystemResourceStore())
 
         params = {'title' : 'TS', 'description' : ''}
         params['duration'] = timedelta(minutes=4)
@@ -81,28 +100,33 @@ class TestGraph(unittest.TestCase):
         self.assertFalse(g.timing)
 
     def test_add_objects(self):
-        g = Graph()
+        obj_store = MemoryObjectStore()
+        res_store = FileSystemResourceStore()
+        g = Graph(obj_store,res_store)
 
-        g.add_object(Object('a',name="Nut"))
-        g.add_object(Object('b',name="Wrench"))
+        obj_store.add_object(Object('a',name="Nut"))
+        obj_store.add_object(Object('b',name="Wrench"))
 
         s = GraphStep('b',
             title='With objects',
             description='Step with objects',
-            parts = {'nut' : ObjectReference('nut')},
-            tools = {'wr' : ObjectReference('wrench')}
+            parts = {'nut' : ObjectReference('a')},
+            tools = {'wr' : ObjectReference('b')}
         )
 
         g.add_step(s,[])
 
     def test_add_resources(self):
-        g = Graph()
+        obj_store = MemoryObjectStore()
+        res_store = FileSystemResourceStore()
+        g = Graph(obj_store,res_store)
 
-        g.add_resource(Image('wds',alt="foo",extension=".png"))
+        img = Image('wds',alt="foo",extension=".png")
+        res_store.add_resource(img,'wds.png')
         self.assertRaises(KeyError,
-            lambda: g.add_resource(File('wds',filename="foo"))
+            lambda: res_store.add_resource(File('wds',filename="foo"),'a.tmp')
         )
-        g.add_resource(File('kds',filename="foo"))
+        res_store.add_resource(File('kds',filename="foo"),'a.tmp')
 
         s = GraphStep('b',
             title='With objects',
@@ -115,13 +139,16 @@ class TestGraph(unittest.TestCase):
 
 
     def test_graph(self):
-        g = Graph()
+        obj_store = MemoryObjectStore()
+        res_store = FileSystemResourceStore()
+        g = Graph(obj_store,res_store)
 
-        g.add_object(Object('nut',name="Nut"))
-        g.add_object(Object('b',name="Wrench"))
+        obj_store.add_object(Object('nut',name="Nut"))
+        obj_store.add_object(Object('b',name="Wrench"))
 
-        g.add_resource(Image('wds',alt="foo",extension=".png"))
-        g.add_resource(File('kds',filename="foo"))
+        img = Image('wds',alt="foo",extension=".png")
+        res_store.add_resource(img,'a.png')
+        res_store.add_resource(File('kds',filename="foo"),'a.tmp')
 
         g.add_step(GraphStep('a',
             title='First Step',
