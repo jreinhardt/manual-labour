@@ -43,77 +43,69 @@ class ResourceReference(object):
 
         validate(kwargs,'res_ref.json')
 
-class ObjectStore(object):
+class Store(object):
     """
-    Interface for data structures that can be used to lookup objects. The
-    interface does not specify how to add objects, as this is specific to
-    the requirements of the application.
+    Interface for data structures that can be used to lookup resources and
+    objects. The interface does not specify how to add content, as this can be
+    specific to the requirements of the application.
     """
-    def contains(self,key):
+    def has_obj(self,obj_id):
         """
-        Return whether an object with the given key is stored in this
-        ObjectStore.
+        Return whether an object with the given obj_id is stored in this Store.
         """
         raise NotImplementedError
-    def get(self,key):
+    def get_obj(self,obj_id):
         """
-        Return the object for this key. Raise KeyError if key is not
-        known.
+        Return the object for this obj_id. Raise KeyError if key is not known.
         """
         raise NotImplementedError
-    def iter_objects(self):
+    def iter_obj(self):
         """
         Iterate over all (obj_id,obj) tuples
         """
         raise NotImplementedError
-
-class ResourceStore(object):
-    """
-    Interface for data structures that can be used to lookup resources and
-    their associated files. The interface does not specify how to add
-    objects, as this is specific to the requirements of the application.
-    """
-    def contains(self,key):
+    def has_res(self,res_id):
         """
-        Return whether a resource with the given key is stored in this
-        ResourceStore.
+        Return whether a resource with the given res_id is stored in this
+        Store.
         """
         raise NotImplementedError
-    def get(self,key):
+    def get_res(self,res_id):
         """
-        Return the resource for this key. Raise KeyError if key is not
-        known.
-        """
-        raise NotImplementedError
-    def get_url(self,key):
-        """
-        Return a URL for the file associated with this resource. Raise
-        KeyError if key is not known.
+        Return the resource for this key. Raise KeyError if key is not known.
         """
         raise NotImplementedError
-    def iter_resources(self):
+    def get_res_url(self,res_id):
+        """
+        Return a URL for the file associated with this resource. Raise KeyError
+        if res_id is not known.
+        """
+        raise NotImplementedError
+    def iter_res(self):
         """
         Iterate over all (res_id,res,url) tuples
         """
         raise NotImplementedError
 
-class FileSystemResourceStore(ResourceStore):
+class LocalMemoryStore(Store):
     """
-    Resource store for looking up resources from the file system
+    Store that stores resource and object data in memory and the local file
+    system for files.
     """
     def __init__(self):
+        self.objects = {}
         self.resources = {}
         self.paths = {}
-    def contains(self,key):
+    def has_res(self,key):
         return key in self.resources
-    def get(self,key):
+    def get_res(self,key):
         return self.resources[key]
-    def get_url(self,key):
+    def get_res_url(self,key):
         return "file://%s" % self.paths[key]
-    def iter_resources(self):
+    def iter_res(self):
         for id,res in self.resources.iteritems():
             yield (id,res,self.paths[id])
-    def add_resource(self,res,path):
+    def add_res(self,res,path):
         """
         Add a new resource to the store. Checks for collisions
         """
@@ -122,17 +114,13 @@ class FileSystemResourceStore(ResourceStore):
             raise KeyError('ResourceID already found in Store: %s' % id)
         self.resources[res_id] = res
         self.paths[res_id] = abspath(path)
-
-class MemoryObjectStore(ObjectStore):
-    def __init__(self):
-        self.objects = {}
-    def contains(self,key):
+    def has_obj(self,key):
         return key in self.objects
-    def get(self,key):
+    def get_obj(self,key):
         return self.objects[key]
-    def iter_objects(self):
+    def iter_obj(self):
         return self.objects.iteritems()
-    def add_object(self,obj):
+    def add_obj(self,obj):
         """
         Add a new object to the store. Checks for collisions
         """
@@ -216,16 +204,15 @@ class Graph(object):
     """
     Class to hold a set of dependent steps
     """
-    def __init__(self,obj_store,res_store):
+    def __init__(self,store):
         self.steps = {}
 
         #dependency graph
         self.children = {}
         self.parents = {}
 
-        #object and resource stores
-        self.objects = obj_store
-        self.resources = res_store
+        self.store = store
+        """A datastructure to store object and resource data"""
 
         self.timing = True
         """Indicates, whether all steps in this graph contain timing infos"""
@@ -260,10 +247,10 @@ class Graph(object):
         graph = pgv.AGraph(directed=True)
 
         #Add objects
-        for id, obj in self.objects.iter_objects():
+        for id, obj in self.store.iter_obj():
             graph.add_node('o_' + id,label=obj.name,shape='rectangle')
 
-        for id, res, _ in self.resources.iter_resources():
+        for id, res, _ in self.store.iter_res():
             graph.add_node('r_' + id,label=res.res_id,shape='diamond')
 
         #Add nodes

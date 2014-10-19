@@ -55,27 +55,29 @@ class TestObjRefs(unittest.TestCase):
         self.assertEqual(obr.optional,True)
         self.assertEqual(obr.quantity,2)
 
-class TestObjectStores(unittest.TestCase):
-    def test_memory(self):
-        m = MemoryObjectStore()
-        self.assertFalse(m.contains('asdf'))
-        m.add_object(Object('asdf',name='FooBar'))
-        self.assertTrue(m.contains('asdf'))
-        self.assertEqual(m.get('asdf').name,'FooBar')
+class TestStores(unittest.TestCase):
+    def test_localmemory(self):
+        m = LocalMemoryStore()
 
-class TestResourceStores(unittest.TestCase):
-    def test_filesystem(self):
-        r = FileSystemResourceStore()
-        self.assertFalse(r.contains('asdf'))
-        r.add_resource(File('asdf',filename='setup.py'),'setup.py')
-        self.assertTrue(r.contains('asdf'))
-        self.assertEqual(r.get('asdf').filename,'setup.py')
-        fid = urlopen(r.get_url('asdf'))
+        self.assertFalse(m.has_obj('asdf'))
+        m.add_obj(Object('asdf',name='FooBar'))
+        self.assertTrue(m.has_obj('asdf'))
+        self.assertEqual(m.get_obj('asdf').name,'FooBar')
+
+        self.assertEqual(len(list(m.iter_obj())),1)
+
+        self.assertFalse(m.has_res('asdf'))
+        m.add_res(File('asdf',filename='test_core.py'),'tests/test_core.py')
+        self.assertTrue(m.has_res('asdf'))
+        self.assertEqual(m.get_res('asdf').filename,'test_core.py')
+        fid = urlopen(m.get_res_url('asdf'))
         fid.close()
+
+        self.assertEqual(len(list(m.iter_res())),1)
 
 class TestGraph(unittest.TestCase):
     def test_add_steps(self):
-        g = Graph(MemoryObjectStore(),FileSystemResourceStore())
+        g = Graph(LocalMemoryStore())
 
         params = {'title' : 'TestStep', 'description' : 'asd'}
         g.add_step(GraphStep('a',**params),[])
@@ -88,7 +90,7 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(g.parents['b'],['a'])
 
     def test_timing(self):
-        g = Graph(MemoryObjectStore(),FileSystemResourceStore())
+        g = Graph(LocalMemoryStore())
 
         params = {'title' : 'TS', 'description' : ''}
         params['duration'] = timedelta(minutes=4)
@@ -100,12 +102,11 @@ class TestGraph(unittest.TestCase):
         self.assertFalse(g.timing)
 
     def test_add_objects(self):
-        obj_store = MemoryObjectStore()
-        res_store = FileSystemResourceStore()
-        g = Graph(obj_store,res_store)
+        store = LocalMemoryStore()
+        g = Graph(store)
 
-        obj_store.add_object(Object('a',name="Nut"))
-        obj_store.add_object(Object('b',name="Wrench"))
+        store.add_obj(Object('a',name="Nut"))
+        store.add_obj(Object('b',name="Wrench"))
 
         s = GraphStep('b',
             title='With objects',
@@ -117,16 +118,15 @@ class TestGraph(unittest.TestCase):
         g.add_step(s,[])
 
     def test_add_resources(self):
-        obj_store = MemoryObjectStore()
-        res_store = FileSystemResourceStore()
-        g = Graph(obj_store,res_store)
+        store = LocalMemoryStore()
+        g = Graph(store)
 
         img = Image('wds',alt="foo",extension=".png")
-        res_store.add_resource(img,'wds.png')
+        store.add_res(img,'wds.png')
         self.assertRaises(KeyError,
-            lambda: res_store.add_resource(File('wds',filename="foo"),'a.tmp')
+            lambda: store.add_res(File('wds',filename="foo"),'a.tmp')
         )
-        res_store.add_resource(File('kds',filename="foo"),'a.tmp')
+        store.add_res(File('kds',filename="foo"),'a.tmp')
 
         s = GraphStep('b',
             title='With objects',
@@ -139,16 +139,15 @@ class TestGraph(unittest.TestCase):
 
 
     def test_graph(self):
-        obj_store = MemoryObjectStore()
-        res_store = FileSystemResourceStore()
-        g = Graph(obj_store,res_store)
+        store = LocalMemoryStore()
+        g = Graph(store)
 
-        obj_store.add_object(Object('nut',name="Nut"))
-        obj_store.add_object(Object('b',name="Wrench"))
+        store.add_obj(Object('nut',name="Nut"))
+        store.add_obj(Object('b',name="Wrench"))
 
         img = Image('wds',alt="foo",extension=".png")
-        res_store.add_resource(img,'a.png')
-        res_store.add_resource(File('kds',filename="foo"),'a.tmp')
+        store.add_res(img,'a.png')
+        store.add_res(File('kds',filename="foo"),'a.tmp')
 
         g.add_step(GraphStep('a',
             title='First Step',
