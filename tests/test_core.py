@@ -46,6 +46,10 @@ class TestObjects(unittest.TestCase):
             Object('eimer')
         )
 
+    def test_image(self):
+        o = Object('eimer',name="Eimer",images=[ResourceReference('asdf')])
+        self.assertEqual(len(o.images),1)
+
 class TestObjRefs(unittest.TestCase):
     def test_init(self):
         obr = ObjectReference('nut')

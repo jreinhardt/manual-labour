@@ -143,6 +143,7 @@ class Object(object):
 
         self.name = kwargs["name"]
         self.description = kwargs.get("description","")
+        self.images = kwargs.get("images",[])
 
 class ObjectReference(object):
     """
@@ -263,11 +264,17 @@ class Graph(object):
                 if obj.optional:
                     attr['style'] = 'dashed'
                 graph.add_edge('o_' + obj.obj_id,'s_' + id,**attr)
+
+                for img in self.store.get_obj(obj.obj_id).images:
+                    graph.add_edge('r_' + img.res_id,'o_' + obj.obj_id)
             for obj in step.tools.values():
                 attr = {'color' : 'red','label' : obj.quantity}
                 if obj.optional:
                     attr['style'] = 'dashed'
                 graph.add_edge('o_' + obj.obj_id,'s_' + id,**attr)
+
+                for img in self.store.get_obj(obj.obj_id).images:
+                    graph.add_edge('r_' + img.res_id,'o_' + obj.obj_id)
 
             #add resource dependencies
             for res in step.files.values():
