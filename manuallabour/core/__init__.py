@@ -251,7 +251,7 @@ class Graph(object):
             graph.add_node('o_' + id,label=obj.name,shape='rectangle')
 
         for id, res, _ in self.store.iter_res():
-            graph.add_node('r_' + id,label=res.res_id,shape='diamond')
+            graph.add_node('r_' + id,label=res.res_id[:6],shape='diamond')
 
         #Add nodes
         for id,step in self.steps.iteritems():
