@@ -183,7 +183,7 @@ class TestGraph(unittest.TestCase):
             files = {'res2' : ResourceReference('kds')}
         ),['a'])
 
-        g.to_svg('tests/output/test.svg')
+        g.to_svg('tests/output/graph.svg')
 
 class TestSchedule(unittest.TestCase):
     def test_untimed(self):
@@ -196,6 +196,8 @@ class TestSchedule(unittest.TestCase):
 
         self.assertEqual(s.steps[0].step_idx,0)
         self.assertEqual(s.steps[0].step_nr,1)
+
+        s.to_svg('tests/output/schedule_untimed.svg')
 
     def test_timed(self):
         store = LocalMemoryStore()
@@ -212,6 +214,8 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(s.steps[0].stop.seconds,300)
         self.assertEqual(s.steps[1].start.seconds,480)
         self.assertEqual(s.steps[1].stop.seconds,960)
+
+        s.to_svg('tests/output/schedule_timed.svg')
 
     def test_bom(self):
         # don't need to actually fill the store, as bom and bot operate only

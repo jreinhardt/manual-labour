@@ -400,7 +400,57 @@ class Schedule(object):
             self.tools.append(BOMReference(o_id,**args))
         for o_id,args in parts.iteritems():
             self.parts.append(BOMReference(o_id,**args))
+    def to_svg(self,path):
+        """
+        Render schedule structure to svg file
+        """
+        import pygraphviz as pgv
 
+        graph = pgv.AGraph(directed=True)
+
+        #Add objects
+        for id, obj in self.store.iter_obj():
+            graph.add_node('o_' + id,label=obj.name,shape='rectangle')
+
+        for id, res, _ in self.store.iter_res():
+            graph.add_node('r_' + id,label=res.res_id[:6],shape='diamond')
+
+        #Add nodes
+        for step in self.steps:
+            nr = step.step_nr
+            graph.add_node('s_%d' % nr,label=step.title)
+
+            #add object dependencies
+            for obj in step.parts.values():
+                attr = {'color' : 'blue','label' : obj.quantity}
+                if obj.optional:
+                    attr['style'] = 'dashed'
+                graph.add_edge('o_' + obj.obj_id,'s_%d' % nr,**attr)
+
+                for img in self.store.get_obj(obj.obj_id).images:
+                    graph.add_edge('r_' + img.res_id,'o_' + obj.obj_id)
+            for obj in step.tools.values():
+                attr = {'color' : 'red','label' : obj.quantity}
+                if obj.optional:
+                    attr['style'] = 'dashed'
+                graph.add_edge('o_' + obj.obj_id,'s_%d' % nr,**attr)
+
+                for img in self.store.get_obj(obj.obj_id).images:
+                    graph.add_edge('r_' + img.res_id,'o_' + obj.obj_id)
+
+            #add resource dependencies
+            for res in step.files.values():
+                graph.add_edge('r_' + res.res_id,'s_%d' % nr,color='orange')
+            for res in step.images.values():
+                graph.add_edge('r_' + res.res_id,'s_%d' % nr,color='green')
+
+        for step in self.steps:
+            #Add step dependencies
+            nr = step.step_nr
+            if nr > 1:
+                graph.add_edge('s_%d' % (nr-1),'s_%d' % nr)
+
+        graph.draw(path,prog='dot')
 
 def schedule_greedy(graph, targets = None):
     """
