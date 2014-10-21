@@ -1,3 +1,6 @@
+"""
+This module defines common classes and interfaces for manual labour
+"""
 from datetime import timedelta
 import pkgutil
 import json
@@ -11,22 +14,45 @@ OBJ_ID = '^[a-zA-Z0-9_]*$'
 RES_ID = '^[a-zA-Z0-9_]*$'
 
 def validate(inst,schema_name):
-    schema = json.loads(pkgutil.get_data('manuallabour.core','schema/%s' % schema_name))
+    """
+    validate the contents of the dictionary inst against a schema as defined
+    in the manuallabour.core schema directory.
+    """
+    schema = json.loads(
+        pkgutil.get_data(
+            'manuallabour.core',
+            'schema/%s' % schema_name
+        )
+    )
     jsonschema.validate(inst,schema)
 
 class Resource(object):
+    """ Base class for Resources
+
+    A resource is something that has a file and metadata. A resource is
+    identified by its resource id.
+    """
     def __init__(self, res_id):
         if re.match(RES_ID,res_id) is None:
             raise ValueError('Invalid res_id: %s' % res_id)
         self.res_id = res_id
 
 class File(Resource):
+    """ File resource
+
+    A File is a resource that has a filename as metadata.
+    """
     def __init__(self,res_id,**kwargs):
         Resource.__init__(self,res_id)
         validate(kwargs,'file.json')
         self.filename = kwargs["filename"]
 
 class Image(Resource):
+    """ Image resource
+
+    An Image is a resource that has as metadata an alternative description
+    and a filename extension indicating the format of the image.
+    """
     def __init__(self,res_id,**kwargs):
         Resource.__init__(self,res_id)
         validate(kwargs,'image.json')
@@ -104,15 +130,15 @@ class LocalMemoryStore(Store):
     def get_res_url(self,key):
         return "file://%s" % self.paths[key]
     def iter_res(self):
-        for id,res in self.resources.iteritems():
-            yield (id,res,self.paths[id])
+        for res_id,res in self.resources.iteritems():
+            yield (res_id,res,self.paths[res_id])
     def add_res(self,res,path):
         """
         Add a new resource to the store. Checks for collisions
         """
         res_id = res.res_id
         if res_id in self.resources:
-            raise KeyError('ResourceID already found in Store: %s' % id)
+            raise KeyError('ResourceID already found in Store: %s' % res_id)
         self.resources[res_id] = res
         self.paths[res_id] = abspath(path)
     def has_obj(self,key):
@@ -176,7 +202,7 @@ class GraphStep(StepBase):
     Step used in a Graph.
     """
     def __init__(self,step_id,**kwargs):
-        """parameters: see schema + 
+        """parameters: see schema +
         parts: list of ObjectReferences
         tools: list of ObjectReferences
         """
@@ -202,13 +228,20 @@ class GraphStep(StepBase):
         self.attention = kwargs.get("attention",None)
         self.assertions = kwargs.get("assertions",[])
     def as_dict(self):
+        """ Return contents as dict
+
+        This method returns the contents of this step as a dict (without the
+        step_id), such that the step can be recreated from this dict. This is
+        useful for serialisation.
+        """
         res = copy(self.__dict__)
         res.pop('step_id')
         if self.duration is None:
             res.pop('duration')
         if self.waiting.total_seconds() == 0:
             res.pop('waiting')
-        if self.attention is None: res.pop('attention')
+        if self.attention is None:
+            res.pop('attention')
         return res
 
 class Graph(object):
@@ -229,31 +262,41 @@ class Graph(object):
         """Indicates, whether all steps in this graph contain timing infos"""
 
     def add_step(self,step,requirements):
-        id = step.step_id
-        if id in self.steps:
-            raise KeyError('StepID already found in graph: %s' % id)
-        self.steps[id] = step
+        """ Add a step to graph
+
+        Adds a new step to the graph and registers the dependencies expressed
+        by a list of step_ids of steps that are required by this step.
+        """
+        step_id = step.step_id
+        if step_id in self.steps:
+            raise KeyError('StepID already found in graph: %s' % step_id)
+        self.steps[step_id] = step
 
         #update dependency graph in a way that order of step insertions
         #doesn't mattern
-        self.parents[id] = requirements
+        self.parents[step_id] = requirements
 
-        if not id in self.children:
-            self.children[id] = []
+        if not step_id in self.children:
+            self.children[step_id] = []
         for req in requirements:
             if not req in self.children:
-                self.children[req] = [id]
+                self.children[req] = [step_id]
             else:
-                self.children[req].append(id)
+                self.children[req].append(step_id)
 
         if step.duration is None:
             self.timing = False
 
     def all_ancestors(self,step_id):
+        """ Return set of all ancestor steps
+
+        Returns a set with all steps that are a direct or indirect
+        prerequisite for the step with the id step_id.
+        """
         res = set([])
-        for p in self.parents[step_id]:
-            res.add(p)
-            res.update(self.all_ancestors(p))
+        for parent in self.parents[step_id]:
+            res.add(parent)
+            res.update(self.all_ancestors(parent))
         return res
 
     def to_svg(self,path):
@@ -265,45 +308,50 @@ class Graph(object):
         graph = pgv.AGraph(directed=True)
 
         #Add objects
-        for id, obj in self.store.iter_obj():
-            graph.add_node('o_' + id,label=obj.name,shape='rectangle')
+        for o_id, obj in self.store.iter_obj():
+            o_id = 'o_' + o_id
+            graph.add_node(o_id,label=obj.name,shape='rectangle')
 
-        for id, res, _ in self.store.iter_res():
-            graph.add_node('r_' + id,label=res.res_id[:6],shape='diamond')
+        for r_id, res, _ in self.store.iter_res():
+            r_id = 'r_' + r_id
+            graph.add_node(r_id,label=res.res_id[:6],shape='diamond')
 
         #Add nodes
-        for id,step in self.steps.iteritems():
-            graph.add_node('s_' + id,label=step.title)
+        for s_id,step in self.steps.iteritems():
+            s_id = 's_' + s_id
+            graph.add_node(s_id,label=step.title)
 
             #add object dependencies
             for obj in step.parts.values():
+                o_id = 'o_' + obj.obj_id
                 attr = {'color' : 'blue','label' : obj.quantity}
                 if obj.optional:
                     attr['style'] = 'dashed'
-                graph.add_edge('o_' + obj.obj_id,'s_' + id,**attr)
+                graph.add_edge(o_id,s_id,**attr)
 
                 for img in self.store.get_obj(obj.obj_id).images:
-                    graph.add_edge('r_' + img.res_id,'o_' + obj.obj_id)
+                    graph.add_edge('r_' + img.res_id,o_id)
             for obj in step.tools.values():
+                o_id = 'o_' + obj.obj_id
                 attr = {'color' : 'red','label' : obj.quantity}
                 if obj.optional:
                     attr['style'] = 'dashed'
-                graph.add_edge('o_' + obj.obj_id,'s_' + id,**attr)
+                graph.add_edge(o_id,s_id,**attr)
 
                 for img in self.store.get_obj(obj.obj_id).images:
-                    graph.add_edge('r_' + img.res_id,'o_' + obj.obj_id)
+                    graph.add_edge('r_' + img.res_id,o_id)
 
             #add resource dependencies
             for res in step.files.values():
-                graph.add_edge('r_' + res.res_id,'s_' + id,color='orange')
+                graph.add_edge('r_' + res.res_id,s_id,color='orange')
             for res in step.images.values():
-                graph.add_edge('r_' + res.res_id,'s_' + id,color='green')
+                graph.add_edge('r_' + res.res_id,s_id,color='green')
 
 
         #Add step dependencies
-        for id in self.steps:
-            for child in self.children[id]:
-                graph.add_edge('s_' + id,'s_' + child)
+        for s_id in self.steps:
+            for child in self.children[s_id]:
+                graph.add_edge('s_' + s_id,'s_' + child)
 
         graph.draw(path,prog='dot')
 
@@ -357,16 +405,26 @@ class Schedule(object):
         i = 0
         for step in steps:
             if start is None:
-                self.steps.append(ScheduleStep(step.step_id,
-                    step_idx = i,**step.as_dict()))
+                self.steps.append(
+                    ScheduleStep(
+                        step.step_id,
+                        step_idx = i,
+                        **step.as_dict()
+                    )
+                )
             else:
-                id = step.step_id
-                self.steps.append(ScheduleStep(id,
-                    step_idx = i,
-                    start = start[id],
-                    stop =  start[id] + step.duration,
-                    waiting =  start[id] + step.duration + step.waiting,
-                    **step.as_dict()))
+                step_id = step.step_id
+                t_start = start[step_id]
+                self.steps.append(
+                    ScheduleStep(
+                        step_id,
+                        step_idx = i,
+                        start = t_start,
+                        stop = t_start + step.duration,
+                        waiting = t_start + step.duration + step.waiting,
+                        **step.as_dict()
+                    )
+                )
             i += 1
 
         #reverse lookup
@@ -380,26 +438,29 @@ class Schedule(object):
         tools = {}
         parts = {}
         for step in self.steps:
-            for t in step.tools.values():
-                if not t.obj_id in tools:
-                    tools[t.obj_id] = {"quantity" : 0 }
-                if not t.optional:
-                    tools[t.obj_id]["quantity"] = \
-                        max(t.quantity,tools[t.obj_id]["quantity"])
-            for p in step.parts.values():
-                if not p.obj_id in parts:
-                    parts[p.obj_id] = {
+            for tool in step.tools.values():
+                if not tool.obj_id in tools:
+                    tools[tool.obj_id] = {"quantity" : 0 }
+                if not tool.optional:
+                    tools[tool.obj_id]["quantity"] = \
+                        max(tool.quantity,tools[tool.obj_id]["quantity"])
+            for part in step.parts.values():
+                if not part.obj_id in parts:
+                    parts[part.obj_id] = {
                         "optional" : 0,
                         "quantity" : 0
                     }
-                if p.optional:
-                    parts[p.obj_id]["optional"] += p.quantity
+                if part.optional:
+                    parts[part.obj_id]["optional"] += part.quantity
                 else:
-                    parts[p.obj_id]["quantity"] += p.quantity
+                    parts[part.obj_id]["quantity"] += part.quantity
+
         for o_id,args in tools.iteritems():
             self.tools.append(BOMReference(o_id,**args))
+
         for o_id,args in parts.iteritems():
             self.parts.append(BOMReference(o_id,**args))
+
     def to_svg(self,path):
         """
         Render schedule structure to svg file
@@ -409,11 +470,11 @@ class Schedule(object):
         graph = pgv.AGraph(directed=True)
 
         #Add objects
-        for id, obj in self.store.iter_obj():
-            graph.add_node('o_' + id,label=obj.name,shape='rectangle')
+        for o_id, obj in self.store.iter_obj():
+            graph.add_node('o_' + o_id,label=obj.name,shape='rectangle')
 
-        for id, res, _ in self.store.iter_res():
-            graph.add_node('r_' + id,label=res.res_id[:6],shape='diamond')
+        for r_id, res, _ in self.store.iter_res():
+            graph.add_node('r_' + r_id,label=r_id[:6],shape='diamond')
 
         #Add nodes
         for step in self.steps:
@@ -461,17 +522,19 @@ def schedule_greedy(graph, targets = None):
     """
 
     if not graph.timing:
-        raise ValueError("This graph can not be scheduled greedily due to"
-                "missing timing information")
+        raise ValueError(
+            "This graph can not be scheduled greedily due to "
+            "missing timing information"
+        )
 
     #find set of steps required for target
     if targets is None:
         steps = set(graph.steps.values())
     else:
         steps = set([])
-        for t in targets:
-            steps.add(t)
-            steps.update(graph.all_ancestors(t))
+        for target in targets:
+            steps.add(target)
+            steps.update(graph.all_ancestors(target))
         steps = set(graph.steps[s] for s in steps)
 
     time = 0
@@ -484,35 +547,36 @@ def schedule_greedy(graph, targets = None):
     while len(scheduled) < len(steps):
         #find possible next steps
         for step in steps:
-            id = step.step_id
-            if id in scheduled:
+            s_id = step.step_id
+            if s_id in scheduled:
                 continue
-            for dep in graph.parents[id]:
+            for dep in graph.parents[s_id]:
                 if not dep in scheduled:
                     break
             else:
-                possible[id] = step
+                possible[s_id] = step
 
         #from these find the step with minimal end time
         best_cand = None
-        for id,cand in possible.iteritems():
+        for c_id,cand in possible.iteritems():
             cand_start = time
             #find earliest possible starting time
-            for dep in graph.parents[id]:
+            for dep in graph.parents[c_id]:
                 if dep in waiting and waiting[dep] > cand_start:
-                    cand_start = self.waiting[dep]
+                    cand_start = waiting[dep]
             cand_stop = cand_start + cand.duration.total_seconds()
             if best_cand is None or cand_stop < best_cand[3]:
-                best_cand = (id,cand,cand_start,cand_stop)
+                best_cand = (c_id,cand,cand_start,cand_stop)
 
         #schedule it
-        id,cand,cand_start,cand_stop = best_cand
+        # pylint: disable=W0633
+        c_id,cand,cand_start,cand_stop = best_cand
 
-        start[id] = cand_start
-        scheduled[id] = cand
-        ids.append(id)
+        start[c_id] = cand_start
+        scheduled[c_id] = cand
+        ids.append(c_id)
 
-        possible.pop(id)
+        possible.pop(c_id)
         time = cand_stop
 
-    return [scheduled[id] for id in ids], [start[id] for id in ids]
+    return [scheduled[i] for i in ids], [start[i] for i in ids]
