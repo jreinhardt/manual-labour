@@ -5,7 +5,8 @@
   "type" : "object",
   "properties" : {
     "quantity" : {"type" : "number", "description" : "Number of instances of this object", "default" : 1},
-    "optional" : {"type" : "boolean", "description" : "If this object is strictly required", "default" : false}
+    "optional" : {"type" : "boolean", "description" : "If this object is strictly required", "default" : false},
+    "created" : {"type" : "boolean", "description" : "If this object is created in this step instead of consumed", "default" : false}
   },
   "additionalProperties" : false
 }

@@ -187,6 +187,8 @@ class Object(object):
 class ObjectReference(object):
     """
     A reference to an object that is stored by its obj_id in an object store.
+
+    A object can not be created and optional at the same time.
     """
     def __init__(self,obj_id,**kwargs):
         if re.match(OBJ_ID,obj_id) is None:
@@ -196,7 +198,9 @@ class ObjectReference(object):
         validate(kwargs,'obj_ref.json')
 
         self.optional = kwargs.get("optional",False)
+        self.created = kwargs.get("created",False)
         self.quantity = kwargs.get("quantity",1)
+        assert not (self.created and self.optional)
 
 
 class StepBase(object):
@@ -228,6 +232,9 @@ class GraphStep(StepBase):
 
         self.tools = kwargs.get("tools",{})
         self.parts = kwargs.get("parts",{})
+        self.results = kwargs.get("results",{})
+        for res in self.results.values():
+            assert res.created
 
         self.waiting = kwargs.get("waiting",timedelta())
         self.duration = kwargs.get("duration",None)
@@ -441,34 +448,52 @@ class Schedule(object):
         for step in self.steps:
             self.id_to_nr[step.step_id] = step.step_nr
 
-        #list of tools and parts
-        self.tools = []
-        self.parts = []
+        self.tools = {}
+        self.parts = {}
+        self._create_bom()
+
+    def _create_bom(self):
+        """
+        Assemble the list of required parts and tools
+        """
         tools = {}
         parts = {}
         for step in self.steps:
             for tool in step.tools.values():
-                if not tool.obj_id in tools:
-                    tools[tool.obj_id] = {"quantity" : 0 }
-                if not tool.optional:
-                    tools[tool.obj_id]["quantity"] = \
-                        max(tool.quantity,tools[tool.obj_id]["quantity"])
-            for part in step.parts.values():
-                if not part.obj_id in parts:
-                    parts[part.obj_id] = {
+                obj_id = tool.obj_id
+                if not obj_id in tools:
+                    tools[obj_id] = {
+                        "quantity" : 0,
+                        "created" : 0
+                    }
+                if tool.created:
+                    tools[obj_id]["quantity"] += tool.quantity
+                else:
+                    if not tool.optional:
+                        tools[obj_id]["quantity"] = \
+                            max(tool.quantity,tools[obj_id]["quantity"])
+            for part in step.parts.values() + step.results.values():
+                obj_id = part.obj_id
+                if not obj_id in parts:
+                    parts[obj_id] = {
                         "optional" : 0,
                         "quantity" : 0
                     }
-                if part.optional:
-                    parts[part.obj_id]["optional"] += part.quantity
+                if part.created:
+                    parts[obj_id]["quantity"] -= part.quantity
                 else:
-                    parts[part.obj_id]["quantity"] += part.quantity
+                    if part.optional:
+                        parts[obj_id]["optional"] += part.quantity
+                    else:
+                        parts[obj_id]["quantity"] += part.quantity
 
         for o_id,args in tools.iteritems():
-            self.tools.append(BOMReference(o_id,**args))
+            args["quantity"] = max(0,args["quantity"] - args.pop("created"))
+            self.tools[o_id] = BOMReference(o_id,**args)
 
         for o_id,args in parts.iteritems():
-            self.parts.append(BOMReference(o_id,**args))
+            if args["quantity"] > 0 and args["optional"] > 0:
+                self.parts[o_id] = BOMReference(o_id,**args)
 
     def to_svg(self,path):
         """

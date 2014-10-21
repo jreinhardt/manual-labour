@@ -133,12 +133,18 @@ class TestGraph(unittest.TestCase):
 
         store.add_obj(Object('a',name="Nut"))
         store.add_obj(Object('b',name="Wrench"))
+        store.add_obj(Object('c',name="Bolt"))
+        store.add_obj(Object('d',name="Tightened NutBolt"))
 
         s = GraphStep('b',
             title='With objects',
             description='Step with objects',
-            parts = {'nut' : ObjectReference('a')},
-            tools = {'wr' : ObjectReference('b')}
+            parts = {
+                'nut' : ObjectReference('a'),
+                'bolt' : ObjectReference('c')
+            },
+            tools = {'wr' : ObjectReference('b')},
+            results = {'res' : ObjectReference('d',created=True)}
         )
 
         g.add_step(s,[])
@@ -230,11 +236,15 @@ class TestSchedule(unittest.TestCase):
         steps = [
             GraphStep('a',title="First",description="Do this",
                 tools={'a' : ObjectReference('ta')},
-                parts={'a' : ObjectReference('pa',quantity=2)}
+                parts={'a' : ObjectReference('pa',quantity=2)},
+                results={'a' : ObjectReference('ra',created=True)}
             ),
             GraphStep('b',title="Second",description="Do that",
                 tools={'a' : ObjectReference('ta',quantity=3)},
-                parts={'a' : ObjectReference('pa',quantity=2,optional=True)}
+                parts={
+                    'a' : ObjectReference('pa',quantity=2,optional=True),
+                    'b' : ObjectReference('ra')
+                }
             ),
             GraphStep('c',title="Third",description="And this",
                 parts={'a' : ObjectReference('pa',quantity=3)}
@@ -242,10 +252,11 @@ class TestSchedule(unittest.TestCase):
         ]
 
         s = Schedule(steps,store)
-        self.assertEqual(s.tools[0].quantity,3)
+        self.assertEqual(s.tools['ta'].quantity,3)
 
-        self.assertEqual(s.parts[0].quantity,5)
-        self.assertEqual(s.parts[0].optional,2)
+        self.assertFalse('ra' in s.parts)
+        self.assertEqual(s.parts['pa'].quantity,5)
+        self.assertEqual(s.parts['pa'].optional,2)
 
 class TestSchedulers(unittest.TestCase):
     def setUp(self):

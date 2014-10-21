@@ -31,6 +31,17 @@
       },
       "additionalProperties" : false
     },
+    "results" : {
+      "type" : "object",
+      "description" : "local names for the results created in this step",
+      "patternProperties" : {
+        "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+          "type" : "objref",
+          "description" : "Reference to a result"
+        }
+      },
+      "additionalProperties" : false
+    },
     "images" : {
       "type" : "object",
       "description" : "local names for the images used in this step",
