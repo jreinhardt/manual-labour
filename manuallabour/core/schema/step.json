@@ -7,6 +7,52 @@
     "title" : {"type" : "string", "description" : "Title for this step"},
     "description" : {"type" : "string", "description" : "textual description for this step"},
     "attention" : {"type" : "string", "description" : "warnings about critical mistakes that can be made"},
+    "duration" : {"type" : "timedelta", "description" : "time of activity required in this step"},
+    "waiting" : {"type" : "timedelta", "description" : "waiting time required in this step"},
+    "parts" : {
+      "type" : "object",
+      "description" : "local names for the parts used in this step",
+      "patternProperties" : {
+        "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+          "type" : "objref",
+          "description" : "Reference to a part"
+        }
+      },
+      "additionalProperties" : false
+    },
+    "tools" : {
+      "type" : "object",
+      "description" : "local names for the tools used in this step",
+      "patternProperties" : {
+        "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+          "type" : "objref",
+          "description" : "Reference to a tool"
+        }
+      },
+      "additionalProperties" : false
+    },
+    "images" : {
+      "type" : "object",
+      "description" : "local names for the images used in this step",
+      "patternProperties" : {
+        "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+          "type" : "resref",
+          "description" : "Reference to an image"
+        }
+      },
+      "additionalProperties" : false
+    },
+    "files" : {
+      "type" : "object",
+      "description" : "local names for the files used in this step",
+      "patternProperties" : {
+        "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+          "type" : "resref",
+          "description" : "Reference to a file"
+        }
+      },
+      "additionalProperties" : false
+    },
     "assertions" : {
       "type" : "array",
       "items" : {

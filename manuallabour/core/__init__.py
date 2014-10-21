@@ -24,7 +24,15 @@ def validate(inst,schema_name):
             'schema/%s' % schema_name
         )
     )
-    jsonschema.validate(inst,schema)
+    validator = jsonschema.Draft4Validator(
+        schema,
+        types={
+            "timedelta" : (timedelta,),
+            "objref" : (ObjectReference,),
+            "resref" : (ResourceReference,)
+        }
+    )
+    validator.validate(inst)
 
 class Resource(object):
     """ Base class for Resources
@@ -44,7 +52,9 @@ class File(Resource):
     """
     def __init__(self,res_id,**kwargs):
         Resource.__init__(self,res_id)
+
         validate(kwargs,'file.json')
+
         self.filename = kwargs["filename"]
 
 class Image(Resource):
@@ -55,7 +65,9 @@ class Image(Resource):
     """
     def __init__(self,res_id,**kwargs):
         Resource.__init__(self,res_id)
+
         validate(kwargs,'image.json')
+
         self.alt = kwargs["alt"]
         self.ext = kwargs["extension"]
 
@@ -208,17 +220,17 @@ class GraphStep(StepBase):
         """
         StepBase.__init__(self,step_id)
 
-        #local namespaces. not easily validated by schema
-        self.parts = kwargs.pop("parts",{})
-        self.tools = kwargs.pop("tools",{})
-
-        self.files = kwargs.pop("files",{})
-        self.images = kwargs.pop("images",{})
-
-        self.duration = kwargs.pop("duration",None)
-        self.waiting = kwargs.pop("waiting",timedelta())
-
         validate(kwargs,'step.json')
+
+        #local namespaces
+        self.images = kwargs.get("images",{})
+        self.files = kwargs.get("files",{})
+
+        self.tools = kwargs.get("tools",{})
+        self.parts = kwargs.get("parts",{})
+
+        self.waiting = kwargs.get("waiting",timedelta())
+        self.duration = kwargs.get("duration",None)
 
         #required
         self.title = kwargs["title"]

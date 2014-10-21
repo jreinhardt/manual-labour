@@ -20,6 +20,9 @@ class TestStep(unittest.TestCase):
         self.assertEqual(step.title,"TestStep")
 
         params['parts'] = [ObjectReference('nut')]
+        self.assertRaises(ValidationError,lambda: GraphStep('a',**params))
+
+        params['parts'] = {'nut' : ObjectReference('nut')}
         step = GraphStep('a',**params)
         self.assertEqual(len(step.parts),1)
 
@@ -35,6 +38,9 @@ class TestStep(unittest.TestCase):
         step = GraphStep('a',**params)
         data = step.as_dict()
         self.assertEqual(data['waiting'].total_seconds(),300)
+
+        params['waiting'] = 21
+        self.assertRaises(ValidationError,lambda: GraphStep('a',**params))
 
 class TestResources(unittest.TestCase):
     def test_File(self):
@@ -151,8 +157,8 @@ class TestGraph(unittest.TestCase):
         s = GraphStep('b',
             title='With objects',
             description='Step with objects',
-            files = {'l_kds' : ObjectReference('kds')},
-            images = {'l_wds' : ObjectReference('wds')}
+            files = {'l_kds' : ResourceReference('kds')},
+            images = {'l_wds' : ResourceReference('wds')}
         )
 
         g.add_step(s,[])
