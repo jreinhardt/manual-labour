@@ -176,6 +176,7 @@ class TestGraph(unittest.TestCase):
 
         store.add_obj(Object('nut',name="Nut"))
         store.add_obj(Object('b',name="Wrench"))
+        store.add_obj(Object('crazy_shit',name="Resulting thing with a nut"))
 
         img = Image('wds',alt="foo",extension=".png")
         store.add_res(img,'a.png')
@@ -185,12 +186,16 @@ class TestGraph(unittest.TestCase):
             title='First Step',
             description='Do this',
             parts = {'nut' : ObjectReference('nut',optional=True)},
-            images = {'res1' : ResourceReference('wds')}
+            images = {'res1' : ResourceReference('wds')},
+            results = {'res' : ObjectReference('crazy_shit',created=True)}
         ),[])
         g.add_step(GraphStep('b',
             title='Second Step',
             description='Do that',
-            parts = {'nut' : ObjectReference('nut',quantity=2)},
+            parts = {
+                'nut' : ObjectReference('nut',quantity=2),
+                'cs' : ObjectReference('crazy_shit')
+            },
             tools = {'wr' : ObjectReference('b',)},
             files = {'res2' : ResourceReference('kds')}
         ),['a'])
