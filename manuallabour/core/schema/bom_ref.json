@@ -1,0 +1,13 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "Bill of Material reference schema",
+  "description" : "Description of a Bill of Material reference",
+  "type" : "object",
+  "properties" : {
+    "quantity" : {"type" : "number", "description" : "Number of mandatory instances of this object", "default" : 1},
+    "optional" : {"type" : "number", "description" : "Number of optional instances of this object", "default" : 0}
+  },
+  "additionalProperties" : false
+}
+
+

@@ -213,7 +213,7 @@ class GraphStep(StepBase):
 
 class Graph(object):
     """
-    Class to hold a set of dependent steps
+    Container to hold a set of dependent steps
     """
     def __init__(self,store):
         self.steps = {}
@@ -248,6 +248,13 @@ class Graph(object):
 
         if step.duration is None:
             self.timing = False
+
+    def all_ancestors(self,step_id):
+        res = set([])
+        for p in self.parents[step_id]:
+            res.add(p)
+            res.update(self.all_ancestors(p))
+        return res
 
     def to_svg(self,path):
         """
@@ -299,3 +306,163 @@ class Graph(object):
                 graph.add_edge('s_' + id,'s_' + child)
 
         graph.draw(path,prog='dot')
+
+class ScheduleStep(GraphStep):
+    """
+    Step used in a Schedule
+    """
+    def __init__(self,step_id,**kwargs):
+
+        self.step_idx = kwargs.pop("step_idx")
+        """ Index of this step, starting with 0"""
+        self.step_nr = self.step_idx + 1
+        """ Number of this step, starting with 1"""
+
+        self.start = kwargs.pop("start",None)
+        """ Time when the active part of the step starts"""
+        self.stop = kwargs.pop("stop",None)
+        """ Time when the active part of the step stops"""
+        self.waiting = kwargs.pop("waiting",None)
+        """ Time when the waiting part of the step ends"""
+
+        GraphStep.__init__(self,step_id,**kwargs)
+
+class BOMReference(object):
+    """
+    A reference to an object that is stored by its obj_id in an object store.
+    """
+    def __init__(self,obj_id,**kwargs):
+        if re.match(OBJ_ID,obj_id) is None:
+            raise ValueError('Invalid obj_id: %s' % obj_id)
+        self.obj_id = obj_id
+
+        validate(kwargs,'bom_ref.json')
+
+        self.optional = kwargs.get("optional",0)
+        self.quantity = kwargs.get("quantity",1)
+
+class Schedule(object):
+    """
+    Container to hold a sequence of steps
+    """
+    def __init__(self,steps,store,start=None):
+        """
+        Initialize the Schedule with a sequence of Graph Steps and a store
+        for all needed objects and resources.  If it is a timed schedule, a
+        dict mapping ids to start timedeltas must be given
+        """
+        self.store = store
+
+        self.steps = []
+        i = 0
+        for step in steps:
+            if start is None:
+                self.steps.append(ScheduleStep(step.step_id,
+                    step_idx = i,**step.as_dict()))
+            else:
+                id = step.step_id
+                self.steps.append(ScheduleStep(id,
+                    step_idx = i,
+                    start = start[id],
+                    stop =  start[id] + step.duration,
+                    waiting =  start[id] + step.duration + step.waiting,
+                    **step.as_dict()))
+            i += 1
+
+        #reverse lookup
+        self.id_to_nr = {}
+        for step in self.steps:
+            self.id_to_nr[step.step_id] = step.step_nr
+
+        #list of tools and parts
+        self.tools = []
+        self.parts = []
+        tools = {}
+        parts = {}
+        for step in self.steps:
+            for t in step.tools.values():
+                if not t.obj_id in tools:
+                    tools[t.obj_id] = {"quantity" : 0 }
+                if not t.optional:
+                    tools[t.obj_id]["quantity"] = \
+                        max(t.quantity,tools[t.obj_id]["quantity"])
+            for p in step.parts.values():
+                if not p.obj_id in parts:
+                    parts[p.obj_id] = {
+                        "optional" : 0,
+                        "quantity" : 0
+                    }
+                if p.optional:
+                    parts[p.obj_id]["optional"] += p.quantity
+                else:
+                    parts[p.obj_id]["quantity"] += p.quantity
+        for o_id,args in tools.iteritems():
+            self.tools.append(BOMReference(o_id,**args))
+        for o_id,args in parts.iteritems():
+            self.parts.append(BOMReference(o_id,**args))
+
+
+def schedule_greedy(graph, targets = None):
+    """
+    Scheduler that always chooses the next step such that its finish time
+    is minimized. Does not take into account limited availability of tools.
+
+    if targets is not given, schedules full graph
+    """
+
+    if not graph.timing:
+        raise ValueError("This graph can not be scheduled greedily due to"
+                "missing timing information")
+
+    #find set of steps required for target
+    if targets is None:
+        steps = set(graph.steps.values())
+    else:
+        steps = set([])
+        for t in targets:
+            steps.add(t)
+            steps.update(graph.all_ancestors(t))
+        steps = set(graph.steps[s] for s in steps)
+
+    time = 0
+    possible = {}
+    scheduled = {}
+    start = {}
+    waiting = {}
+    ids = []
+
+    while len(scheduled) < len(steps):
+        #find possible next steps
+        for step in steps:
+            id = step.step_id
+            if id in scheduled:
+                continue
+            for dep in graph.parents[id]:
+                if not dep in scheduled:
+                    break
+            else:
+                possible[id] = step
+
+        #from these find the step with minimal end time
+        best_cand = None
+        for id,cand in possible.iteritems():
+            cand_start = time
+            #find earliest possible starting time
+            for dep in graph.parents[id]:
+                if dep in waiting and waiting[dep] > cand_start:
+                    cand_start = self.waiting[dep]
+            cand_stop = cand_start + cand.duration.total_seconds()
+            if best_cand is None or cand_stop < best_cand[3]:
+                best_cand = (id,cand,cand_start,cand_stop)
+
+        #schedule it
+        id,cand,cand_start,cand_stop = best_cand
+
+        start[id] = cand_start
+        scheduled[id] = cand
+        ids.append(id)
+
+        possible.pop(id)
+        time = cand_stop
+
+    return [scheduled[id] for id in ids], [start[id] for id in ids]
