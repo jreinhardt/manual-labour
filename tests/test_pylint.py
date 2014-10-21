@@ -18,4 +18,4 @@ class PylintTest(TestCase):
         errors = "\n".join(errors).strip()
         if len(errors) > 0:
             print errors
-            raise SyntaxError("PyLint detected problems")
+            raise SyntaxError("PyLint has detected problems")
