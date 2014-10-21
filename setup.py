@@ -25,6 +25,7 @@ setup(
         'manual' : 'core/schema/*.json'
     },
     extras_require = {
-        'graph': ['pygraphviz']
+        'graph': ['pygraphviz'],
+        'pylint': ['pylint']
     }
 )
