@@ -17,8 +17,24 @@ class TestStep(unittest.TestCase):
 
         params = {'title' : 'TestStep', 'description' : 'asd'}
         step = GraphStep('a',**params)
+        self.assertEqual(step.title,"TestStep")
 
         params['parts'] = [ObjectReference('nut')]
+        step = GraphStep('a',**params)
+        self.assertEqual(len(step.parts),1)
+
+        params['duration'] = timedelta(minutes=5)
+        step = GraphStep('a',**params)
+        self.assertEqual(step.duration.total_seconds(),300)
+
+        data = step.as_dict()
+        self.assertEqual(data['duration'].total_seconds(),300)
+        self.assertEqual(data['title'],'TestStep')
+
+        params['waiting'] = timedelta(minutes=5)
+        step = GraphStep('a',**params)
+        data = step.as_dict()
+        self.assertEqual(data['waiting'].total_seconds(),300)
 
 class TestResources(unittest.TestCase):
     def test_File(self):

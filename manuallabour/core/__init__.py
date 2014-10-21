@@ -4,6 +4,7 @@ import json
 import jsonschema
 import re
 from os.path import abspath
+from copy import copy
 
 STEP_ID = '^[a-z-A-Z][a-zA-Z0-9]*$'
 OBJ_ID = '^[a-zA-Z0-9_]*$'
@@ -200,6 +201,15 @@ class GraphStep(StepBase):
         #optional
         self.attention = kwargs.get("attention",None)
         self.assertions = kwargs.get("assertions",[])
+    def as_dict(self):
+        res = copy(self.__dict__)
+        res.pop('step_id')
+        if self.duration is None:
+            res.pop('duration')
+        if self.waiting.total_seconds() == 0:
+            res.pop('waiting')
+        if self.attention is None: res.pop('attention')
+        return res
 
 class Graph(object):
     """
