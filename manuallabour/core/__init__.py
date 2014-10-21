@@ -370,8 +370,6 @@ class ScheduleStep(GraphStep):
         """ Time when the active part of the step starts"""
         self.stop = kwargs.pop("stop",None)
         """ Time when the active part of the step stops"""
-        self.waiting = kwargs.pop("waiting",None)
-        """ Time when the waiting part of the step ends"""
 
         GraphStep.__init__(self,step_id,**kwargs)
 
@@ -421,7 +419,6 @@ class Schedule(object):
                         step_idx = i,
                         start = t_start,
                         stop = t_start + step.duration,
-                        waiting = t_start + step.duration + step.waiting,
                         **step.as_dict()
                     )
                 )
@@ -572,11 +569,11 @@ def schedule_greedy(graph, targets = None):
         # pylint: disable=W0633
         c_id,cand,cand_start,cand_stop = best_cand
 
-        start[c_id] = cand_start
+        start[c_id] = timedelta(seconds=cand_start)
         scheduled[c_id] = cand
         ids.append(c_id)
 
         possible.pop(c_id)
         time = cand_stop
 
-    return [scheduled[i] for i in ids], [start[i] for i in ids]
+    return [scheduled[i] for i in ids], start
