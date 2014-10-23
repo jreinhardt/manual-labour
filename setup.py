@@ -16,7 +16,8 @@ with open(path.join(here, 'version'), encoding='utf-8') as f:
 setup(
     name='manuallabour',
     version=version,
-    packages=find_packages(exclude=['tests','docs']),
+    packages=find_packages("src"),
+    package_dir={"" : "src"},
     namespace_packages=['manuallabour'],
     description='Library for processing step by step instructions',
     long_description=long_description,
