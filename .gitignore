@@ -1,5 +1,6 @@
 docs/build
 tests/output
 **/*.pyc
-*.egg-info/**
+**/*.egg-info/**
 **/.*.swp
+.coverage
