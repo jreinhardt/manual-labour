@@ -122,7 +122,7 @@ class Graph(object):
         """
         import pygraphviz as pgv
 
-        graph = pgv.AGraph(directed=True)
+        graph = pgv.AGraph(directed=True,strict=False)
 
         #Add objects
         for o_id, obj in self.store.iter_obj():
