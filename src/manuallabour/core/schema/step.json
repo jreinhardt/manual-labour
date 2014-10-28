@@ -9,6 +9,14 @@
     "attention" : {"type" : "string", "description" : "warnings about critical mistakes that can be made"},
     "duration" : {"type" : "timedelta", "description" : "time of activity required in this step"},
     "waiting" : {"type" : "timedelta", "description" : "waiting time required in this step"},
+    "requires" : {
+      "type" : "array", 
+      "description" : "step_ids of prerequisite steps",
+      "items" : {
+        "type" : "string",
+        "pattern" : "^([a-zA-Z][0-9a-zA-Z_]*)$"
+      }
+    },
     "parts" : {
       "type" : "object",
       "description" : "local names for the parts used in this step",

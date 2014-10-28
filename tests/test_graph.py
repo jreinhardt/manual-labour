@@ -43,10 +43,10 @@ class TestGraph(unittest.TestCase):
         g = Graph(LocalMemoryStore())
 
         params = {'title' : 'TestStep', 'description' : 'asd'}
-        g.add_step(GraphStep('a',**params),[])
-        g.add_step(GraphStep('b',**params),['a'])
+        g.add_step(GraphStep('a',**params))
+        g.add_step(GraphStep('b',requires=['a'],**params))
         self.assertRaises(KeyError, lambda:
-            g.add_step(GraphStep('a',**params),[])
+            g.add_step(GraphStep('a',**params))
         )
 
         self.assertEqual(g.children['a'],['b'])
@@ -57,11 +57,11 @@ class TestGraph(unittest.TestCase):
 
         params = {'title' : 'TS', 'description' : ''}
         params['duration'] = timedelta(minutes=4)
-        g.add_step(GraphStep('a',**params),[])
+        g.add_step(GraphStep('a',**params))
         self.assertTrue(g.timing)
 
         params.pop('duration')
-        g.add_step(GraphStep('b',**params),['a'])
+        g.add_step(GraphStep('b',requires=['a'],**params))
         self.assertFalse(g.timing)
 
     def test_add_objects(self):
@@ -84,7 +84,7 @@ class TestGraph(unittest.TestCase):
             results = {'res' : common.ObjectReference('d',created=True)}
         )
 
-        g.add_step(s,[])
+        g.add_step(s)
 
     def test_add_resources(self):
         store = LocalMemoryStore()
@@ -104,7 +104,7 @@ class TestGraph(unittest.TestCase):
             images = {'l_wds' : common.ResourceReference('wds')}
         )
 
-        g.add_step(s,[])
+        g.add_step(s)
 
 
     def test_graph(self):
@@ -125,17 +125,18 @@ class TestGraph(unittest.TestCase):
             parts = {'nut' : common.ObjectReference('nut',optional=True)},
             images = {'res1' : common.ResourceReference('wds')},
             results = {'res' : common.ObjectReference('resnut',created=True)}
-        ),[])
+        ))
         g.add_step(GraphStep('b',
             title='Second Step',
             description='Do that',
+            requires=['a'],
             parts = {
                 'nut' : common.ObjectReference('nut',quantity=2),
                 'cs' : common.ObjectReference('resnut')
             },
             tools = {'wr' : common.ObjectReference('b',)},
             files = {'res2' : common.ResourceReference('kds')}
-        ),['a'])
+        ))
 
         g.to_svg('tests/output/graph.svg')
 

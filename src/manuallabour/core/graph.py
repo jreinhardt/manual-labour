@@ -34,6 +34,8 @@ class GraphStep(object):
         for res in self.results.values():
             assert res.created
 
+        self.requires = kwargs.get("requires",[])
+
         self.waiting = kwargs.get("waiting",timedelta())
         self.duration = kwargs.get("duration",None)
 
@@ -78,7 +80,7 @@ class Graph(object):
         self.timing = True
         """Indicates, whether all steps in this graph contain timing infos"""
 
-    def add_step(self,step,requirements):
+    def add_step(self,step):
         """ Add a step to graph
 
         Adds a new step to the graph and registers the dependencies expressed
@@ -91,11 +93,11 @@ class Graph(object):
 
         #update dependency graph in a way that order of step insertions
         #doesn't mattern
-        self.parents[step_id] = requirements
+        self.parents[step_id] = step.requires
 
         if not step_id in self.children:
             self.children[step_id] = []
-        for req in requirements:
+        for req in step.requires:
             if not req in self.children:
                 self.children[req] = [step_id]
             else:

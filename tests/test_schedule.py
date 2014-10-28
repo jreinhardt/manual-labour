@@ -79,17 +79,19 @@ class TestSchedulers(unittest.TestCase):
             title='First Step',
             duration=timedelta(minutes=5),
             description='Do this'
-        ),[])
+        ))
         self.g.add_step(GraphStep('b',
             title='Second Step',
             duration=timedelta(minutes=5),
+            requires=['a'],
             description='Do that'
-        ),['a'])
+        ))
         self.g.add_step(GraphStep('c',
             title='Something completely unrelated',
             duration=timedelta(minutes=5),
+            requires=['a'],
             description='Is not required for b'
-        ),['a'])
+        ))
     def test_greedy(self):
         steps,start = schedule_greedy(self.g)
         ids = [s.step_id for s in steps]
