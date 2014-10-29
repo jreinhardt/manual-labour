@@ -110,7 +110,7 @@ class Schedule(object):
             self.tools[o_id] = BOMReference(o_id,**args)
 
         for o_id,args in parts.iteritems():
-            if args["quantity"] > 0 and args["optional"] > 0:
+            if args["quantity"] > 0 or args["optional"] > 0:
                 self.parts[o_id] = BOMReference(o_id,**args)
 
     def to_svg(self,path):
