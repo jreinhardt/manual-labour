@@ -23,6 +23,14 @@ class ScheduleStep(GraphStep):
         """ Time when the active part of the step stops"""
 
         GraphStep.__init__(self,step_id,**kwargs)
+    def as_dict(self):
+        res = GraphStep.as_dict(self)
+        res.pop("step_nr")
+        if not self.start is None:
+            res["start"] = self.start
+        if not self.stop is None:
+            res["stop"] = self.stop
+        return res
 
 class Schedule(object):
     """

@@ -6,8 +6,8 @@ import manuallabour.core.common as common
 from manuallabour.core.stores import LocalMemoryStore
 from manuallabour.core.graph import *
 
-class TestStep(unittest.TestCase):
-    def test_GraphStep(self):
+class TestGraphStep(unittest.TestCase):
+    def test_graphstep(self):
         self.assertRaises(ValidationError,lambda: GraphStep('a'))
         self.assertRaises(ValueError,lambda: GraphStep('9'))
 
@@ -27,6 +27,7 @@ class TestStep(unittest.TestCase):
         self.assertEqual(step.duration.total_seconds(),300)
 
         data = step.as_dict()
+        self.assertEqual(step.as_dict(),GraphStep('a',**data).as_dict())
         self.assertEqual(data['duration'].total_seconds(),300)
         self.assertEqual(data['title'],'TestStep')
 

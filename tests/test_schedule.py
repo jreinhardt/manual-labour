@@ -9,6 +9,31 @@ from manuallabour.core.stores import LocalMemoryStore
 
 from manuallabour.core.schedule import *
 
+class TestScheduleStep(unittest.TestCase):
+    def test_schedulestep(self):
+        self.assertRaises(ValidationError,lambda: ScheduleStep('a',step_idx=0))
+        self.assertRaises(ValueError,lambda: ScheduleStep('9',step_idx=0))
+
+        params = {'title' : 'TestStep', 'description' : 'asd', 'step_idx' : 0}
+        step = ScheduleStep('a',**params)
+        self.assertEqual(step.title,"TestStep")
+
+        params['parts'] = [common.ObjectReference('nut')]
+        self.assertRaises(ValidationError,lambda: ScheduleStep('a',**params))
+
+        params['parts'] = {'nut' : common.ObjectReference('nut')}
+        step = ScheduleStep('a',**params)
+        self.assertEqual(len(step.parts),1)
+
+        params['duration'] = timedelta(minutes=5)
+        step = ScheduleStep('a',**params)
+        self.assertEqual(step.duration.total_seconds(),300)
+
+        data = step.as_dict()
+        self.assertEqual(step.as_dict(),ScheduleStep('a',**data).as_dict())
+        self.assertEqual(data['duration'].total_seconds(),300)
+        self.assertEqual(data['title'],'TestStep')
+
 class TestSchedule(unittest.TestCase):
     def test_untimed(self):
         store = LocalMemoryStore()
