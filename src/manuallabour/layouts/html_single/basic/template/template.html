@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>{{ title }}</title>
+	</head>
+	<body>
+		<h1>{{ title }}</h1>
+		<h2>BOM</h2>
+		<ul>
+			{% for part in parts %}
+			{% if part.optional > 0 %}
+			<li>{{part.quantity}}x (+{{part.optional}}x) {{part.name}}</li>
+			{%else%}
+			<li>{{part.quantity}}x {{part.name}}</li>
+			{% endif %}
+			{% endfor %}
+		</ul>
+
+		<h2>Required Tools</h2>
+		<ul>
+			{% for tool in tools %}
+			{% if tool.optional > 0 %}
+			<li>{{tool.quantity}}x ({{tool.optional}}x) {{tool.name}}</li>
+			{%else%}
+			<li>{{tool.quantity}}x {{tool.name}}</li>
+			{% endif %}
+			{% endfor %}
+		</ul>
+
+		{% for step in steps %}
+		<h2>Step {{step.step_nr}}: {{step.title}}</h2>
+		{% if step.parts %}
+		<h3>Parts</h3>
+		<ul>
+			{% for ref, part in step.parts.iteritems() %}
+			{% if ref.optional > 0 %}
+			<li> {{ref.quantity}}x ({{ref.optional}}x) {{part.name}}</li>
+			{% else %}
+			<li> {{ref.quantity}}x {{part.name}}</li>
+			{% endif %}
+			{% endfor %}
+		</ul>
+		{% endif %}
+		{% if step.tools %}
+		<h3>Tools</h3>
+		<ul>
+			{% for ref, tool in step.tools.iteritems() %}
+			{% if ref.optional > 0 %}
+			<li> {{ref.quantity}}x ({{ref.optional}}x) {{tool.name}}</li>
+			{% else %}
+			<li> {{ref.quantity}}x {{tool.name}}</li>
+			{% endif %}
+			{% endfor %}
+		</ul>
+		{% endif %}
+
+		{% if step.files %}
+		<h3>Files</h3>
+		<ul>
+			{% for ref, file, url in step.files %}
+			<li> <a href="{{url}}">{{file.filename}}</a></li>
+			{% endfor %}
+		</ul>
+		{% endif %}
+
+		{% if step.attention %}
+		<h3>Attention</h3>
+		<p>{{step.attention}}</p>
+		{% endif %}
+
+		<h3>Description</h3>
+		<p>{{step.description}}</p>
+
+		{% if step.results %}
+		<h3>Results</h3>
+		<ul>
+			{% for ref, result in step.results.iteritems() %}
+			{% if ref.optional > 0 %}
+			<li> {{ref.quantity}}x ({{ref.optional}}x) {{result.name}}</li>
+			{% else %}
+			<li> {{ref.quantity}}x {{result.name}}</li>
+			{% endif %}
+			{% endfor %}
+		</ul>
+		{% endif %}
+
+		{% if step.assertions %}
+		<h3>Check</h3>
+		{% for ass in step.assertions %}
+        <input type="checkbox"> {{ ass }}<br>
+		{% endfor %}
+		{% endif %}
+		{% endfor %}
+
+	</body>
+</html>

@@ -18,12 +18,17 @@ setup(
     version=version,
     packages=find_packages("src"),
     package_dir={"" : "src"},
-    namespace_packages=['manuallabour'],
+    namespace_packages=[
+        'manuallabour',
+        'manuallabour.exporters',
+        'manuallabour.layouts',
+        'manuallabour.layouts.html_single'],
     description='Library for processing step by step instructions',
     long_description=long_description,
-    install_requires = ['jsonschema'],
+    install_requires = ['jsonschema','jinja2'],
     package_data = {
-        'manual' : 'core/schema/*.json'
+        'manuallabour.core' : 'schema/*.json',
+        'manuallabour.layouts.html_single.basic' : 'template'
     },
     extras_require = {
         'graph': ['pygraphviz'],
