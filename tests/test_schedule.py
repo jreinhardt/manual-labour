@@ -98,25 +98,25 @@ class TestSchedule(unittest.TestCase):
 class TestSchedulers(unittest.TestCase):
     def setUp(self):
         store = LocalMemoryStore()
-        self.g = Graph(store)
-
-        self.g.add_step(GraphStep('a',
+        steps = [
+        GraphStep('a',
             title='First Step',
             duration=timedelta(minutes=5),
             description='Do this'
-        ))
-        self.g.add_step(GraphStep('b',
+        ),
+        GraphStep('b',
             title='Second Step',
             duration=timedelta(minutes=5),
             requires=['a'],
             description='Do that'
-        ))
-        self.g.add_step(GraphStep('c',
+        ),
+        GraphStep('c',
             title='Something completely unrelated',
             duration=timedelta(minutes=5),
             requires=['a'],
             description='Is not required for b'
-        ))
+        )]
+        self.g = Graph(steps,store)
     def test_greedy(self):
         steps,start = schedule_greedy(self.g)
         ids = [s.step_id for s in steps]

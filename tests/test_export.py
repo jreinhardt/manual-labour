@@ -8,14 +8,12 @@ from manuallabour.core.stores import LocalMemoryStore
 
 class TestExporter(unittest.TestCase):
     def test_html_single(self):
-        g = Graph(LocalMemoryStore())
         dt = timedelta(minutes=4)
-        g.add_step(
-            GraphStep('a',title="First",description="Do this",duration=dt)
-        )
-        g.add_step(
+        steps = [
+            GraphStep('a',title="First",description="Do this",duration=dt),
             GraphStep('b',title="Second",description="Do that",duration=dt)
-        )
+        ]
+        g = Graph(steps,LocalMemoryStore())
 
         steps,start = schedule_greedy(g)
         s = Schedule(steps,g.store,start)

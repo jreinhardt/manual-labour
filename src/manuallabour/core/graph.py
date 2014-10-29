@@ -67,7 +67,7 @@ class Graph(object):
     """
     Container to hold a set of dependent steps
     """
-    def __init__(self,store):
+    def __init__(self,steps,store):
         self.steps = {}
 
         #dependency graph
@@ -80,7 +80,10 @@ class Graph(object):
         self.timing = True
         """Indicates, whether all steps in this graph contain timing infos"""
 
-    def add_step(self,step):
+        for step in steps:
+            self._add_step(step)
+
+    def _add_step(self,step):
         """ Add a step to graph
 
         Adds a new step to the graph and registers the dependencies expressed
