@@ -49,6 +49,12 @@ class Object(object):
         self.name = kwargs["name"]
         self.description = kwargs.get("description","")
         self.images = kwargs.get("images",[])
+    def as_dict(self):
+        return {
+            "name" : self.name,
+            "description" : self.description,
+            "images" : self.images
+        }
 
 class ObjectReference(object):
     """
