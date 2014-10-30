@@ -102,6 +102,16 @@ class ObjectReference(DataStruct):
         DataStruct.__init__(self,**kwargs)
         assert not (self.created and self.optional)
 
+class BOMReference(DataStruct):
+    """
+    A reference to an object that is stored by its obj_id in an object store.
+    """
+    _schema = load_schema(SCHEMA_DIR,'bom_ref.json')
+    _validator = jsonschema.Draft4Validator(_schema)
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+
 def validate(inst,schema_name):
     """
     validate the contents of the dictionary inst against a schema as defined
@@ -124,19 +134,6 @@ def validate(inst,schema_name):
     validator.validate(inst)
 
 
-class BOMReference(object):
-    """
-    A reference to an object that is stored by its obj_id in an object store.
-    """
-    def __init__(self,obj_id,**kwargs):
-        if re.match(OBJ_ID,obj_id) is None:
-            raise ValueError('Invalid obj_id: %s' % obj_id)
-        self.obj_id = obj_id
-
-        validate(kwargs,'bom_ref.json')
-
-        self.optional = kwargs.get("optional",0)
-        self.quantity = kwargs.get("quantity",1)
 
 
 class Resource(object):

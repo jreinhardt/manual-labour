@@ -113,9 +113,9 @@ class TestReferences(unittest.TestCase):
         res = ResourceReference('nut')
 
     def test_bom_ref(self):
-        self.assertRaises(ValueError,lambda: BOMReference('*'))
+        self.assertRaises(ValidationError,lambda: BOMReference(obj_id='*'))
 
-        bom = BOMReference('nut')
+        bom = BOMReference(obj_id='nut')
         self.assertEqual(bom.optional,0)
         self.assertEqual(bom.quantity,1)
 
