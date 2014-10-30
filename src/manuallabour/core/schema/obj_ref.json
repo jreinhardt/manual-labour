@@ -4,10 +4,28 @@
   "description" : "Description of a object reference",
   "type" : "object",
   "properties" : {
-    "quantity" : {"type" : "number", "description" : "Number of instances of this object", "default" : 1},
-    "optional" : {"type" : "boolean", "description" : "If this object is strictly required", "default" : false},
-    "created" : {"type" : "boolean", "description" : "If this object is created in this step instead of consumed", "default" : false}
+    "obj_id" : {
+      "type" : "string",
+      "description" : "ID of the referenced object",
+      "pattern" : "^[a-zA-Z0-9_]*$"
+    },
+    "quantity" : {
+      "type" : "number",
+      "description" : "Number of instances of this object",
+      "default" : 1
+    },
+    "optional" : {
+      "type" : "boolean",
+      "description" : "Indicates if this object is strictly required",
+      "default" : false
+    },
+    "created" : {
+      "type" : "boolean",
+      "description" : "Indicates if object is created instead of consumed",
+      "default" : false
+    }
   },
+  "required" : ["obj_id"],
   "additionalProperties" : false
 }
 

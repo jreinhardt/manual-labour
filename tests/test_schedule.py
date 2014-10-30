@@ -18,10 +18,10 @@ class TestScheduleStep(unittest.TestCase):
         step = ScheduleStep('a',**params)
         self.assertEqual(step.title,"TestStep")
 
-        params['parts'] = [common.ObjectReference('nut')]
+        params['parts'] = [common.ObjectReference(obj_id='nut')]
         self.assertRaises(ValidationError,lambda: ScheduleStep('a',**params))
 
-        params['parts'] = {'nut' : common.ObjectReference('nut')}
+        params['parts'] = {'nut' : common.ObjectReference(obj_id='nut')}
         step = ScheduleStep('a',**params)
         self.assertEqual(len(step.parts),1)
 
@@ -72,19 +72,23 @@ class TestSchedule(unittest.TestCase):
         store = LocalMemoryStore()
         steps = [
             GraphStep('a',title="First",description="Do this",
-                tools={'a' : common.ObjectReference('ta')},
-                parts={'a' : common.ObjectReference('pa',quantity=2)},
-                results={'a' : common.ObjectReference('ra',created=True)}
+                tools={'a' : common.ObjectReference(obj_id='ta')},
+                parts={'a' : common.ObjectReference(obj_id='pa',quantity=2)},
+                results={'a' : common.ObjectReference(obj_id='ra',created=True)}
             ),
             GraphStep('b',title="Second",description="Do that",
-                tools={'a' : common.ObjectReference('ta',quantity=3)},
+                tools={'a' : common.ObjectReference(obj_id='ta',quantity=3)},
                 parts={
-                    'b' : common.ObjectReference('ra'),
-                    'a' : common.ObjectReference('pa',quantity=2,optional=True)
+                    'b' : common.ObjectReference(obj_id='ra'),
+                    'a' : common.ObjectReference(
+                        obj_id='pa',
+                        quantity=2,
+                        optional=True
+                    )
                 }
             ),
             GraphStep('c',title="Third",description="And this",
-                parts={'a' : common.ObjectReference('pa',quantity=3)}
+                parts={'a' : common.ObjectReference(obj_id='pa',quantity=3)}
             )
         ]
 

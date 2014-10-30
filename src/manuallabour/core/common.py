@@ -55,7 +55,20 @@ class Object(DataStruct):
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
 
+class ObjectReference(DataStruct):
+    """
+    A reference to an object that is stored by its obj_id in an object store.
 
+    A object can not be created and optional at the same time.
+    """
+    _schema = json.loads(
+        pkgutil.get_data('manuallabour.core', 'schema/obj_ref.json')
+    )
+    _validator = jsonschema.Draft4Validator(_schema)
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+        assert not (self.created and self.optional)
 
 def validate(inst,schema_name):
     """
@@ -78,24 +91,6 @@ def validate(inst,schema_name):
     )
     validator.validate(inst)
 
-
-class ObjectReference(object):
-    """
-    A reference to an object that is stored by its obj_id in an object store.
-
-    A object can not be created and optional at the same time.
-    """
-    def __init__(self,obj_id,**kwargs):
-        if re.match(OBJ_ID,obj_id) is None:
-            raise ValueError('Invalid obj_id: %s' % obj_id)
-        self.obj_id = obj_id
-
-        validate(kwargs,'obj_ref.json')
-
-        self.optional = kwargs.get("optional",False)
-        self.created = kwargs.get("created",False)
-        self.quantity = kwargs.get("quantity",1)
-        assert not (self.created and self.optional)
 
 class BOMReference(object):
     """

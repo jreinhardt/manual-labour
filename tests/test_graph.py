@@ -15,10 +15,10 @@ class TestGraphStep(unittest.TestCase):
         step = GraphStep('a',**params)
         self.assertEqual(step.title,"TestStep")
 
-        params['parts'] = [common.ObjectReference('nut')]
+        params['parts'] = [common.ObjectReference(obj_id='nut')]
         self.assertRaises(ValidationError,lambda: GraphStep('a',**params))
 
-        params['parts'] = {'nut' : common.ObjectReference('nut')}
+        params['parts'] = {'nut' : common.ObjectReference(obj_id='nut')}
         step = GraphStep('a',**params)
         self.assertEqual(len(step.parts),1)
 
@@ -82,11 +82,13 @@ class TestGraph(unittest.TestCase):
             title='With objects',
             description='Step with objects',
             parts = {
-                'nut' : common.ObjectReference('a'),
-                'bolt' : common.ObjectReference('c')
+                'nut' : common.ObjectReference(obj_id='a'),
+                'bolt' : common.ObjectReference(obj_id='c')
             },
-            tools = {'wr' : common.ObjectReference('b')},
-            results = {'res' : common.ObjectReference('d',created=True)}
+            tools = {'wr' : common.ObjectReference(obj_id='b')},
+            results = {
+                'res' : common.ObjectReference(obj_id='d',created=True)
+            }
         )]
 
         g = Graph(steps,store)
@@ -124,19 +126,25 @@ class TestGraph(unittest.TestCase):
         steps = [GraphStep('a',
             title='First Step',
             description='Do this',
-            parts = {'nut' : common.ObjectReference('nut',optional=True)},
-            images = {'res1' : common.ResourceReference('wds')},
-            results = {'res' : common.ObjectReference('resnut',created=True)}
+            parts = {
+                'nut' : common.ObjectReference(obj_id='nut',optional=True)
+            },
+            images = {
+                'res1' : common.ResourceReference('wds')
+            },
+            results = {
+                'res' : common.ObjectReference(obj_id='resnut',created=True)
+            }
         ),
         GraphStep('b',
             title='Second Step',
             description='Do that',
             requires=['a'],
             parts = {
-                'nut' : common.ObjectReference('nut',quantity=2),
-                'cs' : common.ObjectReference('resnut')
+                'nut' : common.ObjectReference(obj_id='nut',quantity=2),
+                'cs' : common.ObjectReference(obj_id='resnut')
             },
-            tools = {'wr' : common.ObjectReference('b',)},
+            tools = {'wr' : common.ObjectReference(obj_id='b',)},
             files = {'res2' : common.ResourceReference('kds')}
         )]
 

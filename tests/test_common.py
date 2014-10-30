@@ -75,13 +75,13 @@ class TestObjects(unittest.TestCase):
 
 class TestReferences(unittest.TestCase):
     def test_obj_ref(self):
-        self.assertRaises(ValueError,lambda: ObjectReference('*'))
+        self.assertRaises(ValidationError,lambda: ObjectReference(obj_id='*'))
 
-        obr = ObjectReference('nut')
+        obr = ObjectReference(obj_id='nut')
         self.assertEqual(obr.optional,False)
         self.assertEqual(obr.quantity,1)
 
-        obr = ObjectReference('nut',quantity=2,optional=True)
+        obr = ObjectReference(obj_id='nut',quantity=2,optional=True)
         self.assertEqual(obr.optional,True)
         self.assertEqual(obr.quantity,2)
 
