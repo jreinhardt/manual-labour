@@ -104,16 +104,6 @@ class ObjectReference(DataStruct):
         DataStruct.__init__(self,**kwargs)
         assert not (self.created and self.optional)
 
-class BOMReference(DataStruct):
-    """
-    A reference to an object that is stored by its obj_id in an object store.
-    """
-    _schema = load_schema(SCHEMA_DIR,'bom_ref.json')
-    _validator = jsonschema.Draft4Validator(_schema)
-
-    def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
-
 class ResourceReference(DataStruct):
     """
     A reference to a resource that is stored by res_id in a resource store.

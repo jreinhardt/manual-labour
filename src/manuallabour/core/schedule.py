@@ -6,7 +6,6 @@ from datetime import timedelta
 import jsonschema
 
 from manuallabour.core.graph import GraphStep
-from manuallabour.core.common import BOMReference
 import manuallabour.core.common as common
 from manuallabour.core.common import DataStruct, load_schema, SCHEMA_DIR
 
@@ -15,6 +14,16 @@ TYPES = {
     "objref" : (common.ObjectReference,),
     "resref" : (common.ResourceReference,)
 }
+
+class BOMReference(DataStruct):
+    """
+    An object with counters.
+    """
+    _schema = load_schema(SCHEMA_DIR,'bom_ref.json')
+    _validator = jsonschema.Draft4Validator(_schema,types=TYPES)
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
 
 class ScheduleStep(DataStruct):
     """
@@ -85,18 +94,26 @@ class Schedule(object):
         parts = {}
         for step in self.steps:
             for tool in step.tools.values():
-                obj_id = tool.obj_id
-                if not obj_id in tools:
-                    tools[obj_id] = {
+                if not tool.obj_id in tools:
+                    tools[tool.obj_id] = {
                         "quantity" : 0,
-                        "created" : 0
+                        "optional" : 0,
+                        "current" : 0,
+                        "current_opt" : 0,
                     }
+                count = tools[tool.obj_id]
                 if tool.created:
-                    tools[obj_id]["quantity"] += tool.quantity
+                    count["current"] -= tool.quantity
+                    count["current_opt"] -= tool.quantity
                 else:
-                    if not tool.optional:
-                        tools[obj_id]["quantity"] = \
-                            max(tool.quantity,tools[obj_id]["quantity"])
+                    if tool.optional:
+                        count["current_opt"] = + tool.quantity
+                    else:
+                        count["current"] = + tool.quantity
+                        count["current_opt"] = + tool.quantity
+                count["quantity"] = max(count["quantity"],count["current"])
+                count["optional"] = max(count["optional"],count["current_opt"])
+
             for part in step.parts.values() + step.results.values():
                 obj_id = part.obj_id
                 if not obj_id in parts:
@@ -104,6 +121,7 @@ class Schedule(object):
                         "optional" : 0,
                         "quantity" : 0
                     }
+
                 if part.created:
                     parts[obj_id]["quantity"] -= part.quantity
                 else:
@@ -112,13 +130,14 @@ class Schedule(object):
                     else:
                         parts[obj_id]["quantity"] += part.quantity
 
-        for o_id,args in tools.iteritems():
-            args["quantity"] = max(0,args["quantity"] - args.pop("created"))
-            self.tools[o_id] = BOMReference(obj_id=o_id,**args)
+        for obj_id,count in tools.iteritems():
+            count.pop("current")
+            count.pop("current_opt")
+            self.tools[obj_id] = BOMReference(obj_id=obj_id,**count)
 
-        for o_id,args in parts.iteritems():
-            if args["quantity"] > 0 or args["optional"] > 0:
-                self.parts[o_id] = BOMReference(obj_id=o_id,**args)
+        for obj_id,count in parts.iteritems():
+            if count["quantity"] > 0 or count["optional"] > 0:
+                self.parts[obj_id] = BOMReference(obj_id=obj_id,**count)
 
     def to_svg(self,path):
         """

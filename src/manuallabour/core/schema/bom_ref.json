@@ -9,15 +9,13 @@
     },
     "quantity" : {
       "type" : "number",
-      "description" : "Number of mandatory instances of this object",
-      "default" : 1
+      "description" : "Number of required mandatory instances of this object"
     },
     "optional" : {"type" : "number",
-      "description" : "Number of optional instances of this object",
-      "default" : 0
+      "description" : "Number of optionally required instances of this object"
     }
   },
-  "required" : ["obj_id"],
+  "required" : ["obj_id","quantity","optional"],
   "additionalProperties" : false
 }
 

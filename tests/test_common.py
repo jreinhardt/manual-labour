@@ -115,11 +115,3 @@ class TestReferences(unittest.TestCase):
         )
 
         res = ResourceReference(res_id='nut')
-
-    def test_bom_ref(self):
-        self.assertRaises(ValidationError,lambda: BOMReference(obj_id='*'))
-
-        bom = BOMReference(obj_id='nut')
-        self.assertEqual(bom.optional,0)
-        self.assertEqual(bom.quantity,1)
-
