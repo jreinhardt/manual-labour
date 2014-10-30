@@ -3,15 +3,51 @@ This module defines common classes and interfaces for manual labour
 """
 
 import pkgutil
+import pkg_resources
 import json
 import re
 from copy import copy
 from datetime import timedelta
+from os.path import join
 
 import jsonschema
 
 OBJ_ID = '^[a-zA-Z0-9_]*$'
 RES_ID = '^[a-zA-Z0-9_]*$'
+
+SCHEMA_DIR =  pkg_resources.resource_filename('manuallabour.core','schema')
+
+def dereference_schema(schema_dir,schema):
+    """
+    Dereference JSON references.
+
+    Only works for relative filesystem references like
+    "$ref" : "sibling.json#/schemaname"
+    and can not handle recursive references.
+    """
+    for k,v in schema.iteritems():
+        if k == "$ref":
+            fname,sname = v.split('#/')
+            with open(join(schema_dir,fname)) as fid:
+                ref_schema = json.loads(fid.read())
+            schema.update(ref_schema[sname])
+            schema.pop("$ref")
+            return
+        elif isinstance(v,dict):
+            dereference_schema(schema_dir,v)
+        elif isinstance(v,list):
+            for s in v:
+                if isinstance(s,dict):
+                    dereference_schema(schema_dir,s)
+
+def load_schema(schema_dir,schema_name):
+    """
+    Load a jsonschema and dereferences JSON references by substitution.
+    """
+    with open(join(schema_dir,schema_name)) as fid:
+        schema = json.loads(fid.read())
+    dereference_schema(schema_dir,schema)
+    return schema
 
 class DataStruct(object):
     """
@@ -47,9 +83,7 @@ class Object(DataStruct):
     assembly process. It can be either a part that is consumed in a step, a
     tool that isn't, or a result that is created in a step.
     """
-    _schema = json.loads(
-        pkgutil.get_data('manuallabour.core', 'schema/object.json')
-    )
+    _schema = load_schema(SCHEMA_DIR,'object.json')
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
@@ -61,9 +95,7 @@ class ObjectReference(DataStruct):
 
     A object can not be created and optional at the same time.
     """
-    _schema = json.loads(
-        pkgutil.get_data('manuallabour.core', 'schema/obj_ref.json')
-    )
+    _schema = load_schema(SCHEMA_DIR,'obj_ref.json')
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):

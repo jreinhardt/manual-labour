@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "state": {
+      "oneOf" : [
+        {"type" : "string"},
+        {"$ref" : "include.json#/address" }
+      ]
+    }
+  }
+}

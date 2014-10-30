@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "street_address": { "type": "string" },
+    "city":           { "type": "string" },
+    "state":          { "type": "string" },
+    "neighbour" : {
+      "$ref" : "include.json#/address"
+    }
+  },
+  "required": ["street_address", "city", "state"]
+}

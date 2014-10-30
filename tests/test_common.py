@@ -1,9 +1,31 @@
 import unittest
 
 import json
+from os.path import join
 from jsonschema import ValidationError,Draft4Validator
 
 from manuallabour.core.common import *
+
+SCHEMA_DIR = 'tests/schema'
+
+class JSONTest(unittest.TestCase):
+    def test_noref(self):
+        self.assertEqual(
+            load_schema(SCHEMA_DIR,'noref.json'),
+            json.loads(open(join(SCHEMA_DIR,'noref.json')).read())
+        )
+
+    def test_ref(self):
+        self.assertEqual(
+            load_schema(SCHEMA_DIR,'noref.json'),
+            load_schema(SCHEMA_DIR,'ref.json')
+        )
+    def test_nested(self):
+        schema = load_schema(SCHEMA_DIR,'nested.json'),
+        self.assertTrue("required" in schema[0]["properties"]["neighbour"])
+    def test_oneOf(self):
+        schema = load_schema(SCHEMA_DIR,'OneOf.json'),
+        self.assertTrue("required" in schema[0]["properties"]["state"]["oneOf"][1])
 
 class DataStructTest(DataStruct):
     _schema = {"type" : "object",
