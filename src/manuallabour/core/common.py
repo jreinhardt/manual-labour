@@ -12,9 +12,6 @@ from os.path import join
 
 import jsonschema
 
-OBJ_ID = '^[a-zA-Z0-9_]*$'
-RES_ID = '^[a-zA-Z0-9_]*$'
-
 SCHEMA_DIR =  pkg_resources.resource_filename('manuallabour.core','schema')
 
 def dereference_schema(schema_dir,schema):
