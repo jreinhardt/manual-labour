@@ -8,47 +8,55 @@ from manuallabour.core.graph import *
 
 class TestGraphStep(unittest.TestCase):
     def test_graphstep(self):
-        self.assertRaises(ValidationError,lambda: GraphStep('a'))
-        self.assertRaises(ValueError,lambda: GraphStep('9'))
+        self.assertRaises(ValidationError,lambda: GraphStep(step_id='a'))
+        self.assertRaises(ValidationError,lambda: GraphStep(step_id='9'))
 
         params = {'title' : 'TestStep', 'description' : 'asd'}
-        step = GraphStep('a',**params)
+        step = GraphStep(step_id='a',**params)
         self.assertEqual(step.title,"TestStep")
 
         params['parts'] = [common.ObjectReference(obj_id='nut')]
-        self.assertRaises(ValidationError,lambda: GraphStep('a',**params))
+        self.assertRaises(
+            ValidationError,
+            lambda: GraphStep(step_id='a',**params)
+        )
 
         params['parts'] = {'nut' : common.ObjectReference(obj_id='nut')}
-        step = GraphStep('a',**params)
+        step = GraphStep(step_id='a',**params)
         self.assertEqual(len(step.parts),1)
 
         params['duration'] = timedelta(minutes=5)
-        step = GraphStep('a',**params)
+        step = GraphStep(step_id='a',**params)
         self.assertEqual(step.duration.total_seconds(),300)
 
         data = step.as_dict()
-        self.assertEqual(step.as_dict(),GraphStep('a',**data).as_dict())
+        self.assertEqual(data,GraphStep(**data).as_dict())
+        self.assertTrue('step_id' in data)
         self.assertEqual(data['duration'].total_seconds(),300)
         self.assertEqual(data['title'],'TestStep')
 
         params['waiting'] = timedelta(minutes=5)
-        step = GraphStep('a',**params)
+        step = GraphStep(step_id='a',**params)
         data = step.as_dict()
         self.assertEqual(data['waiting'].total_seconds(),300)
 
         params['waiting'] = 21
-        self.assertRaises(ValidationError,lambda: GraphStep('a',**params))
+        self.assertRaises(
+            ValidationError,
+            lambda: GraphStep(step_id='a',**params)
+        )
+
 
 class TestGraph(unittest.TestCase):
     def test_add_steps(self):
         params = {'title' : 'TestStep', 'description' : 'asd'}
         steps = [
-            GraphStep('a',**params),
-            GraphStep('b',requires=['a'],**params)
+            GraphStep(step_id='a',**params),
+            GraphStep(step_id='b',requires=['a'],**params)
         ]
         g = Graph(steps,LocalMemoryStore())
 
-        steps.append(GraphStep('a',**params))
+        steps.append(GraphStep(step_id='a',**params))
         self.assertRaises(KeyError, lambda: Graph(steps,LocalMemoryStore()))
 
         self.assertEqual(g.children['a'],['b'])
@@ -61,12 +69,12 @@ class TestGraph(unittest.TestCase):
             'duration' : timedelta(minutes=4)
         }
 
-        steps = [GraphStep('a',**params)]
+        steps = [GraphStep(step_id='a',**params)]
         g = Graph(steps,LocalMemoryStore())
         self.assertTrue(g.timing)
 
         params.pop('duration')
-        steps.append(GraphStep('b',requires=['a'],**params))
+        steps.append(GraphStep(step_id='b',requires=['a'],**params))
         g = Graph(steps,LocalMemoryStore())
         self.assertFalse(g.timing)
 
@@ -78,7 +86,8 @@ class TestGraph(unittest.TestCase):
         store.add_obj(common.Object(obj_id='c',name="Bolt"))
         store.add_obj(common.Object(obj_id='d',name="Tightened NutBolt"))
 
-        steps = [GraphStep('b',
+        steps = [GraphStep(
+            step_id='b',
             title='With objects',
             description='Step with objects',
             parts = {
@@ -109,7 +118,8 @@ class TestGraph(unittest.TestCase):
         )
         store.add_res(common.File(res_id='kds',filename="foo"),'a.tmp')
 
-        steps = [GraphStep('b',
+        steps = [GraphStep(
+            step_id='b',
             title='With objects',
             description='Step with objects',
             files = {'l_kds' : common.ResourceReference(res_id='kds')},
@@ -129,7 +139,8 @@ class TestGraph(unittest.TestCase):
         store.add_res(img,'a.png')
         store.add_res(common.File(res_id='kds',filename="foo"),'a.tmp')
 
-        steps = [GraphStep('a',
+        steps = [GraphStep(
+            step_id='a',
             title='First Step',
             description='Do this',
             parts = {
@@ -142,7 +153,8 @@ class TestGraph(unittest.TestCase):
                 'res' : common.ObjectReference(obj_id='resnut',created=True)
             }
         ),
-        GraphStep('b',
+        GraphStep(
+            step_id='b',
             title='Second Step',
             description='Do that',
             requires=['a'],

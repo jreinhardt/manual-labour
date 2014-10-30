@@ -5,63 +5,35 @@ import re
 from copy import copy
 from datetime import timedelta
 
+import jsonschema
+
+from manuallabour.core.common import DataStruct, load_schema, SCHEMA_DIR
 from manuallabour.core.common import validate
+import manuallabour.core.common as common
 
-STEP_ID = '^[a-z-A-Z][a-zA-Z0-9]*$'
+TYPES = {
+    "timedelta" : (timedelta,),
+    "objref" : (common.ObjectReference,),
+    "resref" : (common.ResourceReference,)
+}
 
-class GraphStep(object):
+
+class GraphStep(DataStruct):
     """
     Step used in a Graph.
     """
-    def __init__(self,step_id,**kwargs):
-        """parameters: see schema +
-        parts: list of ObjectReferences
-        tools: list of ObjectReferences
-        """
-        if re.match(STEP_ID,step_id) is None:
-            raise ValueError('Invalid step_id: %s' % step_id)
-        self.step_id = step_id
+    _schema = load_schema(SCHEMA_DIR,'graph_step.json')
+    _validator = jsonschema.Draft4Validator(_schema, types=TYPES)
 
-        validate(kwargs,'step.json')
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
 
-        #local namespaces
-        self.images = kwargs.get("images",{})
-        self.files = kwargs.get("files",{})
-
-        self.tools = kwargs.get("tools",{})
-        self.parts = kwargs.get("parts",{})
-        self.results = kwargs.get("results",{})
         for res in self.results.values():
             assert res.created
 
-        self.requires = kwargs.get("requires",[])
+        if not "waiting" in kwargs:
+            self._calculated["waiting"] = timedelta()
 
-        self.waiting = kwargs.get("waiting",timedelta())
-        self.duration = kwargs.get("duration",None)
-
-        #required
-        self.title = kwargs["title"]
-        self.description = kwargs["description"]
-
-        #optional
-        self.attention = kwargs.get("attention",None)
-        self.assertions = kwargs.get("assertions",[])
-    def as_dict(self):
-        """ Return contents as dict
-
-        This method returns the contents of this step as a dict (without the
-        step_id), such that the step can be recreated from this dict. This is
-        useful for serialisation.
-        """
-        res = copy(self.__dict__)
-        res.pop('step_id')
-        if self.duration is None:
-            res.pop('duration')
-        if self.waiting.total_seconds() == 0:
-            res.pop('waiting')
-        if self.attention is None:
-            res.pop('attention')
-        return res
 
 class Graph(object):
     """

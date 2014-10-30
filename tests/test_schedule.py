@@ -12,7 +12,7 @@ from manuallabour.core.schedule import *
 class TestScheduleStep(unittest.TestCase):
     def test_schedulestep(self):
         self.assertRaises(ValidationError,lambda: ScheduleStep('a',step_idx=0))
-        self.assertRaises(ValueError,lambda: ScheduleStep('9',step_idx=0))
+        self.assertRaises(ValidationError,lambda: ScheduleStep('9',step_idx=0))
 
         params = {'title' : 'TestStep', 'description' : 'asd', 'step_idx' : 0}
         step = ScheduleStep('a',**params)
@@ -38,8 +38,8 @@ class TestSchedule(unittest.TestCase):
     def test_untimed(self):
         store = LocalMemoryStore()
         steps = [
-            GraphStep('a',title="First",description="Do this"),
-            GraphStep('b',title="Second",description="Do that")
+            GraphStep(step_id='a',title="First",description="Do this"),
+            GraphStep(step_id='b',title="Second",description="Do that")
         ]
         s = Schedule(steps,store)
 
@@ -51,8 +51,18 @@ class TestSchedule(unittest.TestCase):
     def test_timed(self):
         store = LocalMemoryStore()
         steps = [
-            GraphStep('a',title="First",description="Do this",duration=timedelta(minutes=5)),
-            GraphStep('b',title="Second",description="Do that",duration=timedelta(minutes=8))
+            GraphStep(
+                step_id='a',
+                title="First",
+                description="Do this",
+                duration=timedelta(minutes=5)
+            ),
+            GraphStep(
+                step_id='b',
+                title="Second",
+                description="Do that",
+                duration=timedelta(minutes=8)
+            )
         ]
         start = {'a' : timedelta(), 'b' : timedelta(minutes=8)}
         s = Schedule(steps,store,start)
@@ -71,12 +81,18 @@ class TestSchedule(unittest.TestCase):
         # on the references
         store = LocalMemoryStore()
         steps = [
-            GraphStep('a',title="First",description="Do this",
+            GraphStep(
+                step_id='a',
+                title="First",
+                description="Do this",
                 tools={'a' : common.ObjectReference(obj_id='ta')},
                 parts={'a' : common.ObjectReference(obj_id='pa',quantity=2)},
                 results={'a' : common.ObjectReference(obj_id='ra',created=True)}
             ),
-            GraphStep('b',title="Second",description="Do that",
+            GraphStep(
+                step_id='b',
+                title="Second",
+                description="Do that",
                 tools={'a' : common.ObjectReference(obj_id='ta',quantity=3)},
                 parts={
                     'b' : common.ObjectReference(obj_id='ra'),
@@ -87,7 +103,10 @@ class TestSchedule(unittest.TestCase):
                     )
                 }
             ),
-            GraphStep('c',title="Third",description="And this",
+            GraphStep(
+                step_id='c',
+                title="Third",
+                description="And this",
                 parts={'a' : common.ObjectReference(obj_id='pa',quantity=3)}
             )
         ]
@@ -103,18 +122,21 @@ class TestSchedulers(unittest.TestCase):
     def setUp(self):
         store = LocalMemoryStore()
         steps = [
-        GraphStep('a',
+        GraphStep(
+            step_id='a',
             title='First Step',
             duration=timedelta(minutes=5),
             description='Do this'
         ),
-        GraphStep('b',
+        GraphStep(
+            step_id='b',
             title='Second Step',
             duration=timedelta(minutes=5),
             requires=['a'],
             description='Do that'
         ),
-        GraphStep('c',
+        GraphStep(
+            step_id='c',
             title='Something completely unrelated',
             duration=timedelta(minutes=5),
             requires=['a'],

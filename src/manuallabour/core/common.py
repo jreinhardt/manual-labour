@@ -58,10 +58,10 @@ class DataStruct(object):
     def __init__(self,**kwargs):
         self._validator.validate(kwargs)
         self._kwargs = kwargs
+        self._calculated = {}
         for field, schema in self._schema["properties"].iteritems():
             if (not field in kwargs) and "default" in schema:
-                self._kwargs[field] = copy(schema["default"])
-        self._calculated = {}
+                self._calculated[field] = copy(schema["default"])
     def __getattr__(self,name):
         if name in self._kwargs:
             return self._kwargs.get(name)

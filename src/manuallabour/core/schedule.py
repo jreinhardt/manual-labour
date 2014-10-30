@@ -5,12 +5,14 @@ from datetime import timedelta
 
 from manuallabour.core.graph import GraphStep
 from manuallabour.core.common import BOMReference
+from manuallabour.core.common import DataStruct, load_schema, SCHEMA_DIR
 
 class ScheduleStep(GraphStep):
     """
     Step used in a Schedule
     """
     def __init__(self,step_id,**kwargs):
+        kwargs.pop("step_id",None)
 
         self.step_idx = kwargs.pop("step_idx")
         """ Index of this step, starting with 0"""
@@ -22,10 +24,10 @@ class ScheduleStep(GraphStep):
         self.stop = kwargs.pop("stop",None)
         """ Time when the active part of the step stops"""
 
-        GraphStep.__init__(self,step_id,**kwargs)
+        GraphStep.__init__(self,step_id=step_id,**kwargs)
     def as_dict(self):
         res = GraphStep.as_dict(self)
-        res.pop("step_nr")
+        res.pop("step_id")
         if not self.start is None:
             res["start"] = self.start
         if not self.stop is None:
@@ -50,7 +52,6 @@ class Schedule(object):
             if start is None:
                 self.steps.append(
                     ScheduleStep(
-                        step.step_id,
                         step_idx = i,
                         **step.as_dict()
                     )
@@ -60,7 +61,6 @@ class Schedule(object):
                 t_start = start[step_id]
                 self.steps.append(
                     ScheduleStep(
-                        step_id,
                         step_idx = i,
                         start = t_start,
                         stop = t_start + step.duration,

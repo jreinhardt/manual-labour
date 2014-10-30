@@ -10,8 +10,18 @@ class TestExporter(unittest.TestCase):
     def test_html_single(self):
         dt = timedelta(minutes=4)
         steps = [
-            GraphStep('a',title="First",description="Do this",duration=dt),
-            GraphStep('b',title="Second",description="Do that",duration=dt)
+            GraphStep(
+                step_id='a',
+                title="First",
+                description="Do this",
+                duration=dt
+            ),
+            GraphStep(
+                step_id='b',
+                title="Second",
+                description="Do that",
+                duration=dt
+            )
         ]
         g = Graph(steps,LocalMemoryStore())
 

@@ -1,0 +1,74 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "Step schema",
+  "description" : "Description of a single step of the instructions",
+  "type" : "object",
+  "properties" : {
+    "step_id" : {
+      "$ref" : "common.json#/res_id"
+    },
+    "step_idx" : {
+      "type" : "number",
+      "description" : "Index for this step"
+    },
+    "start" : {
+      "type" : "timedelta",
+      "description" : "Start time for this step"
+    },
+    "title" : {
+      "type" : "string",
+      "description" : "Title for this step"
+    },
+    "description" : {
+      "type" : "string",
+      "description" : "textual description for this step"
+    },
+    "attention" : {
+      "type" : "string",
+      "description" : "warnings about critical mistakes that can be made",
+      "default" : ""
+    },
+    "duration" : {
+      "type" : "timedelta",
+      "description" : "time of activity required in this step",
+      "default" : null
+    },
+    "waiting" : {
+      "type" : "timedelta",
+      "description" : "waiting time required in this step"
+    },
+    "requires" : {
+      "type" : "array",
+      "description" : "step_ids of prerequisite steps",
+      "items" : {
+        "$ref" : "common.json#/step_id"
+      },
+      "default" : []
+    },
+    "parts" : {
+      "$ref" : "common.json#/object_namespace"
+    },
+    "tools" : {
+      "$ref" : "common.json#/object_namespace"
+    },
+    "results" : {
+      "$ref" : "common.json#/object_namespace"
+    },
+    "images" : {
+      "$ref" : "common.json#/resource_namespace"
+    },
+    "files" : {
+      "$ref" : "common.json#/resource_namespace"
+    },
+    "assertions" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string",
+        "description" : "Assertions about the results of the step"
+      },
+      "default" : []
+    }
+  },
+  "required" : ["step_id","step_idx","title","description"],
+  "additionalProperties" : false
+}

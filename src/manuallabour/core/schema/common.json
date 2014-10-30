@@ -11,6 +11,35 @@
     "type" : "string",
     "description" : "ID of the referenced resource",
     "pattern" : "^[a-zA-Z0-9_]*$"
+  },
+  "step_id" : {
+    "type" : "string",
+    "description" : "ID of the referenced step",
+    "pattern" : "^[a-z-A-Z][a-zA-Z0-9]*$"
+  },
+  "object_namespace" : {
+    "type" : "object",
+    "description" : "local names for Objects",
+    "patternProperties" : {
+      "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+        "type" : "objref",
+        "description" : "Reference to an Object"
+      }
+    },
+    "default" : {},
+    "additionalProperties" : false
+  },
+  "resource_namespace" : {
+    "type" : "object",
+    "description" : "local names for Resources",
+    "patternProperties" : {
+      "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+        "type" : "resref",
+        "description" : "Reference to an Resource"
+      }
+    },
+    "default" : {},
+    "additionalProperties" : false
   }
 }
 
