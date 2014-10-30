@@ -9,7 +9,7 @@ class TestStores(unittest.TestCase):
         m = LocalMemoryStore()
 
         self.assertFalse(m.has_obj('asdf'))
-        m.add_obj(Object('asdf',name='FooBar'))
+        m.add_obj(Object(obj_id='asdf',name='FooBar'))
         self.assertTrue(m.has_obj('asdf'))
         self.assertEqual(m.get_obj('asdf').name,'FooBar')
 

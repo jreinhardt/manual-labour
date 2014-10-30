@@ -40,6 +40,23 @@ class DataStruct(object):
     def as_dict(self):
         return self._kwargs
 
+
+class Object(DataStruct):
+    """
+    An object is a physical object that is in some sense relevant to the
+    assembly process. It can be either a part that is consumed in a step, a
+    tool that isn't, or a result that is created in a step.
+    """
+    _schema = json.loads(
+        pkgutil.get_data('manuallabour.core', 'schema/object.json')
+    )
+    _validator = jsonschema.Draft4Validator(_schema)
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+
+
+
 def validate(inst,schema_name):
     """
     validate the contents of the dictionary inst against a schema as defined
@@ -61,28 +78,6 @@ def validate(inst,schema_name):
     )
     validator.validate(inst)
 
-class Object(object):
-    """
-    An object is a physical object that is in some sense relevant to the
-    assembly process. It can be either a part that is consumed in a step, a
-    tool that isn't, or a result that is created in a step.
-    """
-    def __init__(self,obj_id,**kwargs):
-        if re.match(OBJ_ID,obj_id) is None:
-            raise ValueError('Invalid obj_id: %s' % obj_id)
-        self.obj_id = obj_id
-
-        validate(kwargs,'object.json')
-
-        self.name = kwargs["name"]
-        self.description = kwargs.get("description","")
-        self.images = kwargs.get("images",[])
-    def as_dict(self):
-        return {
-            "name" : self.name,
-            "description" : self.description,
-            "images" : self.images
-        }
 
 class ObjectReference(object):
     """

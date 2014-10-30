@@ -4,16 +4,23 @@
   "description" : "Description of a physical object that is involved in a step. This can be a tool, a part or the result of a step.",
   "type" : "object",
   "properties" : {
+    "obj_id" : {
+      "type" : "string",
+      "description" : "ID of the object",
+      "pattern" : "^[a-zA-Z0-9_]*$"
+    },
     "name" : {"type" : "string", "description" : "Name of the object"},
     "description" : {
       "type" : "string",
-      "description" : "Description of the object"
+      "description" : "Description of the object",
+      "default" : ""
     },
     "images" : {
       "type" : "array",
-      "description" : "A list of ResourceReferences"
+      "description" : "A list of ResourceReferences",
+      "default" : []
     }
   },
-  "required" : ["name"],
+  "required" : ["obj_id","name"],
   "additionalProperties" : false
 }

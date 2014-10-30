@@ -73,10 +73,10 @@ class TestGraph(unittest.TestCase):
     def test_add_objects(self):
         store = LocalMemoryStore()
 
-        store.add_obj(common.Object('a',name="Nut"))
-        store.add_obj(common.Object('b',name="Wrench"))
-        store.add_obj(common.Object('c',name="Bolt"))
-        store.add_obj(common.Object('d',name="Tightened NutBolt"))
+        store.add_obj(common.Object(obj_id='a',name="Nut"))
+        store.add_obj(common.Object(obj_id='b',name="Wrench"))
+        store.add_obj(common.Object(obj_id='c',name="Bolt"))
+        store.add_obj(common.Object(obj_id='d',name="Tightened NutBolt"))
 
         steps = [GraphStep('b',
             title='With objects',
@@ -113,9 +113,9 @@ class TestGraph(unittest.TestCase):
     def test_graph(self):
         store = LocalMemoryStore()
 
-        store.add_obj(common.Object('nut',name="Nut"))
-        store.add_obj(common.Object('b',name="Wrench"))
-        store.add_obj(common.Object('resnut',name="Result with a nut"))
+        store.add_obj(common.Object(obj_id='nut',name="Nut"))
+        store.add_obj(common.Object(obj_id='b',name="Wrench"))
+        store.add_obj(common.Object(obj_id='resnut',name="Result with a nut"))
 
         img = common.Image('wds',alt="foo",extension=".png")
         store.add_res(img,'a.png')

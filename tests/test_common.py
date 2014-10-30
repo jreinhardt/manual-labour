@@ -58,13 +58,19 @@ class TestResources(unittest.TestCase):
 
 class TestObjects(unittest.TestCase):
     def test_init(self):
-        Object('eimer',name="Eimer")
-        self.assertRaises(ValidationError,lambda:
-            Object('eimer')
+        Object(obj_id='foo',name="Bar")
+        self.assertRaises(ValidationError,lambda: Object(obj_id='foo'))
+        self.assertRaises(ValidationError,
+            lambda: Object(obj_id='*asd*',name="foo")
         )
+    def test_default(self):
+        o = Object(obj_id='foo',name="Bar")
+        self.assertEqual(o.description,"")
+        self.assertEqual(o.images,[])
+
 
     def test_image(self):
-        o = Object('eimer',name="Eimer",images=[ResourceReference('asdf')])
+        o = Object(obj_id='foo',name="Bar",images=[ResourceReference('asdf')])
         self.assertEqual(len(o.images),1)
 
 class TestReferences(unittest.TestCase):
