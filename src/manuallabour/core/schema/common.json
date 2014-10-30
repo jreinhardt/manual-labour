@@ -1,0 +1,11 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "Common schema components",
+  "description" : "Components that are reused using JSON References",
+  "obj_id" : {
+    "type" : "string",
+    "description" : "ID of the referenced object",
+    "pattern" : "^[a-zA-Z0-9_]*$"
+  }
+}
+

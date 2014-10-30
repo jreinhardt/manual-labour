@@ -5,9 +5,7 @@
   "type" : "object",
   "properties" : {
     "obj_id" : {
-      "type" : "string",
-      "description" : "ID of the referenced object",
-      "pattern" : "^[a-zA-Z0-9_]*$"
+      "$ref" : "common.json#/obj_id"
     },
     "quantity" : {
       "type" : "number",
