@@ -10,12 +10,20 @@ class HTMLMarkup(MarkupBase):
     """
     Markup for HTML export
     """
+    def __init__(self,store):
+        self.store = store
+    def _handle_obj(self,obj,text):
+        if obj.images:
+            url = self.store.get_res_url(obj.images[0].res_id)
+            return "<a href='%s'>%s</a>" % (url,text or obj.name)
+        else:
+            return text or obj.name
     def part(self,obj,text):
-        return text or obj.name
+        return self._handle_obj(obj,text)
     def tool(self,obj,text):
-        return text or obj.name
+        return self._handle_obj(obj,text)
     def result(self,obj,text):
-        return text or obj.name
+        return self._handle_obj(obj,text)
     def image(self,res,url,text):
         return "<img src='%s' alt='%s'>" % (url,res.alt)
     def file(self,res,url,text):
@@ -23,7 +31,7 @@ class HTMLMarkup(MarkupBase):
 
 class SinglePageHTMLExporter(ExporterBase):
     def __init__(self,layout):
-        ExporterBase.__init__(self,HTMLMarkup())
+        ExporterBase.__init__(self)
         self.layout = layout
         self.env = Environment(
             loader=PackageLoader(
@@ -46,6 +54,7 @@ class SinglePageHTMLExporter(ExporterBase):
 
         #prepare stuff for rendering
         store = schedule.store
+        markup = HTMLMarkup(store)
 
         parts = []
         for ref in schedule.parts.values():
@@ -75,12 +84,12 @@ class SinglePageHTMLExporter(ExporterBase):
         for step in schedule.steps:
             step_dict = step.as_dict()
             step_dict["step_nr"] = step.step_idx + 1
-            step_dict["description"] = self.markup.markup(
+            step_dict["description"] = markup.markup(
                 step,
                 store,
                 step_dict["description"]
             )
-            step_dict["attention"] = self.markup.markup(
+            step_dict["attention"] = markup.markup(
                 step,
                 store,
                 step_dict.get("attention","")

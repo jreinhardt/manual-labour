@@ -54,9 +54,5 @@ class MarkupBase(object):
         raise NotImplementedError
 
 class ExporterBase(object):
-    def __init__(self,markup):
-        self.markup = markup
-        """A markup object that can render strings"""
-
     def export(self,schedule,path):
         raise NotImplementedError
