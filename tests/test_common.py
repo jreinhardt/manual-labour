@@ -92,7 +92,9 @@ class TestObjects(unittest.TestCase):
 
 
     def test_image(self):
-        o = Object(obj_id='foo',name="Bar",images=[ResourceReference('asdf')])
+        o = Object(obj_id='foo',name="Bar",images=[
+            ResourceReference(res_id='asdf')
+        ])
         self.assertEqual(len(o.images),1)
 
 class TestReferences(unittest.TestCase):
@@ -108,9 +110,11 @@ class TestReferences(unittest.TestCase):
         self.assertEqual(obr.quantity,2)
 
     def test_res_ref(self):
-        self.assertRaises(ValueError,lambda: ResourceReference('*'))
+        self.assertRaises(ValidationError,
+            lambda: ResourceReference(res_id='*')
+        )
 
-        res = ResourceReference('nut')
+        res = ResourceReference(res_id='nut')
 
     def test_bom_ref(self):
         self.assertRaises(ValidationError,lambda: BOMReference(obj_id='*'))

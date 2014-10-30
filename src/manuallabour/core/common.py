@@ -112,6 +112,16 @@ class BOMReference(DataStruct):
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
 
+class ResourceReference(DataStruct):
+    """
+    A reference to a resource that is stored by res_id in a resource store.
+    """
+    _schema = load_schema(SCHEMA_DIR,'res_ref.json')
+    _validator = jsonschema.Draft4Validator(_schema)
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+
 def validate(inst,schema_name):
     """
     validate the contents of the dictionary inst against a schema as defined
@@ -133,9 +143,6 @@ def validate(inst,schema_name):
     )
     validator.validate(inst)
 
-
-
-
 class Resource(object):
     """ Base class for Resources
 
@@ -147,16 +154,6 @@ class Resource(object):
             raise ValueError('Invalid res_id: %s' % res_id)
         self.res_id = res_id
 
-class ResourceReference(object):
-    """
-    A reference to a resource that is stored by res_id in a resource store.
-    """
-    def __init__(self,res_id,**kwargs):
-        if re.match(RES_ID,res_id) is None:
-            raise ValueError('Invalid res_id: %s' % res_id)
-        self.res_id = res_id
-
-        validate(kwargs,'res_ref.json')
 
 class File(Resource):
     """ File resource

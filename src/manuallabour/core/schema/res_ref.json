@@ -3,6 +3,11 @@
   "title" : "Resource reference schema",
   "description" : "Description of a resource reference",
   "type" : "object",
-  "properties" : {},
+  "properties" : {
+    "res_id" : {
+      "$ref" : "common.json#/res_id"
+    }
+  },
+  "required" : ["res_id"],
   "additionalProperties" : false
 }

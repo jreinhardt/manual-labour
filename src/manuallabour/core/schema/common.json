@@ -6,6 +6,11 @@
     "type" : "string",
     "description" : "ID of the referenced object",
     "pattern" : "^[a-zA-Z0-9_]*$"
+  },
+  "res_id" : {
+    "type" : "string",
+    "description" : "ID of the referenced resource",
+    "pattern" : "^[a-zA-Z0-9_]*$"
   }
 }
 

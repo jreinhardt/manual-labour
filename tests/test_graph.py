@@ -106,8 +106,8 @@ class TestGraph(unittest.TestCase):
         steps = [GraphStep('b',
             title='With objects',
             description='Step with objects',
-            files = {'l_kds' : common.ResourceReference('kds')},
-            images = {'l_wds' : common.ResourceReference('wds')}
+            files = {'l_kds' : common.ResourceReference(res_id='kds')},
+            images = {'l_wds' : common.ResourceReference(res_id='wds')}
         )]
 
         g = Graph(steps,store)
@@ -130,7 +130,7 @@ class TestGraph(unittest.TestCase):
                 'nut' : common.ObjectReference(obj_id='nut',optional=True)
             },
             images = {
-                'res1' : common.ResourceReference('wds')
+                'res1' : common.ResourceReference(res_id='wds')
             },
             results = {
                 'res' : common.ObjectReference(obj_id='resnut',created=True)
@@ -145,7 +145,7 @@ class TestGraph(unittest.TestCase):
                 'cs' : common.ObjectReference(obj_id='resnut')
             },
             tools = {'wr' : common.ObjectReference(obj_id='b',)},
-            files = {'res2' : common.ResourceReference('kds')}
+            files = {'res2' : common.ResourceReference(res_id='kds')}
         )]
 
         g = Graph(steps,store)
