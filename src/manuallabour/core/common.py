@@ -5,12 +5,40 @@ This module defines common classes and interfaces for manual labour
 import pkgutil
 import json
 import re
+from copy import copy
 from datetime import timedelta
 
 import jsonschema
 
 OBJ_ID = '^[a-zA-Z0-9_]*$'
 RES_ID = '^[a-zA-Z0-9_]*$'
+
+class DataStruct(object):
+    """
+    A validating convenience wrapper around a dictionary. Serves as basis for
+    many of the classes holding data.
+    """
+    _schema = None
+    """JSON schema for the input of this class"""
+    _validator = None
+    """Validator for the schema of this class"""
+    def __init__(self,**kwargs):
+        self._validator.validate(kwargs)
+        self._kwargs = kwargs
+        for field, schema in self._schema["properties"].iteritems():
+            if (not field in kwargs) and "default" in schema:
+                self._kwargs[field] = copy(schema["default"])
+        self._calculated = {}
+    def __getattr__(self,name):
+        if name in self._kwargs:
+            return self._kwargs.get(name)
+        elif name in self._calculated:
+            return self._calculated.get(name)
+        else:
+            raise AttributeError('Class %s has no attribute %s' % (type(self),name))
+
+    def as_dict(self):
+        return self._kwargs
 
 def validate(inst,schema_name):
     """

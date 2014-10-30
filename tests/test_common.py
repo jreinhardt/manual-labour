@@ -1,8 +1,41 @@
 import unittest
 
-from jsonschema import ValidationError
+import json
+from jsonschema import ValidationError,Draft4Validator
 
 from manuallabour.core.common import *
+
+class DataStructTest(DataStruct):
+    _schema = {"type" : "object",
+        "properties" : {
+            "name" : {"type" : "string"},
+            "description" : {"type" : "string","default" : ""}
+        },
+        "required" : ["name"]
+    }
+    _validator = jsonschema.Draft4Validator(_schema,)
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+        self._calculated["title"] = self.name.title()
+
+class TestDataStruct(unittest.TestCase):
+    def test_init(self):
+        a = DataStructTest(name="Test")
+        self.assertRaises(ValidationError,lambda: DataStructTest(mame="Test"))
+        self.assertRaises(ValidationError,lambda: DataStructTest())
+        self.assertRaises(ValidationError,lambda: DataStructTest(name=4))
+
+    def test_defaults(self):
+        a = DataStructTest(name="Test")
+        self.assertEqual(a.description,"")
+
+        b = DataStructTest(name="Test",description="foo")
+        self.assertEqual(b.description,"foo")
+
+    def test_calculated(self):
+        a = DataStructTest(name="foo")
+        self.assertEqual(a.title,"Foo")
+
 
 class TestResources(unittest.TestCase):
     def test_File(self):
