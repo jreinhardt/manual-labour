@@ -11,26 +11,35 @@ from manuallabour.core.schedule import *
 
 class TestScheduleStep(unittest.TestCase):
     def test_schedulestep(self):
-        self.assertRaises(ValidationError,lambda: ScheduleStep('a',step_idx=0))
-        self.assertRaises(ValidationError,lambda: ScheduleStep('9',step_idx=0))
+        self.assertRaises(
+            ValidationError,
+            lambda: ScheduleStep(step_id='a',step_idx=0)
+        )
+        self.assertRaises(
+            ValidationError,
+            lambda: ScheduleStep(step_id='9',step_idx=0)
+        )
 
         params = {'title' : 'TestStep', 'description' : 'asd', 'step_idx' : 0}
-        step = ScheduleStep('a',**params)
+        step = ScheduleStep(step_id='a',**params)
         self.assertEqual(step.title,"TestStep")
 
         params['parts'] = [common.ObjectReference(obj_id='nut')]
-        self.assertRaises(ValidationError,lambda: ScheduleStep('a',**params))
+        self.assertRaises(
+            ValidationError,
+            lambda: ScheduleStep(step_id='a',**params)
+        )
 
         params['parts'] = {'nut' : common.ObjectReference(obj_id='nut')}
-        step = ScheduleStep('a',**params)
+        step = ScheduleStep(step_id='a',**params)
         self.assertEqual(len(step.parts),1)
 
         params['duration'] = timedelta(minutes=5)
-        step = ScheduleStep('a',**params)
+        step = ScheduleStep(step_id='a',**params)
         self.assertEqual(step.duration.total_seconds(),300)
 
         data = step.as_dict()
-        self.assertEqual(step.as_dict(),ScheduleStep('a',**data).as_dict())
+        self.assertEqual(data,ScheduleStep(**data).as_dict())
         self.assertEqual(data['duration'].total_seconds(),300)
         self.assertEqual(data['title'],'TestStep')
 

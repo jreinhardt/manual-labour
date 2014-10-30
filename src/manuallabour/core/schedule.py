@@ -3,36 +3,39 @@ This module defines the Schedule class and related classes
 """
 from datetime import timedelta
 
+import jsonschema
+
 from manuallabour.core.graph import GraphStep
 from manuallabour.core.common import BOMReference
+import manuallabour.core.common as common
 from manuallabour.core.common import DataStruct, load_schema, SCHEMA_DIR
 
-class ScheduleStep(GraphStep):
+TYPES = {
+    "timedelta" : (timedelta,),
+    "objref" : (common.ObjectReference,),
+    "resref" : (common.ResourceReference,)
+}
+
+class ScheduleStep(DataStruct):
     """
     Step used in a Schedule
     """
-    def __init__(self,step_id,**kwargs):
-        kwargs.pop("step_id",None)
 
-        self.step_idx = kwargs.pop("step_idx")
-        """ Index of this step, starting with 0"""
-        self.step_nr = self.step_idx + 1
-        """ Number of this step, starting with 1"""
+    _schema = load_schema(SCHEMA_DIR,'schedule_step.json')
+    _validator = jsonschema.Draft4Validator(_schema, types=TYPES)
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
 
-        self.start = kwargs.pop("start",None)
-        """ Time when the active part of the step starts"""
-        self.stop = kwargs.pop("stop",None)
-        """ Time when the active part of the step stops"""
+        self._calculated["step_nr"] = self.step_idx + 1
 
-        GraphStep.__init__(self,step_id=step_id,**kwargs)
-    def as_dict(self):
-        res = GraphStep.as_dict(self)
-        res.pop("step_id")
-        if not self.start is None:
-            res["start"] = self.start
-        if not self.stop is None:
-            res["stop"] = self.stop
-        return res
+        for res in self.results.values():
+            assert res.created
+
+        if not "waiting" in kwargs:
+            self._calculated["waiting"] = timedelta()
+
+        if "start" in kwargs and not self.duration is None:
+            self._calculated["stop"] = self.start + self.duration
 
 class Schedule(object):
     """
@@ -63,7 +66,6 @@ class Schedule(object):
                     ScheduleStep(
                         step_idx = i,
                         start = t_start,
-                        stop = t_start + step.duration,
                         **step.as_dict()
                     )
                 )
