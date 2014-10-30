@@ -122,6 +122,29 @@ class ResourceReference(DataStruct):
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
 
+class File(DataStruct):
+    """ File resource
+
+    A File is a resource that has a filename as metadata.
+    """
+    _schema = load_schema(SCHEMA_DIR,'file.json')
+    _validator = jsonschema.Draft4Validator(_schema)
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+
+class Image(DataStruct):
+    """ Image resource
+
+    An Image is a resource that has as metadata an alternative description
+    and a filename extension indicating the format of the image.
+    """
+    _schema = load_schema(SCHEMA_DIR,'image.json')
+    _validator = jsonschema.Draft4Validator(_schema)
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+
 def validate(inst,schema_name):
     """
     validate the contents of the dictionary inst against a schema as defined
@@ -142,42 +165,3 @@ def validate(inst,schema_name):
         }
     )
     validator.validate(inst)
-
-class Resource(object):
-    """ Base class for Resources
-
-    A resource is something that has a file and metadata. A resource is
-    identified by its resource id.
-    """
-    def __init__(self, res_id):
-        if re.match(RES_ID,res_id) is None:
-            raise ValueError('Invalid res_id: %s' % res_id)
-        self.res_id = res_id
-
-
-class File(Resource):
-    """ File resource
-
-    A File is a resource that has a filename as metadata.
-    """
-    def __init__(self,res_id,**kwargs):
-        Resource.__init__(self,res_id)
-
-        validate(kwargs,'file.json')
-
-        self.filename = kwargs["filename"]
-
-class Image(Resource):
-    """ Image resource
-
-    An Image is a resource that has as metadata an alternative description
-    and a filename extension indicating the format of the image.
-    """
-    def __init__(self,res_id,**kwargs):
-        Resource.__init__(self,res_id)
-
-        validate(kwargs,'image.json')
-
-        self.alt = kwargs["alt"]
-        self.ext = kwargs["extension"]
-

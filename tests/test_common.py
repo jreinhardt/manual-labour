@@ -61,22 +61,22 @@ class TestDataStruct(unittest.TestCase):
 
 class TestResources(unittest.TestCase):
     def test_File(self):
-        f = File('asbd',filename="test.file")
+        f = File(res_id='asbd',filename="test.file")
         self.assertEqual(f.res_id,'asbd')
 
-        self.assertRaises(ValueError,lambda: File('*'))
+        self.assertRaises(ValidationError,lambda: File(res_id='*'))
 
-        self.assertRaises(ValidationError,lambda: File('bsd'))
-        self.assertRaises(ValidationError,lambda: File('bsd',foo=2))
+        self.assertRaises(ValidationError,lambda: File(res_id='bsd'))
+        self.assertRaises(ValidationError,lambda: File(res_id='bsd',foo=2))
 
     def test_Image(self):
-        i = Image('asbf',alt='a test image',extension='.png')
+        i = Image(res_id='asbf',alt='a test image',extension='.png')
         self.assertEqual(i.res_id,'asbf')
 
-        self.assertRaises(ValueError,lambda: Image('*'))
+        self.assertRaises(ValidationError,lambda: Image(res_id='*'))
 
-        self.assertRaises(ValidationError, lambda: Image('sda'))
-        self.assertRaises(ValidationError, lambda: Image('sda',foo=2))
+        self.assertRaises(ValidationError, lambda: Image(res_id='sda'))
+        self.assertRaises(ValidationError, lambda: Image(res_id='sda',foo=2))
 
 class TestObjects(unittest.TestCase):
     def test_init(self):

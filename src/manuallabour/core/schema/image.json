@@ -4,10 +4,19 @@
   "description" : "Description of an Image.",
   "type" : "object",
   "properties" : {
-    "extension" : {"type" : "string", "description" : "Extension of the image file."},
-    "alt" : {"type" : "string", "description" : "Alternative description of the image."}
+    "res_id" : {
+      "$ref" : "common.json#/res_id"
+    },
+    "extension" : {
+      "type" : "string",
+      "description" : "Extension of the image file."
+    },
+    "alt" : {
+      "type" : "string",
+      "description" : "Alternative description of the image."
+    }
   },
-  "required" : ["extension","alt"],
+  "required" : ["res_id","extension","alt"],
   "additionalProperties" : false
 }
 

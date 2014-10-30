@@ -96,12 +96,18 @@ class TestGraph(unittest.TestCase):
     def test_add_resources(self):
         store = LocalMemoryStore()
 
-        img = common.Image('wds',alt="foo",extension=".png")
+        img = common.Image(res_id='wds',alt="foo",extension=".png")
         store.add_res(img,'wds.png')
         self.assertRaises(KeyError,
-            lambda: store.add_res(common.File('wds',filename="foo"),'a.tmp')
+            lambda: store.add_res(
+                common.File(
+                    res_id='wds',
+                    filename="foo"
+                ),
+                'a.tmp'
+            )
         )
-        store.add_res(common.File('kds',filename="foo"),'a.tmp')
+        store.add_res(common.File(res_id='kds',filename="foo"),'a.tmp')
 
         steps = [GraphStep('b',
             title='With objects',
@@ -119,9 +125,9 @@ class TestGraph(unittest.TestCase):
         store.add_obj(common.Object(obj_id='b',name="Wrench"))
         store.add_obj(common.Object(obj_id='resnut',name="Result with a nut"))
 
-        img = common.Image('wds',alt="foo",extension=".png")
+        img = common.Image(res_id='wds',alt="foo",extension=".png")
         store.add_res(img,'a.png')
-        store.add_res(common.File('kds',filename="foo"),'a.tmp')
+        store.add_res(common.File(res_id='kds',filename="foo"),'a.tmp')
 
         steps = [GraphStep('a',
             title='First Step',

@@ -4,8 +4,14 @@
   "description" : "Description of a file. ",
   "type" : "object",
   "properties" : {
-    "filename" : {"type" : "string", "description" : "Filename of the file"}
+    "res_id" : {
+      "$ref" : "common.json#/res_id"
+    },
+    "filename" : {
+      "type" : "string",
+      "description" : "Filename of the file"
+    }
   },
-  "required" : ["filename"],
+  "required" : ["res_id","filename"],
   "additionalProperties" : false
 }

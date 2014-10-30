@@ -16,7 +16,10 @@ class TestStores(unittest.TestCase):
         self.assertEqual(len(list(m.iter_obj())),1)
 
         self.assertFalse(m.has_res('adf'))
-        m.add_res(File('adf',filename='test_stores.py'),'tests/test_stores.py')
+        m.add_res(
+            File(res_id='adf',filename='test_stores.py'),
+            'tests/test_stores.py'
+        )
         self.assertTrue(m.has_res('adf'))
         self.assertEqual(m.get_res('adf').filename,'test_stores.py')
         fid = urlopen(m.get_res_url('adf'))
