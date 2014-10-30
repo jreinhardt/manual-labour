@@ -60,6 +60,11 @@ class DataStruct(object):
         self._kwargs = kwargs
         self._calculated = {}
         for field, schema in self._schema["properties"].iteritems():
+            #check for missing defaults
+            if (not field in self._schema.get("required",[])) and \
+                not "default" in schema:
+                    raise ValueError("No default given for %s" % field)
+            #apply defaults
             if (not field in kwargs) and "default" in schema:
                 self._calculated[field] = copy(schema["default"])
     def __getattr__(self,name):

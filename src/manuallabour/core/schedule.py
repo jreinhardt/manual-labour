@@ -31,10 +31,7 @@ class ScheduleStep(DataStruct):
         for res in self.results.values():
             assert res.created
 
-        if not "waiting" in kwargs:
-            self._calculated["waiting"] = timedelta()
-
-        if "start" in kwargs and not self.duration is None:
+        if not (self.start is None or self.duration is None):
             self._calculated["stop"] = self.start + self.duration
 
 class Schedule(object):

@@ -31,10 +31,6 @@ class GraphStep(DataStruct):
         for res in self.results.values():
             assert res.created
 
-        if not "waiting" in kwargs:
-            self._calculated["waiting"] = timedelta()
-
-
 class Graph(object):
     """
     Container to hold a set of dependent steps

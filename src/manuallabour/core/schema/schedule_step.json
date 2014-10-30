@@ -13,7 +13,8 @@
     },
     "start" : {
       "type" : "timedelta",
-      "description" : "Start time for this step"
+      "description" : "Start time for this step",
+      "default" : null
     },
     "title" : {
       "type" : "string",
@@ -35,7 +36,8 @@
     },
     "waiting" : {
       "type" : "timedelta",
-      "description" : "waiting time required in this step"
+      "description" : "waiting time required in this step",
+      "default" : null
     },
     "requires" : {
       "type" : "array",

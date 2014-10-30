@@ -27,7 +27,8 @@
     },
     "waiting" : {
       "type" : "timedelta",
-      "description" : "waiting time required in this step"
+      "description" : "waiting time required in this step",
+      "default" : null
     },
     "requires" : {
       "type" : "array",
