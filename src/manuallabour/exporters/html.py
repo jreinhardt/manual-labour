@@ -1,8 +1,8 @@
 from manuallabour.exporters.common import ExporterBase, MarkupBase
 from jinja2 import Environment, PackageLoader
-from os.path import join, basename, splitext, exists, dirname, relpath
+from os.path import join,  exists
 from shutil import rmtree,copytree
-from os import makedirs, remove
+from os import remove
 from codecs import open
 import pkg_resources
 

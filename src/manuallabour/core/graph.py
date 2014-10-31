@@ -1,8 +1,6 @@
 """
 This module defines the Graph class and related classes
 """
-import re
-from copy import copy
 from datetime import timedelta
 
 import jsonschema

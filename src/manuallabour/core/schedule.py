@@ -5,7 +5,6 @@ from datetime import timedelta
 
 import jsonschema
 
-from manuallabour.core.graph import GraphStep
 import manuallabour.core.common as common
 from manuallabour.core.common import DataStruct, load_schema, SCHEMA_DIR
 
@@ -51,8 +50,8 @@ class ScheduleStep(DataStruct):
         res = self.as_dict(full=True)
         res["description"] = markup.markup(self,store,res["description"])
         res["attention"] = markup.markup(self,store,res["attention"])
-        for nspace in ["parts","tools","results","images","files"]:
-            res[nspace] = [ref.dereference(store) for ref in res[nspace].values()]
+        for nsp in ["parts","tools","results","images","files"]:
+            res[nsp] = [ref.dereference(store) for ref in res[nsp].values()]
         return res
 
 class Schedule(object):

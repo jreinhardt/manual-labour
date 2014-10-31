@@ -4,7 +4,7 @@ from datetime import timedelta
 from jsonschema import ValidationError
 
 import manuallabour.core.common as common
-from manuallabour.core.graph import Graph
+from manuallabour.core.graph import Graph, GraphStep
 from manuallabour.core.stores import LocalMemoryStore
 
 from manuallabour.core.schedule import *

@@ -46,9 +46,9 @@ class MarkupBase(object):
         raise NotImplementedError
     def result(self,obj,text):
         raise NotImplementedError
-    def image(self,res,url,text):
+    def image(self,res,text):
         raise NotImplementedError
-    def file(self,res,url,text):
+    def file(self,res,text):
         raise NotImplementedError
 
 class ExporterBase(object):

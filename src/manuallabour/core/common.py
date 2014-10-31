@@ -2,12 +2,9 @@
 This module defines common classes and interfaces for manual labour
 """
 
-import pkgutil
-import pkg_resources
 import json
-import re
+import pkg_resources
 from copy import copy
-from datetime import timedelta
 from os.path import join
 
 import jsonschema
@@ -63,7 +60,7 @@ class DataStruct(object):
             #check for missing defaults
             if (not field in self._schema.get("required",[])) and \
                 not "default" in schema:
-                    raise ValueError("No default given for %s" % field)
+                raise ValueError("No default given for %s" % field)
             #apply defaults
             if (not field in kwargs) and "default" in schema:
                 self._calculated[field] = copy(schema["default"])
@@ -73,7 +70,9 @@ class DataStruct(object):
         elif name in self._calculated:
             return self._calculated.get(name)
         else:
-            raise AttributeError('Class %s has no attribute %s' % (type(self),name))
+            raise AttributeError('Class %s has no attribute %s' %
+                (type(self),name)
+            )
 
     def as_dict(self,full=False):
         """
