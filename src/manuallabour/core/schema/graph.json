@@ -1,0 +1,16 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "Graph steps reference schema",
+  "description" : "Description of the steps for initialising a Graph.",
+  "type" : "object",
+  "patternProperties" : {
+    "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+      "type" : "graphstep",
+      "description" : "Reference to a Step"
+    }
+  },
+  "default" : {},
+  "additionalProperties" : false
+}
+
+

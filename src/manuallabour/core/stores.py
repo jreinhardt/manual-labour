@@ -48,6 +48,21 @@ class Store(object):
         Iterate over all (res_id,res,url) tuples
         """
         raise NotImplementedError
+    def has_step(self,step_id):
+        """
+        Return whether a step with the given step_id is stored in this Store.
+        """
+    def get_step(self,step_id):
+        """
+        Return the Step for this key. Raise KeyError if key is not known.
+        """
+        raise NotImplementedError
+    def iter_step(self):
+        """
+        Iterate over all (step_id,step) tuples
+        """
+        raise NotImplementedError
+
 
 class LocalMemoryStore(Store):
     """
@@ -58,6 +73,8 @@ class LocalMemoryStore(Store):
         self.objects = {}
         self.resources = {}
         self.paths = {}
+        self.steps = {}
+
     def has_res(self,key):
         return key in self.resources
     def get_res(self,key):
@@ -76,6 +93,7 @@ class LocalMemoryStore(Store):
             raise KeyError('ResourceID already found in Store: %s' % res_id)
         self.resources[res_id] = res
         self.paths[res_id] = abspath(path)
+
     def has_obj(self,key):
         return key in self.objects
     def get_obj(self,key):
@@ -89,3 +107,17 @@ class LocalMemoryStore(Store):
         if obj.obj_id in self.objects:
             raise KeyError('ObjectID already found in store: %s' % obj.obj_id)
         self.objects[obj.obj_id] = obj
+
+    def has_step(self,key):
+        return key in self.steps
+    def get_step(self,key):
+        return self.steps[key]
+    def iter_step(self):
+        return self.steps.iteritems()
+    def add_step(self,step):
+        """
+        Add a new step to the store. Checks for collisions
+        """
+        if step.step_id in self.steps:
+            raise KeyError('StepID already found in store: %s' % step.step_id)
+        self.steps[step.step_id] = step

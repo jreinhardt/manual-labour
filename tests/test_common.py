@@ -115,3 +115,71 @@ class TestReferences(unittest.TestCase):
         )
 
         res = ResourceReference(res_id='nut')
+
+class TestStep(unittest.TestCase):
+    def setUp(self):
+        self.params = {
+            'step_id' : 'a',
+            'title' : 'TestStep',
+            'description' : 'asd'
+        }
+    def test_init(self):
+        self.assertRaises(ValidationError,lambda: Step(step_id='a'))
+        self.assertRaises(ValidationError,lambda: Step(step_id='9'))
+
+        step = Step(**self.params)
+        self.assertEqual(step.title,"TestStep")
+
+    def test_objects(self):
+        self.assertRaises(
+            ValidationError,
+            lambda: Step(parts=[ObjectReference(obj_id='nut')],**self.params)
+        )
+
+        step = Step(
+            parts = {
+                'nut' : ObjectReference(obj_id='a'),
+                'bolt' : ObjectReference(obj_id='c')
+            },
+            tools = {'wr' : ObjectReference(obj_id='b')},
+            results = {'res' : ObjectReference(obj_id='d',created=True)},
+            **self.params
+        )
+
+        self.assertEqual(len(step.parts),2)
+        self.assertEqual(len(step.tools),1)
+        self.assertEqual(len(step.results),1)
+
+    def test_resources(self):
+        step = Step(
+            step_id='b',
+            title='With objects',
+            description='Step with objects',
+            files = {'l_kds' : ResourceReference(res_id='kds')},
+            images = {'l_wds' : ResourceReference(res_id='wds')}
+        )
+
+        self.assertEqual(len(step.files),1)
+        self.assertEqual(len(step.images),1)
+
+    def test_time(self):
+        step = Step(duration=timedelta(minutes=5),**self.params)
+        self.assertEqual(step.duration.total_seconds(),300)
+
+        self.assertRaises(
+            ValidationError,
+            lambda: Step(waiting=21,**self.params)
+        )
+
+    def test_dict(self):
+        step = Step(duration=timedelta(minutes=5),**self.params)
+        data = step.as_dict()
+
+        self.assertEqual(data,Step(**data).as_dict())
+        self.assertTrue('step_id' in data)
+        self.assertEqual(data['duration'].total_seconds(),300)
+        self.assertEqual(data['title'],'TestStep')
+
+        step = Step(waiting=timedelta(minutes=5),**self.params)
+        data = step.as_dict()
+        self.assertEqual(data['waiting'].total_seconds(),300)

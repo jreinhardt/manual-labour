@@ -1,4 +1,5 @@
 import unittest
+from datetime import timedelta
 
 from jsonschema import ValidationError
 
@@ -6,140 +7,47 @@ import manuallabour.core.common as common
 from manuallabour.core.stores import LocalMemoryStore
 from manuallabour.core.graph import *
 
-class TestGraphStep(unittest.TestCase):
-    def test_graphstep(self):
-        self.assertRaises(ValidationError,lambda: GraphStep(step_id='a'))
-        self.assertRaises(ValidationError,lambda: GraphStep(step_id='9'))
-
-        params = {'title' : 'TestStep', 'description' : 'asd'}
-        step = GraphStep(step_id='a',**params)
-        self.assertEqual(step.title,"TestStep")
-
-        params['parts'] = [common.ObjectReference(obj_id='nut')]
-        self.assertRaises(
-            ValidationError,
-            lambda: GraphStep(step_id='a',**params)
-        )
-
-        params['parts'] = {'nut' : common.ObjectReference(obj_id='nut')}
-        step = GraphStep(step_id='a',**params)
-        self.assertEqual(len(step.parts),1)
-
-        params['duration'] = timedelta(minutes=5)
-        step = GraphStep(step_id='a',**params)
-        self.assertEqual(step.duration.total_seconds(),300)
-
-        data = step.as_dict()
-        self.assertEqual(data,GraphStep(**data).as_dict())
-        self.assertTrue('step_id' in data)
-        self.assertEqual(data['duration'].total_seconds(),300)
-        self.assertEqual(data['title'],'TestStep')
-
-        params['waiting'] = timedelta(minutes=5)
-        step = GraphStep(step_id='a',**params)
-        data = step.as_dict()
-        self.assertEqual(data['waiting'].total_seconds(),300)
-
-        params['waiting'] = 21
-        self.assertRaises(
-            ValidationError,
-            lambda: GraphStep(step_id='a',**params)
-        )
-
 
 class TestGraph(unittest.TestCase):
-    def test_add_steps(self):
-        params = {'title' : 'TestStep', 'description' : 'asd'}
-        steps = [
-            GraphStep(step_id='a',**params),
-            GraphStep(step_id='b',requires=['a'],**params)
-        ]
-        g = Graph(steps,LocalMemoryStore())
-
-        steps.append(GraphStep(step_id='a',**params))
-        self.assertRaises(KeyError, lambda: Graph(steps,LocalMemoryStore()))
+    def setUp(self):
+        self.steps = {
+            'a' : GraphStep(step_id='xyz'),
+            'b' : GraphStep(step_id='yzx',requires=['a'])
+        }
+    def test_dependencies(self):
+        g = Graph(self.steps,LocalMemoryStore())
 
         self.assertEqual(g.children['a'],['b'])
         self.assertEqual(g.parents['b'],['a'])
 
-    def test_timing(self):
-        params = {
-            'title' : 'TS',
-            'description' : '',
-            'duration' : timedelta(minutes=4)
-        }
+    def test_ancestors(self):
+        g = Graph(self.steps,LocalMemoryStore())
 
-        steps = [GraphStep(step_id='a',**params)]
-        g = Graph(steps,LocalMemoryStore())
-        self.assertTrue(g.timing)
+        self.assertEqual(g.all_ancestors('a'),set([]))
+        self.assertEqual(g.all_ancestors('b'),set(['a']))
 
-        params.pop('duration')
-        steps.append(GraphStep(step_id='b',requires=['a'],**params))
-        g = Graph(steps,LocalMemoryStore())
-        self.assertFalse(g.timing)
-
-    def test_add_objects(self):
+    def test_svg(self):
         store = LocalMemoryStore()
 
-        store.add_obj(common.Object(obj_id='a',name="Nut"))
-        store.add_obj(common.Object(obj_id='b',name="Wrench"))
-        store.add_obj(common.Object(obj_id='c',name="Bolt"))
-        store.add_obj(common.Object(obj_id='d',name="Tightened NutBolt"))
-
-        steps = [GraphStep(
-            step_id='b',
-            title='With objects',
-            description='Step with objects',
-            parts = {
-                'nut' : common.ObjectReference(obj_id='a'),
-                'bolt' : common.ObjectReference(obj_id='c')
-            },
-            tools = {'wr' : common.ObjectReference(obj_id='b')},
-            results = {
-                'res' : common.ObjectReference(obj_id='d',created=True)
-            }
-        )]
-
-        g = Graph(steps,store)
-
-    def test_add_resources(self):
-        store = LocalMemoryStore()
-
-        img = common.Image(res_id='wds',alt="foo",extension=".png")
-        store.add_res(img,'wds.png')
-        self.assertRaises(KeyError,
-            lambda: store.add_res(
-                common.File(
-                    res_id='wds',
-                    filename="foo"
-                ),
-                'a.tmp'
-            )
+        store.add_res(
+            common.Image(res_id='wds',alt="foo",extension=".png"),
+            'a.png'
+        )
+        store.add_res(
+            common.Image(res_id='hds',alt="boo",extension=".png"),
+            'b.png'
         )
         store.add_res(common.File(res_id='kds',filename="foo"),'a.tmp')
 
-        steps = [GraphStep(
-            step_id='b',
-            title='With objects',
-            description='Step with objects',
-            files = {'l_kds' : common.ResourceReference(res_id='kds')},
-            images = {'l_wds' : common.ResourceReference(res_id='wds')}
-        )]
-
-        g = Graph(steps,store)
-
-    def test_graph(self):
-        store = LocalMemoryStore()
-
-        store.add_obj(common.Object(obj_id='nut',name="Nut"))
+        store.add_obj(common.Object(
+            obj_id='nut',
+            name="Nut",
+            images=[common.ResourceReference(res_id='hds')]
+        ))
         store.add_obj(common.Object(obj_id='b',name="Wrench"))
         store.add_obj(common.Object(obj_id='resnut',name="Result with a nut"))
 
-        img = common.Image(res_id='wds',alt="foo",extension=".png")
-        store.add_res(img,'a.png')
-        store.add_res(common.File(res_id='kds',filename="foo"),'a.tmp')
-
-        steps = [GraphStep(
+        store.add_step(common.Step(
             step_id='a',
             title='First Step',
             description='Do this',
@@ -152,21 +60,32 @@ class TestGraph(unittest.TestCase):
             results = {
                 'res' : common.ObjectReference(obj_id='resnut',created=True)
             }
-        ),
-        GraphStep(
+        ))
+        store.add_step(common.Step(
             step_id='b',
             title='Second Step',
             description='Do that',
-            requires=['a'],
             parts = {
                 'nut' : common.ObjectReference(obj_id='nut',quantity=2),
                 'cs' : common.ObjectReference(obj_id='resnut')
             },
             tools = {'wr' : common.ObjectReference(obj_id='b',)},
             files = {'res2' : common.ResourceReference(res_id='kds')}
-        )]
+        ))
+
+        steps = {
+            'first' : GraphStep(step_id='a'),
+            'second' : GraphStep(step_id='b',requires=['first'])
+        }
 
         g = Graph(steps,store)
 
         g.to_svg('tests/output/graph.svg')
+        g.to_svg('tests/output/graph_obj.svg',with_objects=True)
+        g.to_svg('tests/output/graph_res.svg',with_resources=True)
+        g.to_svg(
+            'tests/output/graph_all.svg',
+            with_objects=True,
+            with_resources=True
+        )
 

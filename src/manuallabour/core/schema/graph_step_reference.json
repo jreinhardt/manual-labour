@@ -1,0 +1,22 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "Graph step reference schema",
+  "description" : "Description of a step reference for graphs",
+  "type" : "object",
+  "properties" : {
+    "step_id" : {
+      "$ref" : "common.json#/res_id"
+    },
+    "requires" : {
+      "type" : "array",
+      "description" : "step_ids of prerequisite steps",
+      "items" : {
+        "$ref" : "common.json#/step_id"
+      },
+      "default" : []
+    }
+  },
+  "required" : ["step_id"],
+  "additionalProperties" : false
+}
+

@@ -7,15 +7,6 @@
     "step_id" : {
       "$ref" : "common.json#/res_id"
     },
-    "step_idx" : {
-      "type" : "number",
-      "description" : "Index for this step"
-    },
-    "start" : {
-      "type" : "timedelta",
-      "description" : "Start time for this step",
-      "default" : null
-    },
     "title" : {
       "type" : "string",
       "description" : "Title for this step"
@@ -38,14 +29,6 @@
       "type" : "timedelta",
       "description" : "waiting time required in this step",
       "default" : null
-    },
-    "requires" : {
-      "type" : "array",
-      "description" : "step_ids of prerequisite steps",
-      "items" : {
-        "$ref" : "common.json#/step_id"
-      },
-      "default" : []
     },
     "parts" : {
       "$ref" : "common.json#/object_namespace"
@@ -71,6 +54,6 @@
       "default" : []
     }
   },
-  "required" : ["step_id","step_idx","title","description"],
+  "required" : ["step_id","title","description"],
   "additionalProperties" : false
 }

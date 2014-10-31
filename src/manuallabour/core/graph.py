@@ -1,92 +1,90 @@
 """
 This module defines the Graph class and related classes
 """
-from datetime import timedelta
 
 import jsonschema
 
-from manuallabour.core.common import DataStruct, load_schema, SCHEMA_DIR
+from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR
 import manuallabour.core.common as common
 
-TYPES = {
-    "timedelta" : (timedelta,),
-    "objref" : (common.ObjectReference,),
-    "resref" : (common.ResourceReference,)
-}
-
-
-class GraphStep(DataStruct):
+class GraphStep(ReferenceBase):
     """
-    Step used in a Graph.
+    Reference to a Step for use in a Graph.
     """
-    _schema = load_schema(SCHEMA_DIR,'graph_step.json')
-    _validator = jsonschema.Draft4Validator(_schema, types=TYPES)
+    _schema = load_schema(SCHEMA_DIR,'graph_step_reference.json')
+    _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
-
-        for res in self.results.values():
-            assert res.created
+        ReferenceBase.__init__(self,**kwargs)
+    def dereference(self,store):
+        res = self.as_dict(full=True)
+        step = store.get_step(self.step_id)
+        res.update(step.dereference(store))
+        return res
 
 class Graph(object):
     """
     Container to hold a set of dependent steps
+
+    steps is a dictionary of alias,GraphStep tuples
     """
     def __init__(self,steps,store):
-        self.steps = {}
+        self.steps = steps
 
-        #dependency graph
         self.children = {}
+        """Dict mapping the alias of a step to aliases of all its children"""
         self.parents = {}
+        """Dict mapping the alias of a step to aliases of its parent"""
 
         self.store = store
         """A datastructure to store object and resource data"""
 
-        self.timing = True
-        """Indicates, whether all steps in this graph contain timing infos"""
+        for alias,ref in steps.iteritems():
+            self.parents[alias] = ref.requires
 
-        for step in steps:
-            self._add_step(step)
+            if not alias in self.children:
+                self.children[alias] = []
 
-    def _add_step(self,step):
-        """ Add a step to graph
+            for req in ref.requires:
+                if not req in self.children:
+                    self.children[req] = [alias]
+                else:
+                    self.children[req].append(alias)
 
-        Adds a new step to the graph and registers the dependencies expressed
-        by a list of step_ids of steps that are required by this step.
-        """
-        step_id = step.step_id
-        if step_id in self.steps:
-            raise KeyError('StepID already found in graph: %s' % step_id)
-        self.steps[step_id] = step
-
-        #update dependency graph in a way that order of step insertions
-        #doesn't mattern
-        self.parents[step_id] = step.requires
-
-        if not step_id in self.children:
-            self.children[step_id] = []
-        for req in step.requires:
-            if not req in self.children:
-                self.children[req] = [step_id]
-            else:
-                self.children[req].append(step_id)
-
-        if step.duration is None:
-            self.timing = False
-
-    def all_ancestors(self,step_id):
+    def all_ancestors(self,alias):
         """ Return set of all ancestor steps
 
-        Returns a set with all steps that are a direct or indirect
-        prerequisite for the step with the id step_id.
+        Returns a set with aliases of all steps that are a direct or indirect
+        prerequisite for the step with the alias alias.
         """
         res = set([])
-        for parent in self.parents[step_id]:
+        for parent in self.parents[alias]:
             res.add(parent)
             res.update(self.all_ancestors(parent))
         return res
 
-    def to_svg(self,path):
+    def _objs_to_svg(self,graph,s_id,objs,attr,opt={},rev=False,res=False):
+        """
+        add objects in the list objs to graph, with edge attributes attr, and
+        if obj is optional, opt.
+        If rev is True, reverse the edge, if res is True, also add links to
+        resources.
+        """
+        for obj in objs:
+            o_id = 'o_' + obj["obj_id"]
+            if obj["optional"]:
+                attr.update(opt)
+            attr["label"] = obj["quantity"]
+            if rev:
+                graph.add_edge(s_id,o_id,**attr)
+            else:
+                graph.add_edge(o_id,s_id,**attr)
+            if res:
+                for img in obj["images"]:
+                    graph.add_edge('r_' + img["res_id"],o_id)
+
+
+    def to_svg(self,path,with_objects=False,with_resources=False):
         """
         Render graph structure to svg file
         """
@@ -94,62 +92,69 @@ class Graph(object):
 
         graph = pgv.AGraph(directed=True,strict=False)
 
-        #Add objects
-        for o_id, obj in self.store.iter_obj():
-            o_id = 'o_' + o_id
-            graph.add_node(o_id,label=obj.name,shape='rectangle')
+        #Steps
+        for alias,ref in self.steps.iteritems():
+            s_id = 's_' + alias
+            step_dict = ref.dereference(self.store)
+            graph.add_node(s_id,label=step_dict["title"])
 
-        for r_id, res, _ in self.store.iter_res():
-            r_id = 'r_' + r_id
-            graph.add_node(r_id,label=res.res_id[:6],shape='diamond')
+        for alias,children in self.children.iteritems():
+            for child in children:
+                graph.add_edge('s_' + alias,'s_' + child)
 
-        #Add nodes
-        for s_id,step in self.steps.iteritems():
-            s_id = 's_' + s_id
-            graph.add_node(s_id,label=step.title)
+        #Objects
+        if with_objects:
+            for o_id, obj in self.store.iter_obj():
+                o_id = 'o_' + o_id
+                graph.add_node(o_id,label=obj.name,shape='rectangle')
 
-            #add object dependencies
-            for obj in step.parts.values():
-                o_id = 'o_' + obj.obj_id
-                attr = {'color' : 'blue','label' : obj.quantity}
-                if obj.optional:
-                    attr['style'] = 'dashed'
-                graph.add_edge(o_id,s_id,**attr)
+            for alias,ref in self.steps.iteritems():
+                s_id = 's_' + alias
+                step_dict = ref.dereference(self.store)
 
-                for img in self.store.get_obj(obj.obj_id).images:
-                    graph.add_edge('r_' + img.res_id,o_id)
+                self._objs_to_svg(
+                    graph,
+                    s_id,
+                    step_dict["parts"],
+                    {'color' : 'blue'},
+                    opt={'style' : 'dashed'},
+                    rev=False,
+                    res=with_resources
+                )
 
-            for obj in step.tools.values():
-                o_id = 'o_' + obj.obj_id
-                attr = {'color' : 'red','label' : obj.quantity}
-                if obj.optional:
-                    attr['style'] = 'dashed'
-                graph.add_edge(o_id,s_id,**attr)
+                self._objs_to_svg(
+                    graph,
+                    s_id,
+                    step_dict["tools"],
+                    {'color' : 'red'},
+                    opt={'style' : 'dashed'},
+                    rev=False,
+                    res=with_resources
+                )
 
-                for img in self.store.get_obj(obj.obj_id).images:
-                    graph.add_edge('r_' + img.res_id,o_id)
+                self._objs_to_svg(
+                    graph,
+                    s_id,
+                    step_dict["results"],
+                    {'color' : 'brown'},
+                    opt={'style' : 'dashed'},
+                    rev=True,
+                    res=with_resources
+                )
+        #Resources
+        if with_resources:
+            for r_id, res, _ in self.store.iter_res():
+                r_id = 'r_' + r_id
+                graph.add_node(r_id,label=res.res_id[:6],shape='diamond')
 
-            for obj in step.results.values():
-                o_id = 'o_' + obj.obj_id
-                attr = {'color' : 'brown','label' : obj.quantity}
-                if obj.optional:
-                    attr['style'] = 'dashed'
-                #results are always created
-                graph.add_edge(s_id,o_id,**attr)
+            for alias,ref in self.steps.iteritems():
+                s_id = 's_' + alias
+                step = self.store.get_step(ref.step_id)
 
-                for img in self.store.get_obj(obj.obj_id).images:
-                    graph.add_edge('r_' + img.res_id,o_id)
-
-            #add resource dependencies
-            for res in step.files.values():
-                graph.add_edge('r_' + res.res_id,s_id,color='orange')
-            for res in step.images.values():
-                graph.add_edge('r_' + res.res_id,s_id,color='green')
-
-        #Add step dependencies
-        for s_id in self.steps:
-            for child in self.children[s_id]:
-                graph.add_edge('s_' + s_id,'s_' + child)
+                for res in step.files.values():
+                    graph.add_edge('r_' + res.res_id,s_id,color='orange')
+                for res in step.images.values():
+                    graph.add_edge('r_' + res.res_id,s_id,color='green')
 
         graph.draw(path,prog='dot')
 

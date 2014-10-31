@@ -6,6 +6,7 @@ import json
 import pkg_resources
 from copy import copy
 from os.path import join
+from datetime import timedelta
 
 import jsonschema
 
@@ -153,7 +154,7 @@ class ObjectReference(ReferenceBase):
         assert not (self.created and self.optional)
     def dereference(self,store):
         res = self.as_dict(full=True)
-        res.update(store.get_obj(self.obj_id).as_dict())
+        res.update(store.get_obj(self.obj_id).as_dict(full=True))
         res["images"] = [ref.dereference(store) for ref in res["images"]]
         return res
 
@@ -171,3 +172,33 @@ class Object(DataStruct):
 
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
+
+class Step(DataStruct):
+    """
+    One Step of the instructions
+    """
+    _schema = load_schema(SCHEMA_DIR,'step.json')
+    _validator = jsonschema.Draft4Validator(
+        _schema,
+        types={
+            "timedelta" : (timedelta,),
+            "objref" : (ObjectReference,),
+            "resref" : (ResourceReference,)
+        }
+    )
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+
+        for res in self.results.values():
+            assert res.created
+
+    def dereference(self,store):
+        """
+        Resolve all references and return content of step as a dict
+        flattens namespaces to lists
+        """
+        res = self.as_dict(full=True)
+        for nsp in ["parts","tools","results","images","files"]:
+            res[nsp] = [ref.dereference(store) for ref in res[nsp].values()]
+        return res
