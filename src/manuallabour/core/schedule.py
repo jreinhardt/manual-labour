@@ -24,6 +24,11 @@ class BOMReference(DataStruct):
 
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
+    def dereference(self,store):
+        res = self.as_dict(full=True)
+        res.update(store.get_obj(self.obj_id).as_dict())
+        res["images"] = [ref.dereference(store) for ref in res["images"]]
+        return res
 
 class ScheduleStep(DataStruct):
     """
@@ -42,6 +47,13 @@ class ScheduleStep(DataStruct):
 
         if not (self.start is None or self.duration is None):
             self._calculated["stop"] = self.start + self.duration
+    def markup(self,store,markup):
+        res = self.as_dict(full=True)
+        res["description"] = markup.markup(self,store,res["description"])
+        res["attention"] = markup.markup(self,store,res["attention"])
+        for nspace in ["parts","tools","results","images","files"]:
+            res[nspace] = [ref.dereference(store) for ref in res[nspace].values()]
+        return res
 
 class Schedule(object):
     """

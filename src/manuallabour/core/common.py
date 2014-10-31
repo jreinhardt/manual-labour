@@ -75,34 +75,18 @@ class DataStruct(object):
         else:
             raise AttributeError('Class %s has no attribute %s' % (type(self),name))
 
-    def as_dict(self):
-        return self._kwargs
-
-
-class Object(DataStruct):
-    """
-    An object is a physical object that is in some sense relevant to the
-    assembly process. It can be either a part that is consumed in a step, a
-    tool that isn't, or a result that is created in a step.
-    """
-    _schema = load_schema(SCHEMA_DIR,'object.json')
-    _validator = jsonschema.Draft4Validator(_schema)
-
-    def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
-
-class ObjectReference(DataStruct):
-    """
-    A reference to an object that is stored by its obj_id in an object store.
-
-    A object can not be created and optional at the same time.
-    """
-    _schema = load_schema(SCHEMA_DIR,'obj_ref.json')
-    _validator = jsonschema.Draft4Validator(_schema)
-
-    def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
-        assert not (self.created and self.optional)
+    def as_dict(self,full=False):
+        """
+        Return the content of this instance as a dict.
+        full=True includes also default and calculated values
+        """
+        if full:
+            res = {}
+            res.update(self._kwargs)
+            res.update(self._calculated)
+            return res
+        else:
+            return self._kwargs
 
 class ResourceReference(DataStruct):
     """
@@ -113,6 +97,11 @@ class ResourceReference(DataStruct):
 
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
+    def dereference(self,store):
+        res = self.as_dict(full=True)
+        res.update(store.get_res(self.res_id).as_dict())
+        res["url"] = store.get_res_url(self.res_id)
+        return res
 
 class File(DataStruct):
     """ File resource
@@ -137,6 +126,39 @@ class Image(DataStruct):
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
 
+class ObjectReference(DataStruct):
+    """
+    A reference to an object that is stored by its obj_id in an object store.
+
+    A object can not be created and optional at the same time.
+    """
+    _schema = load_schema(SCHEMA_DIR,'obj_ref.json')
+    _validator = jsonschema.Draft4Validator(_schema)
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+        assert not (self.created and self.optional)
+    def dereference(self,store):
+        res = self.as_dict(full=True)
+        res.update(store.get_obj(self.obj_id).as_dict())
+        res["images"] = [ref.dereference(store) for ref in res["images"]]
+        return res
+
+class Object(DataStruct):
+    """
+    An object is a physical object that is in some sense relevant to the
+    assembly process. It can be either a part that is consumed in a step, a
+    tool that isn't, or a result that is created in a step.
+    """
+    _schema = load_schema(SCHEMA_DIR,'object.json')
+    _validator = jsonschema.Draft4Validator(
+        _schema,
+        types={'resref' : (ResourceReference,)}
+    )
+
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+
 def validate(inst,schema_name):
     """
     validate the contents of the dictionary inst against a schema as defined
@@ -157,3 +179,4 @@ def validate(inst,schema_name):
         }
     )
     validator.validate(inst)
+

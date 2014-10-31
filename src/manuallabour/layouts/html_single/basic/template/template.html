@@ -8,22 +8,32 @@
 		<h2>BOM</h2>
 		<ul>
 			{% for part in parts %}
-			{% if part.optional > 0 %}
-			<li>{{part.quantity}}x (+{{part.optional}}x) {{part.name}}</li>
-			{%else%}
-			<li>{{part.quantity}}x {{part.name}}</li>
+			<li>
+			{% if part.images | length > 0 %}
+			<a href="{{part.images[0].url}}">{{part.quantity}}x {{part.name}}</a>
+			{% else %}
+			{{part.quantity}}x {{part.name}}
 			{% endif %}
+			{% if part.optional > part.optional %}
+			(+{{part.optional}}x)
+			{% endif %}
+			</li>
 			{% endfor %}
 		</ul>
 
 		<h2>Required Tools</h2>
 		<ul>
 			{% for tool in tools %}
-			{% if tool.optional > 0 %}
-			<li>{{tool.quantity}}x ({{tool.optional}}x) {{tool.name}}</li>
-			{%else%}
-			<li>{{tool.quantity}}x {{tool.name}}</li>
+			<li>
+			{% if tool.images | length > 0 %}
+			<a href="{{tool.images[0].url}}">{{tool.quantity}}x {{tool.name}}</a>
+			{% else %}
+			{{tool.quantity}}x {{tool.name}}
 			{% endif %}
+			{% if tool.optional > tool.optional %}
+			(+{{tool.optional}}x)
+			{% endif %}
+			</li>
 			{% endfor %}
 		</ul>
 
@@ -32,11 +42,11 @@
 		{% if step.parts %}
 		<h3>Parts</h3>
 		<ul>
-			{% for ref, part in step.parts.iteritems() %}
-			{% if ref.optional > 0 %}
-			<li> {{ref.quantity}}x ({{ref.optional}}x) {{part.name}}</li>
+			{% for part in step.parts %}
+			{% if part.optional > 0 %}
+			<li> {{part.quantity}}x ({{part.optional}}x) {{part.name}}</li>
 			{% else %}
-			<li> {{ref.quantity}}x {{part.name}}</li>
+			<li> {{part.quantity}}x {{part.name}}</li>
 			{% endif %}
 			{% endfor %}
 		</ul>
@@ -44,11 +54,11 @@
 		{% if step.tools %}
 		<h3>Tools</h3>
 		<ul>
-			{% for ref, tool in step.tools.iteritems() %}
-			{% if ref.optional > 0 %}
-			<li> {{ref.quantity}}x ({{ref.optional}}x) {{tool.name}}</li>
+			{% for tool in step.tools %}
+			{% if tool.optional > 0 %}
+			<li> {{tool.quantity}}x ({{tool.optional}}x) {{tool.name}}</li>
 			{% else %}
-			<li> {{ref.quantity}}x {{tool.name}}</li>
+			<li> {{tool.quantity}}x {{tool.name}}</li>
 			{% endif %}
 			{% endfor %}
 		</ul>
@@ -57,8 +67,8 @@
 		{% if step.files %}
 		<h3>Files</h3>
 		<ul>
-			{% for ref, file, url in step.files %}
-			<li> <a href="{{url}}">{{file.filename}}</a></li>
+			{% for file in step.files %}
+			<li> <a href="{{file.url}}">{{file.filename}}</a></li>
 			{% endfor %}
 		</ul>
 		{% endif %}
@@ -74,11 +84,11 @@
 		{% if step.results %}
 		<h3>Results</h3>
 		<ul>
-			{% for ref, result in step.results.iteritems() %}
-			{% if ref.optional > 0 %}
-			<li> {{ref.quantity}}x ({{ref.optional}}x) {{result.name}}</li>
+			{% for result in step.results %}
+			{% if result.optional > 0 %}
+			<li> {{result.quantity}}x ({{result.optional}}x) {{result.name}}</li>
 			{% else %}
-			<li> {{ref.quantity}}x {{result.name}}</li>
+			<li> {{result.quantity}}x {{result.name}}</li>
 			{% endif %}
 			{% endfor %}
 		</ul>

@@ -25,20 +25,18 @@ class MarkupBase(object):
         #get the resource or object
         if func in ["part","tool","result"]:
             if func == "part":
-                obj = store.get_obj(step.parts[m.group(2)].obj_id)
+                obj = step.parts[m.group(2)].dereference(store)
             elif func == "tool":
-                obj = store.get_obj(step.tools[m.group(2)].obj_id)
+                obj = step.tools[m.group(2)].dereference(store)
             elif func == "result":
-                obj = store.get_obj(step.results[m.group(2)].obj_id)
+                obj = step.results[m.group(2)].dereference(store)
             return callback(obj,kwargs.get("text",""))
         elif func in ["image","file"]:
             if func == "image":
-                res_id = step.images[m.group(2)].res_id
+                res = step.images[m.group(2)].dereference(store)
             elif func == "file":
-                res_id = step.files[m.group(2)].res_id
-            res = store.get_res(res_id)
-            url = store.get_res_url(res_id)
-            return callback(res,url,kwargs.get("text",""))
+                res = step.files[m.group(2)].dereference(store)
+            return callback(res,kwargs.get("text",""))
         else:
             raise ValueError("Unknown callback %s" % func)
 

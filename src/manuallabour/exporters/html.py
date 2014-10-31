@@ -13,21 +13,21 @@ class HTMLMarkup(MarkupBase):
     def __init__(self,store):
         self.store = store
     def _handle_obj(self,obj,text):
-        if obj.images:
-            url = self.store.get_res_url(obj.images[0].res_id)
-            return "<a href='%s'>%s</a>" % (url,text or obj.name)
+        if obj["images"]:
+            url = self.store.get_res_url(obj["images"][0]["res_id"])
+            return "<a href='%s'>%s</a>" % (url,text or obj["name"])
         else:
-            return text or obj.name
+            return text or obj["name"]
     def part(self,obj,text):
         return self._handle_obj(obj,text)
     def tool(self,obj,text):
         return self._handle_obj(obj,text)
     def result(self,obj,text):
         return self._handle_obj(obj,text)
-    def image(self,res,url,text):
-        return "<img src='%s' alt='%s'>" % (url,res.alt)
-    def file(self,res,url,text):
-        return "<a href='%s'>%s</a>" % (url,text or res.filename)
+    def image(self,res,text):
+        return "<img src='%s' alt='%s'>" % (res["url"],res["alt"])
+    def file(self,res,text):
+        return "<a href='%s'>%s</a>" % (res["url"],text or res["filename"])
 
 class SinglePageHTMLExporter(ExporterBase):
     def __init__(self,layout):
@@ -56,63 +56,12 @@ class SinglePageHTMLExporter(ExporterBase):
         store = schedule.store
         markup = HTMLMarkup(store)
 
-        parts = []
-        for ref in schedule.parts.values():
-            part = store.get_obj(ref.obj_id)
-            part_dict = part.as_dict()
-            part_dict["images"] = list(
-                (ref,store.get_res(ref.res_id),store.get_res_url(ref.res_id))
-                    for ref in part.images
-            )
-            part_dict["quantity"] = ref.quantity
-            part_dict["optional"] = ref.optional
-            parts.append(part_dict)
-
-        tools = []
-        for ref in schedule.tools.values():
-            tool = store.get_obj(ref.obj_id)
-            tool_dict = tool.as_dict()
-            tool_dict["images"] = list(
-                (ref,store.get_res(ref.res_id),store.get_res_url(ref.res_id))
-                    for ref in tool.images
-            )
-            tool_dict["quantity"] = ref.quantity
-            tool_dict["optional"] = ref.optional
-            tools.append(tool_dict)
+        parts = [ref.dereference(store) for ref in schedule.parts.values()]
+        tools = [ref.dereference(store) for ref in schedule.tools.values()]
 
         steps = []
         for step in schedule.steps:
-            step_dict = step.as_dict()
-            step_dict["step_nr"] = step.step_idx + 1
-            step_dict["description"] = markup.markup(
-                step,
-                store,
-                step_dict["description"]
-            )
-            step_dict["attention"] = markup.markup(
-                step,
-                store,
-                step_dict.get("attention","")
-            )
-            step_dict["parts"] = dict(
-                (ref,store.get_obj(ref.obj_id)) for ref in step.parts.values()
-            )
-            step_dict["tools"] = dict(
-                (ref,store.get_obj(ref.obj_id)) for ref in step.tools.values()
-            )
-            step_dict["results"] = dict(
-                (ref,store.get_obj(ref.obj_id))
-                    for ref in step.results.values()
-            )
-            step_dict["files"] = list(
-                (ref,store.get_res(ref.res_id),store.get_res_url(ref.res_id))
-                    for ref in step.files.values()
-            )
-            step_dict["images"] = list(
-                (ref,store.get_res(ref.res_id),store.get_res_url(ref.res_id))
-                    for ref in step.images.values()
-            )
-            steps.append(step_dict)
+            steps.append(step.markup(store,markup))
 
         template = self.env.get_template('template.html')
 
