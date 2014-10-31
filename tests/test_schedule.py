@@ -45,7 +45,6 @@ class TestScheduleStep(unittest.TestCase):
         self.assertEqual(step_dict["step_idx"],0)
         self.assertEqual(step_dict["title"],"First Step")
         self.assertEqual(step_dict["images"][0]["filename"],"test.tmp")
-        self.assertEqual(step_dict["stop"].total_seconds(),135*60)
 
         step = ScheduleStep(step_id='b',step_idx=2)
         step_dict = step.dereference(store)

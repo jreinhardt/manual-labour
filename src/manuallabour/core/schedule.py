@@ -46,10 +46,6 @@ class ScheduleStep(ReferenceBase):
         res = self.as_dict(full=True)
         step = store.get_step(self.step_id)
         res.update(step.dereference(store))
-        if res["start"] is None or res["duration"] is None:
-            res["stop"] = None
-        else:
-            res["stop"] = res["start"] + res["duration"]
         return res
 
     def markup(self,store,markup):
@@ -262,6 +258,7 @@ def schedule_greedy(graph, targets = None):
         scheduled[alias] = ScheduleStep(
             step_id=cand.step_id,
             start = timedelta(seconds=cand_start),
+            stop = timedelta(seconds=cand_stop),
             step_idx = len(scheduled)
         )
         possible.pop(alias)

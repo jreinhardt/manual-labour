@@ -15,6 +15,11 @@
       "type" : "timedelta",
       "description" : "Start time for this step",
       "default" : null
+    },
+    "stop" : {
+      "type" : "timedelta",
+      "description" : "Stop time for this step",
+      "default" : null
     }
   },
   "required" : ["step_id","step_idx"],
