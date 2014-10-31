@@ -158,25 +158,3 @@ class Object(DataStruct):
 
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
-
-def validate(inst,schema_name):
-    """
-    validate the contents of the dictionary inst against a schema as defined
-    in the manuallabour.core schema directory.
-    """
-    schema = json.loads(
-        pkgutil.get_data(
-            'manuallabour.core',
-            'schema/%s' % schema_name
-        )
-    )
-    validator = jsonschema.Draft4Validator(
-        schema,
-        types={
-            "timedelta" : (timedelta,),
-            "objref" : (ObjectReference,),
-            "resref" : (ResourceReference,)
-        }
-    )
-    validator.validate(inst)
-

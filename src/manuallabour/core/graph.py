@@ -8,7 +8,6 @@ from datetime import timedelta
 import jsonschema
 
 from manuallabour.core.common import DataStruct, load_schema, SCHEMA_DIR
-from manuallabour.core.common import validate
 import manuallabour.core.common as common
 
 TYPES = {
