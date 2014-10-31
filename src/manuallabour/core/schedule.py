@@ -6,7 +6,8 @@ from datetime import timedelta
 import jsonschema
 
 import manuallabour.core.common as common
-from manuallabour.core.common import DataStruct, load_schema, SCHEMA_DIR
+from manuallabour.core.common import ReferenceBase, DataStruct, load_schema,\
+    SCHEMA_DIR
 
 TYPES = {
     "timedelta" : (timedelta,),
@@ -14,7 +15,7 @@ TYPES = {
     "resref" : (common.ResourceReference,)
 }
 
-class BOMReference(DataStruct):
+class BOMReference(ReferenceBase):
     """
     An object with counters.
     """
@@ -22,7 +23,7 @@ class BOMReference(DataStruct):
     _validator = jsonschema.Draft4Validator(_schema,types=TYPES)
 
     def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
+        ReferenceBase.__init__(self,**kwargs)
     def dereference(self,store):
         res = self.as_dict(full=True)
         res.update(store.get_obj(self.obj_id).as_dict())

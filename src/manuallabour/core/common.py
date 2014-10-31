@@ -87,7 +87,21 @@ class DataStruct(object):
         else:
             return self._kwargs
 
-class ResourceReference(DataStruct):
+class ReferenceBase(DataStruct):
+    """
+    A reference links to something in a store and can hold additional
+    information. It can be dereferenced.
+    """
+    def __init__(self,**kwargs):
+        DataStruct.__init__(self,**kwargs)
+    def dereference(self,store):
+        """
+        Dereference the reference and expand the referenced object and all
+        fields in the reference into a dictionary.
+        """
+        raise NotImplementedError()
+
+class ResourceReference(ReferenceBase):
     """
     A reference to a resource that is stored by res_id in a resource store.
     """
@@ -95,7 +109,7 @@ class ResourceReference(DataStruct):
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
+        ReferenceBase.__init__(self,**kwargs)
     def dereference(self,store):
         res = self.as_dict(full=True)
         res.update(store.get_res(self.res_id).as_dict())
@@ -125,7 +139,7 @@ class Image(DataStruct):
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
 
-class ObjectReference(DataStruct):
+class ObjectReference(ReferenceBase):
     """
     A reference to an object that is stored by its obj_id in an object store.
 
@@ -135,7 +149,7 @@ class ObjectReference(DataStruct):
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
+        ReferenceBase.__init__(self,**kwargs)
         assert not (self.created and self.optional)
     def dereference(self,store):
         res = self.as_dict(full=True)
