@@ -4,54 +4,37 @@ from datetime import timedelta
 from manuallabour.exporters.html import *
 import manuallabour.core.common as common
 from manuallabour.core.graph import Graph,GraphStep
-from manuallabour.core.schedule import Schedule, schedule_greedy
+from manuallabour.core.schedule import Schedule, ScheduleStep
 from manuallabour.core.stores import LocalMemoryStore
+
+from test_schedule import schedule_example
 
 class TestExporter(unittest.TestCase):
     def setUp(self):
         self.store = LocalMemoryStore()
-        self.store.add_step(common.Step(
-            step_id='a',
-            title="First",
-            description="Do this",
-            duration=timedelta(minutes=4)
-        ))
-        self.store.add_step(common.Step(
-            step_id='b',
-            title="Second",
-            description="Do that",
-            duration=timedelta(minutes=6)
-        ))
-        self.store.add_step(common.Step(
-            step_id='c',
-            title="Third",
-            description="And this",
-            duration=timedelta(minutes=4)
-        ))
-        self.store.add_step(common.Step(
-            step_id='d',
-            title="Fourth",
-            description="or this",
-        ))
+        schedule_example(self.store)
 
-        self.steps_timed = {
-            's1' : GraphStep(step_id='a'),
-            'b1' : GraphStep(step_id='b',requires=['s1']),
-            's2' : GraphStep(step_id='c',requires=['b1'])
-        }
+        t1 = timedelta()
+        t2 = timedelta(minutes=25)
+        t3 = timedelta(minutes=45)
+        t4 = timedelta(minutes=90)
 
-        self.steps_untimed = {
-            's1' : GraphStep(step_id='a'),
-            'b1' : GraphStep(step_id='b',requires=['s1']),
-            's2' : GraphStep(step_id='d',requires=['s1'])
-        }
+        steps = [
+            ScheduleStep(step_id='a',step_idx=0),
+            ScheduleStep(step_id='b',step_idx=1),
+            ScheduleStep(step_id='c',step_idx=2)
+        ]
+        steps_timed = [
+            ScheduleStep(step_id='a',step_idx=0,start=t1,stop=t2),
+            ScheduleStep(step_id='b',step_idx=1,start=t2,stop=t3),
+            ScheduleStep(step_id='c',step_idx=2,start=t3,stop=t4)
+        ]
 
+        self.schedule = Schedule(steps,self.store)
+        self.schedule_timed = Schedule(steps_timed,self.store)
     def test_html_single(self):
-        g = Graph(self.steps_timed,self.store)
-        steps = schedule_greedy(g)
-
-        s = Schedule(steps,g.store)
         e = SinglePageHTMLExporter('basic')
 
-        e.export(s,'tests/output/html_single')
+        e.export(self.schedule,'tests/output/html_single')
+        e.export(self.schedule_timed,'tests/output/html_single_timed')
 
