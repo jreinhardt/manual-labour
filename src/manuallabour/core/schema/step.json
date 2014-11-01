@@ -5,7 +5,7 @@
   "type" : "object",
   "properties" : {
     "step_id" : {
-      "$ref" : "common.json#/res_id"
+      "$ref" : "common.json#/step_id"
     },
     "title" : {
       "type" : "string",
