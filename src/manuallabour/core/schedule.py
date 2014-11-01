@@ -26,7 +26,7 @@ class BOMReference(ReferenceBase):
         ReferenceBase.__init__(self,**kwargs)
     def dereference(self,store):
         res = self.as_dict(full=True)
-        res.update(store.get_obj(self.obj_id).as_dict())
+        res.update(store.get_obj(self.obj_id).as_dict(full=True))
         res["images"] = [ref.dereference(store) for ref in res["images"]]
         return res
 
@@ -41,6 +41,8 @@ class ScheduleStep(ReferenceBase):
         DataStruct.__init__(self,**kwargs)
 
         self._calculated["step_nr"] = self.step_idx + 1
+        if ("start" in kwargs) != ("stop" in kwargs):
+            raise ValueError("Both or none of start and stop must be given")
 
     def dereference(self,store):
         res = self.as_dict(full=True)
@@ -50,8 +52,9 @@ class ScheduleStep(ReferenceBase):
 
     def markup(self,store,markup):
         res = self.dereference(store)
-        res["description"] = markup.markup(self,store,res["description"])
-        res["attention"] = markup.markup(self,store,res["attention"])
+        step = store.get_step(self.step_id)
+        res["description"] = markup.markup(step,store,res["description"])
+        res["attention"] = markup.markup(step,store,res["attention"])
         return res
 
 class Schedule(object):
