@@ -4,6 +4,7 @@ This module defines common classes and interfaces for manual labour
 
 import json
 import pkg_resources
+import hashlib
 from copy import copy
 from os.path import join
 from datetime import timedelta
@@ -117,8 +118,33 @@ class ResourceReference(ReferenceBase):
         res["url"] = store.get_res_url(self.res_id)
         return res
 
-class File(DataStruct):
-    """ File resource
+class Resource(DataStruct):
+    """
+    Base class for data that is associated with a file.
+    """
+    @classmethod
+    def calculate_checksum(cls,**kwargs):
+        """
+        Utility function for calculating a sha512 checksum over the keyword
+        arguments (excluding the res_id). This can be useful as a res_id or a
+        part of if.
+
+        Returns a string
+        """
+        if not "res_id" in kwargs:
+            kwargs["res_id"] = "dummy"
+        cls._validator.validate(kwargs)
+        kwargs.pop("res_id")
+
+        m = hashlib.sha512()
+        #sort by key to get reproducible order
+        for k,v in sorted(kwargs.iteritems(),key=lambda x: x[0]):
+            m.update(v)
+        return m.hexdigest()
+
+class File(Resource):
+    """
+    File resource
 
     A File is a resource that has a filename as metadata.
     """
@@ -126,9 +152,9 @@ class File(DataStruct):
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
+        Resource.__init__(self,**kwargs)
 
-class Image(DataStruct):
+class Image(Resource):
     """ Image resource
 
     An Image is a resource that has as metadata an alternative description
@@ -138,7 +164,7 @@ class Image(DataStruct):
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
+        Resource.__init__(self,**kwargs)
 
 class ObjectReference(ReferenceBase):
     """
@@ -172,6 +198,29 @@ class Object(DataStruct):
 
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
+    @classmethod
+    def calculate_checksum(cls,**kwargs):
+        """
+        Utility function for calculating a sha512 checksum over the keyword
+        arguments (excluding the obj_id). This can be useful as a obj_id or a
+        part of if.
+
+        Returns a string
+        """
+        if not "obj_id" in kwargs:
+            kwargs["obj"] = "dummy"
+        cls._validator.validate(kwargs)
+        kwargs.pop("obj_id")
+
+        m = hashlib.sha512()
+        #sort by key to get reproducible order
+        for k,v in sorted(kwargs.iteritems(),key=lambda x: x[0]):
+            if k == "images":
+                for img in v:
+                    m.update(img.res_id)
+            else:
+                m.update(v)
+        return m.hexdigest()
 
 class Step(DataStruct):
     """
@@ -192,6 +241,39 @@ class Step(DataStruct):
 
         for res in self.results.values():
             assert res.created
+
+    @classmethod
+    def calculate_checksum(cls,**kwargs):
+        """
+        Utility function for calculating a sha512 checksum over the keyword
+        arguments (excluding the step_id). This can be useful as a obj_id or a
+        part of if.
+
+        Returns a string
+        """
+        if not "step_id" in kwargs:
+            kwargs["step_id"] = "dummy"
+        cls._validator.validate(kwargs)
+        kwargs.pop("step_id")
+
+        m = hashlib.sha512()
+        #sort by key to get reproducible order
+        for k,v in sorted(kwargs.iteritems(),key=lambda x: x[0]):
+            if k == "images":
+                for alias,img in sorted(v.iteritems(),key=lambda x: x[0]):
+                    m.update(alias)
+                    m.update(img.res_id)
+            elif k == "files":
+                for alias,att in sorted(v.iteritems(),key=lambda x: x[0]):
+                    m.update(alias)
+                    m.update(att.res_id)
+            elif k in ["parts","tools","results"]:
+                for alias,obj in sorted(v.iteritems(),key=lambda x: x[0]):
+                    m.update(alias)
+                    m.update(obj.obj_id)
+            elif k in ["duration","waiting"]:
+                m.update(str(v.total_seconds()))
+        return m.hexdigest()
 
     def dereference(self,store):
         """

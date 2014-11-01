@@ -15,7 +15,7 @@
   "step_id" : {
     "type" : "string",
     "description" : "ID of the referenced step",
-    "pattern" : "^[a-z-A-Z][a-zA-Z0-9]*$"
+    "pattern" : "^[a-zA-Z0-9]*$"
   },
   "object_namespace" : {
     "type" : "object",
