@@ -127,6 +127,7 @@ class Schedule(object):
         for obj_id,count in tools.iteritems():
             count.pop("current")
             count.pop("current_opt")
+            count["optional"] -= count["quantity"]
             self.tools[obj_id] = BOMReference(obj_id=obj_id,**count)
 
         for obj_id,count in parts.iteritems():

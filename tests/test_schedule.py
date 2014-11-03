@@ -124,6 +124,7 @@ class TestSchedule(unittest.TestCase):
 
         s = Schedule(steps,store)
         self.assertEqual(s.tools['ta'].quantity,3)
+        self.assertEqual(s.tools['ta'].optional,0)
 
         self.assertFalse('ra' in s.parts)
         self.assertEqual(s.parts['pa'].quantity,5)
