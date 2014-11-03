@@ -284,3 +284,26 @@ class Step(DataStruct):
         for nsp in ["parts","tools","results","images","files"]:
             res[nsp] = [ref.dereference(store) for ref in res[nsp].values()]
         return res
+
+def graphviz_add_obj_edges(graph,s_id,objs,**kwargs):
+    """
+    add objects in the list objs to graph.
+
+    kwargs:
+    attr: dict of edge attributes
+    opt: additional edge attributes for optional objects
+    res: also add links to resources referenced by this object
+    """
+    for obj in objs:
+        o_id = 'o_' + obj["obj_id"]
+        if obj["optional"] and "opt" in kwargs:
+            kwargs["attr"].update(kwargs["opt"])
+        kwargs["attr"]["label"] = obj["quantity"]
+        if obj["created"]:
+            graph.add_edge(s_id,o_id,**kwargs["attr"])
+        else:
+            graph.add_edge(o_id,s_id,**kwargs["attr"])
+        if kwargs["res"]:
+            for img in obj["images"]:
+                graph.add_edge('r_' + img["res_id"],o_id)
+

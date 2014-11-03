@@ -7,7 +7,7 @@ import jsonschema
 
 import manuallabour.core.common as common
 from manuallabour.core.common import ReferenceBase, DataStruct, load_schema,\
-    SCHEMA_DIR
+    SCHEMA_DIR, graphviz_add_obj_edges
 
 TYPES = {
     "timedelta" : (timedelta,),
@@ -128,7 +128,7 @@ class Schedule(object):
             if count["quantity"] > 0 or count["optional"] > 0:
                 self.parts[obj_id] = BOMReference(obj_id=obj_id,**count)
 
-    def to_svg(self,path):
+    def to_svg(self,path,with_objects=False,with_resources=False):
         """
         Render schedule structure to svg file
         """
@@ -136,64 +136,51 @@ class Schedule(object):
 
         graph = pgv.AGraph(directed=True)
 
-        #Add objects
-        for o_id, obj in self.store.iter_obj():
-            o_id = 'o_' + o_id
-            graph.add_node(o_id,label=obj.name,shape='rectangle')
+        #Steps
+        for ref in self.steps:
+            s_id = 's_' + str(ref.step_nr)
+            step_dict = ref.dereference(self.store)
+            graph.add_node(s_id,label=step_dict["title"])
+            if ref.step_nr > 1:
+                graph.add_edge('s_' + str(ref.step_nr - 1),s_id)
 
-        for r_id, res, _ in self.store.iter_res():
-            r_id = 'r_' + r_id
-            graph.add_node(r_id,label=res.res_id[:6],shape='diamond')
+        #Objects
+        if with_objects:
+            for o_id, obj in self.store.iter_obj():
+                o_id = 'o_' + o_id
+                graph.add_node(o_id,label=obj.name,shape='rectangle')
 
-        #Add nodes
-        for step in self.steps:
-            nr = step.step_nr
-            s_id = 's_%d' % nr
-            graph.add_node(s_id,label=step.title)
+            for ref in self.steps:
+                s_id = 's_' + str(ref.step_nr)
+                step_dict = ref.dereference(self.store)
 
-            #add object dependencies
-            for obj in step.parts.values():
-                o_id = 'o_' + obj.obj_id
-                attr = {'color' : 'blue','label' : obj.quantity}
-                if obj.optional:
-                    attr['style'] = 'dashed'
-                graph.add_edge(o_id,s_id,**attr)
+                args = dict(
+                    attr={'color' : 'blue'},
+                    opt={'style' : 'dashed'},
+                    res=with_resources
+                )
+                graphviz_add_obj_edges(graph,s_id,step_dict["parts"],**args)
 
-                for img in self.store.get_obj(obj.obj_id).images:
-                    graph.add_edge('r_' + img.res_id,o_id)
+                args["attr"] = {'color' : 'red'}
+                graphviz_add_obj_edges(graph,s_id,step_dict["tools"],**args)
 
-            for obj in step.tools.values():
-                o_id = 'o_' + obj.obj_id
-                attr = {'color' : 'red','label' : obj.quantity}
-                if obj.optional:
-                    attr['style'] = 'dashed'
-                graph.add_edge(o_id,s_id,**attr)
+                args["attr"] = {'color' : 'brown'}
+                graphviz_add_obj_edges(graph,s_id,step_dict["results"],**args)
 
-                for img in self.store.get_obj(obj.obj_id).images:
-                    graph.add_edge('r_' + img.res_id,o_id)
+        #Resources
+        if with_resources:
+            for r_id, res, _ in self.store.iter_res():
+                r_id = 'r_' + r_id
+                graph.add_node(r_id,label=res.res_id[:6],shape='diamond')
 
-            for obj in step.results.values():
-                o_id = 'o_' + obj.obj_id
-                attr = {'color' : 'brown','label' : obj.quantity}
-                if obj.optional:
-                    attr['style'] = 'dashed'
-                #results are always created
-                graph.add_edge(s_id,o_id,**attr)
+            for ref in self.steps:
+                s_id = 's_' + str(ref.step_nr)
+                step = self.store.get_step(ref.step_id)
 
-                for img in self.store.get_obj(obj.obj_id).images:
-                    graph.add_edge('r_' + img.res_id,o_id)
-
-            #add resource dependencies
-            for res in step.files.values():
-                graph.add_edge('r_' + res.res_id,s_id,color='orange')
-            for res in step.images.values():
-                graph.add_edge('r_' + res.res_id,s_id,color='green')
-
-        for step in self.steps:
-            #Add step dependencies
-            nr = step.step_nr
-            if nr > 1:
-                graph.add_edge('s_%d' % (nr-1),'s_%d' % nr)
+                for res in step.files.values():
+                    graph.add_edge('r_' + res.res_id,s_id,color='orange')
+                for res in step.images.values():
+                    graph.add_edge('r_' + res.res_id,s_id,color='green')
 
         graph.draw(path,prog='dot')
 

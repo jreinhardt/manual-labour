@@ -121,6 +121,26 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(s.parts['pa'].quantity,5)
         self.assertEqual(s.parts['pa'].optional,1)
 
+    def test_svg(self):
+        store = LocalMemoryStore()
+        schedule_example(store)
+
+        steps = [
+            ScheduleStep(step_id='a',step_idx=0),
+            ScheduleStep(step_id='b',step_idx=1),
+            ScheduleStep(step_id='c',step_idx=2),
+        ]
+
+        s = Schedule(steps,store)
+
+        s.to_svg('tests/output/schedule.svg')
+        s.to_svg('tests/output/schedule_obj.svg',with_objects=True)
+        s.to_svg('tests/output/schedule_res.svg',with_resources=True)
+        s.to_svg('tests/output/schedule_all.svg',
+            with_objects=True,
+            with_resources=True
+        )
+
 class TestSchedulers(unittest.TestCase):
     def setUp(self):
         self.store = LocalMemoryStore()

@@ -4,8 +4,8 @@ This module defines the Graph class and related classes
 
 import jsonschema
 
-from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR
-import manuallabour.core.common as common
+from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
+    graphviz_add_obj_edges
 
 class GraphStep(ReferenceBase):
     """
@@ -63,26 +63,6 @@ class Graph(object):
             res.update(self.all_ancestors(parent))
         return res
 
-    def _objs_to_svg(self,graph,s_id,objs,attr,opt={},rev=False,res=False):
-        """
-        add objects in the list objs to graph, with edge attributes attr, and
-        if obj is optional, opt.
-        If rev is True, reverse the edge, if res is True, also add links to
-        resources.
-        """
-        for obj in objs:
-            o_id = 'o_' + obj["obj_id"]
-            if obj["optional"]:
-                attr.update(opt)
-            attr["label"] = obj["quantity"]
-            if rev:
-                graph.add_edge(s_id,o_id,**attr)
-            else:
-                graph.add_edge(o_id,s_id,**attr)
-            if res:
-                for img in obj["images"]:
-                    graph.add_edge('r_' + img["res_id"],o_id)
-
 
     def to_svg(self,path,with_objects=False,with_resources=False):
         """
@@ -112,35 +92,19 @@ class Graph(object):
                 s_id = 's_' + alias
                 step_dict = ref.dereference(self.store)
 
-                self._objs_to_svg(
-                    graph,
-                    s_id,
-                    step_dict["parts"],
-                    {'color' : 'blue'},
+                args = dict(
+                    attr={'color' : 'blue'},
                     opt={'style' : 'dashed'},
-                    rev=False,
                     res=with_resources
                 )
+                graphviz_add_obj_edges(graph,s_id,step_dict["parts"],**args)
 
-                self._objs_to_svg(
-                    graph,
-                    s_id,
-                    step_dict["tools"],
-                    {'color' : 'red'},
-                    opt={'style' : 'dashed'},
-                    rev=False,
-                    res=with_resources
-                )
+                args["attr"] = {'color' : 'red'}
+                graphviz_add_obj_edges(graph,s_id,step_dict["tools"],**args)
 
-                self._objs_to_svg(
-                    graph,
-                    s_id,
-                    step_dict["results"],
-                    {'color' : 'brown'},
-                    opt={'style' : 'dashed'},
-                    rev=True,
-                    res=with_resources
-                )
+                args["attr"] = {'color' : 'brown'}
+                graphviz_add_obj_edges(graph,s_id,step_dict["results"],**args)
+
         #Resources
         if with_resources:
             for r_id, res, _ in self.store.iter_res():
