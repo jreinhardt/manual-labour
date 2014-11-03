@@ -10,15 +10,23 @@ from manuallabour.core.stores import LocalMemoryStore
 from manuallabour.core.schedule import *
 
 def schedule_example(store):
-    store.add_obj(common.Object(obj_id='ta',name='Tool A'))
-    store.add_obj(common.Object(obj_id='pa',name='Part A'))
-    store.add_obj(common.Object(obj_id='ra',name='Result A'))
-
     store.add_res(
         common.Image(res_id='im',extension='.png',alt='Foo'),
         'foo.png'
     )
     store.add_res(common.File(res_id='f',filename='test.tmp'),'../t.tmp')
+    store.add_res(
+        common.Image(res_id='hds',alt="boo",extension=".png"),
+        'b.png'
+    )
+
+    store.add_obj(common.Object(obj_id='ta',name='Tool A'))
+    store.add_obj(common.Object(
+        obj_id='pa',
+        name='Part A',
+        images=[common.ResourceReference(res_id='hds')]
+    ))
+    store.add_obj(common.Object(obj_id='ra',name='Result A'))
 
     store.add_step(common.Step(
         step_id='a',
