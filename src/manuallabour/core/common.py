@@ -208,7 +208,7 @@ class Object(DataStruct):
         Returns a string
         """
         if not "obj_id" in kwargs:
-            kwargs["obj"] = "dummy"
+            kwargs["obj_id"] = "dummy"
         cls._validator.validate(kwargs)
         kwargs.pop("obj_id")
 
