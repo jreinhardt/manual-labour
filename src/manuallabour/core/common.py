@@ -138,6 +138,7 @@ class Resource(DataStruct):
         check = hashlib.sha512()
         #sort by key to get reproducible order
         for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
+            check.update(key)
             check.update(val)
         return check.hexdigest()
 
@@ -218,6 +219,7 @@ class Object(DataStruct):
                 for img in val:
                     check.update(img.res_id)
             else:
+                check.update(key)
                 check.update(val)
         return check.hexdigest()
 
@@ -272,6 +274,9 @@ class Step(DataStruct):
                     check.update(obj.obj_id)
             elif key in ["duration","waiting"]:
                 check.update(str(val.total_seconds()))
+            else:
+                check.update(key)
+                check.update(val)
         return check.hexdigest()
 
     def dereference(self,store):
