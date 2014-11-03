@@ -1,106 +1,117 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>{{ title }}</title>
-	</head>
-	<body>
-		<h1>{{ title }}</h1>
-		<h2>BOM</h2>
-		<ul>
-			{% for part in parts %}
-			<li>
-			{% if part.images | length > 0 %}
-			<a href="{{part.images[0].url}}">{{part.quantity}}x {{part.name}}</a>
-			{% else %}
-			{{part.quantity}}x {{part.name}}
-			{% endif %}
-			{% if part.optional > part.optional %}
-			(+{{part.optional}}x)
-			{% endif %}
-			</li>
-			{% endfor %}
-		</ul>
+  <head>
+    <title>{{ doc.title }}</title>
+  </head>
+  <body>
+    <h1>{{ doc.title }}</h1>
+    <h2>Author</h2>
+    {{doc.author}}
+    <h2>BOM</h2>
+    <ul>
+      {% for part in parts %}
+      <li>
+      {% if part.images | length > 0 %}
+      <a href="{{part.images[0].url}}">{{part.quantity}}x {{part.name}}</a>
+      {% else %}
+      {{part.quantity}}x {{part.name}}
+      {% endif %}
+      {% if part.optional > 0 %}
+      (+{{part.optional}}x optionally)
+      {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
 
-		<h2>Required Tools</h2>
-		<ul>
-			{% for tool in tools %}
-			<li>
-			{% if tool.images | length > 0 %}
-			<a href="{{tool.images[0].url}}">{{tool.quantity}}x {{tool.name}}</a>
-			{% else %}
-			{{tool.quantity}}x {{tool.name}}
-			{% endif %}
-			{% if tool.optional > tool.optional %}
-			(+{{tool.optional}}x)
-			{% endif %}
-			</li>
-			{% endfor %}
-		</ul>
+    <h2>Required Tools</h2>
+    <ul>
+      {% for tool in tools %}
+      <li>
+      {% if tool.images | length > 0 %}
+      <a href="{{tool.images[0].url}}">{{tool.quantity}}x {{tool.name}}</a>
+      {% else %}
+      {{tool.quantity}}x {{tool.name}}
+      {% endif %}
+      {% if tool.optional > 0 %}
+      (+{{tool.optional}}x optionally)
+      {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
 
-		{% for step in steps %}
-		<h2>Step {{step.step_nr}}: {{step.title}}</h2>
-		{% if step.parts %}
-		<h3>Parts</h3>
-		<ul>
-			{% for part in step.parts %}
-			{% if part.optional > 0 %}
-			<li> {{part.quantity}}x ({{part.optional}}x) {{part.name}}</li>
-			{% else %}
-			<li> {{part.quantity}}x {{part.name}}</li>
-			{% endif %}
-			{% endfor %}
-		</ul>
-		{% endif %}
-		{% if step.tools %}
-		<h3>Tools</h3>
-		<ul>
-			{% for tool in step.tools %}
-			{% if tool.optional > 0 %}
-			<li> {{tool.quantity}}x ({{tool.optional}}x) {{tool.name}}</li>
-			{% else %}
-			<li> {{tool.quantity}}x {{tool.name}}</li>
-			{% endif %}
-			{% endfor %}
-		</ul>
-		{% endif %}
+    {% for step in steps %}
+    <h2>Step {{step.step_nr}}: {{step.title}}</h2>
+    {% if step.duration %}
+    <h3>Duration</h3>
+    <ul>
+      <li>{{step.duration}} activity</li>
+      {% if step.waiting%}
+      <li>{{step.waiting}} waiting time</li>
+      {% endif %}
+    </ul>
+    {% endif %}
+    {% if step.parts %}
+    <h3>Parts</h3>
+    <ul>
+      {% for part in step.parts %}
+      {% if part.optional > 0 %}
+      <li> {{part.quantity}}x {{part.name}} (optional)</li>
+      {% else %}
+      <li> {{part.quantity}}x {{part.name}}</li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if step.tools %}
+    <h3>Tools</h3>
+    <ul>
+      {% for tool in step.tools %}
+      {% if tool.optional > 0 %}
+      <li> {{tool.quantity}}x {{tool.name}} (optional)</li>
+      {% else %}
+      <li> {{tool.quantity}}x {{tool.name}}</li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+    {% endif %}
 
-		{% if step.files %}
-		<h3>Files</h3>
-		<ul>
-			{% for file in step.files %}
-			<li> <a href="{{file.url}}">{{file.filename}}</a></li>
-			{% endfor %}
-		</ul>
-		{% endif %}
+    {% if step.files %}
+    <h3>Files</h3>
+    <ul>
+      {% for file in step.files %}
+      <li> <a href="{{file.url}}">{{file.filename}}</a></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
 
-		{% if step.attention %}
-		<h3>Attention</h3>
-		<p>{{step.attention}}</p>
-		{% endif %}
+    {% if step.attention %}
+    <h3>Attention</h3>
+    <p>{{step.attention}}</p>
+    {% endif %}
 
-		<h3>Description</h3>
-		<p>{{step.description}}</p>
+    <h3>Description</h3>
+    <p>{{step.description}}</p>
 
-		{% if step.results %}
-		<h3>Results</h3>
-		<ul>
-			{% for result in step.results %}
-			{% if result.optional > 0 %}
-			<li> {{result.quantity}}x ({{result.optional}}x) {{result.name}}</li>
-			{% else %}
-			<li> {{result.quantity}}x {{result.name}}</li>
-			{% endif %}
-			{% endfor %}
-		</ul>
-		{% endif %}
+    {% if step.results %}
+    <h3>Results</h3>
+    <ul>
+      {% for result in step.results %}
+      {% if result.optional > 0 %}
+      <li> {{result.quantity}}x ({{result.optional}}x) {{result.name}}</li>
+      {% else %}
+      <li> {{result.quantity}}x {{result.name}}</li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+    {% endif %}
 
-		{% if step.assertions %}
-		<h3>Check</h3>
-		{% for ass in step.assertions %}
+    {% if step.assertions %}
+    <h3>Check</h3>
+    {% for ass in step.assertions %}
         <input type="checkbox"> {{ ass }}<br>
-		{% endfor %}
-		{% endif %}
-		{% endfor %}
+    {% endfor %}
+    {% endif %}
+    {% endfor %}
 
-	</body>
+  </body>
 </html>
