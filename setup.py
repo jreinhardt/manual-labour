@@ -27,8 +27,9 @@ setup(
     long_description=long_description,
     install_requires = ['jsonschema','jinja2'],
     package_data = {
-        'manuallabour.core' : 'schema/*.json',
-        'manuallabour.layouts.html_single.basic' : 'template'
+        'manuallabour.core' : ['schema/*.json'],
+        'manuallabour.exporters' : ['schema/*.json'],
+        'manuallabour.layouts.html_single.basic' : ['template']
     },
     extras_require = {
         'graph': ['pygraphviz'],
