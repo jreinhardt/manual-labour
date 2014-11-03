@@ -141,7 +141,7 @@ class Schedule(object):
 
         graph = pgv.AGraph(directed=True)
 
-        #Steps
+        #Nodes
         for ref in self.steps:
             s_id = 's_' + str(ref.step_nr)
             step_dict = ref.dereference(self.store)
@@ -149,12 +149,23 @@ class Schedule(object):
             if ref.step_nr > 1:
                 graph.add_edge('s_' + str(ref.step_nr - 1),s_id)
 
-        #Objects
         if with_objects:
             for o_id, obj in self.store.iter_obj():
                 o_id = 'o_' + o_id
                 graph.add_node(o_id,label=obj.name,shape='rectangle')
 
+        if with_resources:
+            for r_id, res, _ in self.store.iter_res():
+                r_id = 'r_' + r_id
+                graph.add_node(r_id,label=res.res_id[:6],shape='diamond')
+
+        #edges
+        for ref in self.steps:
+            s_id = 's_' + str(ref.step_nr)
+            if ref.step_nr > 1:
+                graph.add_edge('s_' + str(ref.step_nr - 1),s_id)
+
+        if with_objects:
             for ref in self.steps:
                 s_id = 's_' + str(ref.step_nr)
                 step_dict = ref.dereference(self.store)
@@ -172,12 +183,7 @@ class Schedule(object):
                 args["attr"] = {'color' : 'brown'}
                 graphviz_add_obj_edges(graph,s_id,step_dict["results"],**args)
 
-        #Resources
         if with_resources:
-            for r_id, res, _ in self.store.iter_res():
-                r_id = 'r_' + r_id
-                graph.add_node(r_id,label=res.res_id[:6],shape='diamond')
-
             for ref in self.steps:
                 s_id = 's_' + str(ref.step_nr)
                 step = self.store.get_step(ref.step_id)
