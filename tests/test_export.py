@@ -35,6 +35,8 @@ class TestExporter(unittest.TestCase):
     def test_html_single(self):
         e = SinglePageHTMLExporter('basic')
 
-        e.export(self.schedule,'tests/output/html_single')
-        e.export(self.schedule_timed,'tests/output/html_single_timed')
+        data = dict(title="Title export",author="John Doe")
+
+        e.export(self.schedule,'tests/output/html_single',**data)
+        e.export(self.schedule_timed,'tests/output/html_single_timed',**data)
 

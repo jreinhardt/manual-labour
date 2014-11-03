@@ -48,7 +48,8 @@ class SinglePageHTMLExporter(ExporterBase):
             )
         )
 
-    def export(self,schedule,path):
+    def export(self,schedule,path,**kwargs):
+        ExporterBase.export(self,schedule,path,**kwargs)
         #clean up output dir
         if exists(join(path)):
             rmtree(join(path))
@@ -77,7 +78,7 @@ class SinglePageHTMLExporter(ExporterBase):
             fid.write(
                 #pylint: disable=E1103
                 template.render(
-                    title = "Title",
+                    doc = kwargs,
                     schedule = schedule,
                     parts = parts,
                     tools = tools,

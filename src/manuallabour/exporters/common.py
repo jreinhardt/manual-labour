@@ -2,6 +2,12 @@
 Common Interfaces for exporters and related classes
 """
 import re
+from manuallabour.core.common import load_schema
+from pkg_resources import resource_filename
+
+import jsonschema
+
+SCHEMA_DIR =  resource_filename('manuallabour.exporters','schema')
 
 ML_FUNC = re.compile(r'{{\s*([a-z]*)\(([^,]*?)(,[^\)]*)?\)\s*}}')
 
@@ -80,9 +86,12 @@ class ExporterBase(object):
     """
     Interface for Exporter classes.
     """
-    def export(self,schedule,path):
+    _schema = load_schema(SCHEMA_DIR,"export_data.json")
+    _validator = jsonschema.Draft4Validator(_schema)
+    def export(self,_1,_2,**kwargs):
         """
-        Export the schedule into the format provided by the exporter and store
-        the result in path
+        Export the schedule into the format provided by the exporter and
+        store the result in path. Additional data for the export is given in
+        kwargs
         """
-        raise NotImplementedError
+        self._validator.validate(kwargs)
