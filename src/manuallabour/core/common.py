@@ -21,20 +21,20 @@ def dereference_schema(schema_dir,schema):
     "$ref" : "sibling.json#/schemaname"
     and can not handle recursive references.
     """
-    for k,v in schema.iteritems():
-        if k == "$ref":
-            fname,sname = v.split('#/')
+    for key,val in schema.iteritems():
+        if key == "$ref":
+            fname,sname = val.split('#/')
             with open(join(schema_dir,fname)) as fid:
                 ref_schema = json.loads(fid.read())
             schema.update(ref_schema[sname])
             schema.pop("$ref")
             return
-        elif isinstance(v,dict):
-            dereference_schema(schema_dir,v)
-        elif isinstance(v,list):
-            for s in v:
-                if isinstance(s,dict):
-                    dereference_schema(schema_dir,s)
+        elif isinstance(val,dict):
+            dereference_schema(schema_dir,val)
+        elif isinstance(val,list):
+            for sub in val:
+                if isinstance(sub,dict):
+                    dereference_schema(schema_dir,sub)
 
 def load_schema(schema_dir,schema_name):
     """
@@ -72,9 +72,8 @@ class DataStruct(object):
         elif name in self._calculated:
             return self._calculated.get(name)
         else:
-            raise AttributeError('Class %s has no attribute %s' %
-                (type(self),name)
-            )
+            raise AttributeError('Class %s has no attribute %s' %\
+                (type(self),name))
 
     def as_dict(self,full=False):
         """
@@ -136,11 +135,11 @@ class Resource(DataStruct):
         cls._validator.validate(kwargs)
         kwargs.pop("res_id")
 
-        m = hashlib.sha512()
+        check = hashlib.sha512()
         #sort by key to get reproducible order
-        for k,v in sorted(kwargs.iteritems(),key=lambda x: x[0]):
-            m.update(v)
-        return m.hexdigest()
+        for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
+            check.update(val)
+        return check.hexdigest()
 
 class File(Resource):
     """
@@ -212,15 +211,15 @@ class Object(DataStruct):
         cls._validator.validate(kwargs)
         kwargs.pop("obj_id")
 
-        m = hashlib.sha512()
+        check = hashlib.sha512()
         #sort by key to get reproducible order
-        for k,v in sorted(kwargs.iteritems(),key=lambda x: x[0]):
-            if k == "images":
-                for img in v:
-                    m.update(img.res_id)
+        for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
+            if key == "images":
+                for img in val:
+                    check.update(img.res_id)
             else:
-                m.update(v)
-        return m.hexdigest()
+                check.update(val)
+        return check.hexdigest()
 
 class Step(DataStruct):
     """
@@ -256,24 +255,24 @@ class Step(DataStruct):
         cls._validator.validate(kwargs)
         kwargs.pop("step_id")
 
-        m = hashlib.sha512()
+        check = hashlib.sha512()
         #sort by key to get reproducible order
-        for k,v in sorted(kwargs.iteritems(),key=lambda x: x[0]):
-            if k == "images":
-                for alias,img in sorted(v.iteritems(),key=lambda x: x[0]):
-                    m.update(alias)
-                    m.update(img.res_id)
-            elif k == "files":
-                for alias,att in sorted(v.iteritems(),key=lambda x: x[0]):
-                    m.update(alias)
-                    m.update(att.res_id)
-            elif k in ["parts","tools","results"]:
-                for alias,obj in sorted(v.iteritems(),key=lambda x: x[0]):
-                    m.update(alias)
-                    m.update(obj.obj_id)
-            elif k in ["duration","waiting"]:
-                m.update(str(v.total_seconds()))
-        return m.hexdigest()
+        for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
+            if key == "images":
+                for alias,img in sorted(val.iteritems(),key=lambda x: x[0]):
+                    check.update(alias)
+                    check.update(img.res_id)
+            elif key == "files":
+                for alias,att in sorted(val.iteritems(),key=lambda x: x[0]):
+                    check.update(alias)
+                    check.update(att.res_id)
+            elif key in ["parts","tools","results"]:
+                for alias,obj in sorted(val.iteritems(),key=lambda x: x[0]):
+                    check.update(alias)
+                    check.update(obj.obj_id)
+            elif key in ["duration","waiting"]:
+                check.update(str(val.total_seconds()))
+        return check.hexdigest()
 
     def dereference(self,store):
         """

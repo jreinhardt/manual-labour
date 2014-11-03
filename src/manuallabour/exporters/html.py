@@ -1,8 +1,13 @@
+"""
+This module defines exporters for export of schedules to HTML and other
+classes related to this task.
+"""
 from manuallabour.exporters.common import ExporterBase, MarkupBase
 from jinja2 import Environment, PackageLoader
 from os.path import join,  exists
 from shutil import rmtree,copytree
 from os import remove
+# pylint: disable=W0622
 from codecs import open
 import pkg_resources
 
@@ -30,6 +35,9 @@ class HTMLMarkup(MarkupBase):
         return "<a href='%s'>%s</a>" % (res["url"],text or res["filename"])
 
 class SinglePageHTMLExporter(ExporterBase):
+    """
+    Exporter to export schedules into a single HTML page.
+    """
     def __init__(self,layout):
         ExporterBase.__init__(self)
         self.layout = layout
@@ -67,6 +75,7 @@ class SinglePageHTMLExporter(ExporterBase):
 
         with open(join(path,'out.html'),'w','utf8') as fid:
             fid.write(
+                #pylint: disable=E1103
                 template.render(
                     title = "Title",
                     schedule = schedule,

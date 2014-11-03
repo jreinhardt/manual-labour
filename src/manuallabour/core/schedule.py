@@ -6,8 +6,8 @@ from datetime import timedelta
 import jsonschema
 
 import manuallabour.core.common as common
-from manuallabour.core.common import ReferenceBase, DataStruct, load_schema,\
-    SCHEMA_DIR, graphviz_add_obj_edges
+from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
+    graphviz_add_obj_edges
 
 TYPES = {
     "timedelta" : (timedelta,),
@@ -38,7 +38,7 @@ class ScheduleStep(ReferenceBase):
     _schema = load_schema(SCHEMA_DIR,'schedule_step_reference.json')
     _validator = jsonschema.Draft4Validator(_schema, types=TYPES)
     def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
+        ReferenceBase.__init__(self,**kwargs)
 
         self._calculated["step_nr"] = self.step_idx + 1
         if ("start" in kwargs) != ("stop" in kwargs):
@@ -51,6 +51,11 @@ class ScheduleStep(ReferenceBase):
         return res
 
     def markup(self,store,markup):
+        """
+        Dereference the reference and markup all strings with the Markup
+        Object markup.
+        """
+
         res = self.dereference(store)
         step = store.get_step(self.step_id)
         res["description"] = markup.markup(step,store,res["description"])
@@ -202,7 +207,6 @@ def schedule_greedy(graph, targets = None):
             steps.update(graph.all_ancestors(target))
         steps = dict((key,graph.steps[key]) for key in steps)
 
-    timing = True
     for step in steps.values():
         step_dict = step.dereference(graph.store)
         if step_dict["duration"] is None:
@@ -214,9 +218,7 @@ def schedule_greedy(graph, targets = None):
     time = 0
     possible = {}
     scheduled = {}
-    start = {}
     waiting = {}
-    ids = []
 
     while len(scheduled) < len(steps):
         #find possible next steps

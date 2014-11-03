@@ -1,56 +1,88 @@
+"""
+Common Interfaces for exporters and related classes
+"""
 import re
 
 ML_FUNC = re.compile(r'{{\s*([a-z]*)\(([^,]*?)(,[^\)]*)?\)\s*}}')
 
+# pylint: disable=R0921
 class MarkupBase(object):
     """
     Interface for Markup objects
     """
     def markup(self,step,store,string):
-        return ML_FUNC.sub(lambda m: self.output_ml_func(m,step,store),string)
+        """
+        Markup string with informations from the Step step and the Store
+        store by expanding the {{func(...)}} constructs into something that
+        is appropriate for the output format.
+        """
+        return ML_FUNC.sub(lambda m: self._output_ml_func(m,step,store),string)
 
-    def output_ml_func(self,m,step,store):
+    def _output_ml_func(self,match,step,store):
         #determine callback
-        func = m.group(1)
+        func = match.group(1)
         callback = getattr(self,func)
 
         #collect additional arguments
         kwargs = {}
-        if not m.group(3) is None:
+        if not match.group(3) is None:
             #first comma is contained in group, skip empty arg
-            for arg in m.group(3).split(',')[1:]:
-                k,v = arg.split('=')
-                kwargs[k] = v
+            for arg in match.group(3).split(',')[1:]:
+                key,val = arg.split('=')
+                kwargs[key] = val
 
         #get the resource or object
         if func in ["part","tool","result"]:
             if func == "part":
-                obj = step.parts[m.group(2)].dereference(store)
+                obj = step.parts[match.group(2)].dereference(store)
             elif func == "tool":
-                obj = step.tools[m.group(2)].dereference(store)
+                obj = step.tools[match.group(2)].dereference(store)
             elif func == "result":
-                obj = step.results[m.group(2)].dereference(store)
+                obj = step.results[match.group(2)].dereference(store)
             return callback(obj,kwargs.get("text",""))
         elif func in ["image","file"]:
             if func == "image":
-                res = step.images[m.group(2)].dereference(store)
+                res = step.images[match.group(2)].dereference(store)
             elif func == "file":
-                res = step.files[m.group(2)].dereference(store)
+                res = step.files[match.group(2)].dereference(store)
             return callback(res,kwargs.get("text",""))
         else:
             raise ValueError("Unknown callback %s" % func)
 
     def part(self,obj,text):
+        """
+        Callback for expanding a {{part(...)}} construct
+        """
         raise NotImplementedError
     def tool(self,obj,text):
+        """
+        Callback for expanding a {{tool(...)}} construct
+        """
         raise NotImplementedError
     def result(self,obj,text):
+        """
+        Callback for expanding a {{result(...)}} construct
+        """
         raise NotImplementedError
     def image(self,res,text):
+        """
+        Callback for expanding a {{image(...)}} construct
+        """
         raise NotImplementedError
     def file(self,res,text):
+        """
+        Callback for expanding a {{file(...)}} construct
+        """
         raise NotImplementedError
 
+# pylint: disable=R0921
 class ExporterBase(object):
+    """
+    Interface for Exporter classes.
+    """
     def export(self,schedule,path):
+        """
+        Export the schedule into the format provided by the exporter and store
+        the result in path
+        """
         raise NotImplementedError
