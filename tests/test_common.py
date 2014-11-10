@@ -61,7 +61,7 @@ class TestDataStruct(unittest.TestCase):
 
 class TestResources(unittest.TestCase):
     def test_File(self):
-        f = File(res_id='asbd',filename="test.file")
+        f = File(res_id='asbd',blob_id='asafb',filename="test.file")
         self.assertEqual(f.res_id,'asbd')
 
         self.assertRaises(ValidationError,lambda: File(res_id='*'))
@@ -70,7 +70,7 @@ class TestResources(unittest.TestCase):
         self.assertRaises(ValidationError,lambda: File(res_id='bsd',foo=2))
 
     def test_Image(self):
-        i = Image(res_id='asbf',alt='a test image',extension='.png')
+        i = Image(res_id='asbf',blob_id='a',alt='test image',extension='.png')
         self.assertEqual(i.res_id,'asbf')
 
         self.assertRaises(ValidationError,lambda: Image(res_id='*'))

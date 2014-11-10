@@ -7,13 +7,24 @@ from os.path import abspath
 
 class Store(object):
     """
-    Interface for data structures that can be used to lookup resources and
-    objects. The interface does not specify how to add content, as this can be
-    specific to the requirements of the application.
+    Interface for data structures that can be used to lookup blobs, resources
+    and objects. The interface does not specify how to add content, as this
+    can be specific to the requirements of the application.
     """
+    def has_blob(self,blob_id):
+        """
+        Return whether a blob with the given blob_id is stored in this Store
+        """
+        raise NotImplementedError
+    def get_blob_url(self,blob_id):
+        """
+        Return an URL for the blob with the given blob_id. Raise KeyError if
+        blob_id is not known.
+        """
+        raise NotImplementedError
     def has_obj(self,obj_id):
         """
-        Return whether an object with the given obj_id is stored in this Store.
+        Return whether an object with the given obj_id is stored in this Store
         """
         raise NotImplementedError
     def get_obj(self,obj_id):
@@ -39,8 +50,8 @@ class Store(object):
         raise NotImplementedError
     def get_res_url(self,res_id):
         """
-        Return a URL for the file associated with this resource. Raise KeyError
-        if res_id is not known.
+        Return an URL for the file associated with the resource with this
+        res_id. Raise KeyError if res_id is not known.
         """
         raise NotImplementedError
     def iter_res(self):
@@ -74,17 +85,28 @@ class LocalMemoryStore(Store):
         self.resources = {}
         self.paths = {}
         self.steps = {}
-
-    def has_res(self,key):
-        return key in self.resources
-    def get_res(self,key):
-        return self.resources[key]
-    def get_res_url(self,key):
-        return "file://%s" % self.paths[key]
+    def has_blob(self,blob_id):
+        return blob_id in self.paths
+    def get_blob_url(self,blob_id):
+        return "file://%s" % self.paths[blob_id]
+    def has_res(self,res_id):
+        return res_id in self.resources
+    def get_res(self,res_id):
+        return self.resources[res_id]
+    def get_res_url(self,res_id):
+        res = self.get_res(res_id)
+        return "file://%s" % self.paths[res.blob_id]
     def iter_res(self):
         for res_id,res in self.resources.iteritems():
-            yield (res_id,res,self.paths[res_id])
-    def add_res(self,res,path):
+            yield (res_id,res,self.get_res_url(res_id))
+    def add_blob(self,blob_id,path):
+        """
+        Add a blob by its path
+        """
+        if blob_id in self.paths:
+            raise KeyError('BlobID already found in Store: %s' % blob_id)
+        self.paths[blob_id] = abspath(path)
+    def add_res(self,res):
         """
         Add a new resource to the store. Checks for collisions
         """
@@ -92,8 +114,6 @@ class LocalMemoryStore(Store):
         if res_id in self.resources:
             raise KeyError('ResourceID already found in Store: %s' % res_id)
         self.resources[res_id] = res
-        self.paths[res_id] = abspath(path)
-
     def has_obj(self,key):
         return key in self.objects
     def get_obj(self,key):

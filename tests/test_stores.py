@@ -15,10 +15,11 @@ class TestStores(unittest.TestCase):
 
         self.assertEqual(len(list(m.iter_obj())),1)
 
+        m.add_blob('asg','tests/test_stores.py')
+
         self.assertFalse(m.has_res('adf'))
         m.add_res(
-            common.File(res_id='adf',filename='test_stores.py'),
-            'tests/test_stores.py'
+            common.File(res_id='adf',blob_id="asg",filename='test_stores.py')
         )
         self.assertTrue(m.has_res('adf'))
         self.assertEqual(m.get_res('adf').filename,'test_stores.py')
@@ -26,6 +27,18 @@ class TestStores(unittest.TestCase):
         fid.close()
 
         self.assertEqual(len(list(m.iter_res())),1)
+
+    def test_blobs(self):
+        store = LocalMemoryStore()
+
+        self.assertFalse(store.has_blob('afgda'))
+
+        store.add_blob('afgda','tests/test_stores.py')
+
+        self.assertTrue(store.has_blob('afgda'))
+
+        fid = urlopen(store.get_blob_url('afgda'))
+        fid.close()
 
     def test_add_objects(self):
         store = LocalMemoryStore()
@@ -51,9 +64,14 @@ class TestStores(unittest.TestCase):
     def test_add_resources(self):
         store = LocalMemoryStore()
 
-        store.add_res(common.File(res_id='kds',filename="foo"),'a.tmp')
-        img = common.Image(res_id='wds',alt="foo",extension=".png")
-        store.add_res(img,'wds.png')
+        store.add_blob('kdsb','somedir/a.tmp')
+        store.add_blob('wdsb','someotherdir/wds.png')
+
+        store.add_res(common.File(res_id='kds',blob_id='kdsb',filename="foo"))
+        img = common.Image(
+            res_id='wds',blob_id='wdsb',alt="foo",extension=".png"
+        )
+        store.add_res(img)
 
         self.assertTrue(store.has_res('kds'))
         self.assertFalse(store.has_res('pds'))
@@ -66,8 +84,8 @@ class TestStores(unittest.TestCase):
             lambda: store.add_res(
                 common.File(
                     res_id='wds',
+                    blob_id='wdsb',
                     filename="boo"
-                ),
-                'b.tmp'
+                )
             )
         )

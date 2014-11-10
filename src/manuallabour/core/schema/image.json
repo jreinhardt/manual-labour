@@ -7,6 +7,9 @@
     "res_id" : {
       "$ref" : "common.json#/res_id"
     },
+    "blob_id" : {
+      "$ref" : "common.json#/blob_id"
+    },
     "extension" : {
       "type" : "string",
       "description" : "Extension of the image file."
@@ -16,7 +19,7 @@
       "description" : "Alternative description of the image."
     }
   },
-  "required" : ["res_id","extension","alt"],
+  "required" : ["res_id","blob_id","extension","alt"],
   "additionalProperties" : false
 }
 

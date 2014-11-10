@@ -7,11 +7,14 @@
     "res_id" : {
       "$ref" : "common.json#/res_id"
     },
+    "blob_id" : {
+      "$ref" : "common.json#/blob_id"
+    },
     "filename" : {
       "type" : "string",
       "description" : "Filename of the file"
     }
   },
-  "required" : ["res_id","filename"],
+  "required" : ["res_id","blob_id","filename"],
   "additionalProperties" : false
 }

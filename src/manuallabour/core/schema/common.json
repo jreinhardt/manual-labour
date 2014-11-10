@@ -17,6 +17,11 @@
     "description" : "ID of the referenced step",
     "pattern" : "^[a-zA-Z0-9]*$"
   },
+  "blob_id" : {
+    "type" : "string",
+    "description" : "ID of the referenced blob",
+    "pattern" : "^[a-zA-Z0-9]*$"
+  },
   "object_namespace" : {
     "type" : "object",
     "description" : "local names for Objects",

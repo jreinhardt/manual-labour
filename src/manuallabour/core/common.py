@@ -13,6 +13,20 @@ import jsonschema
 
 SCHEMA_DIR =  pkg_resources.resource_filename('manuallabour.core','schema')
 
+def calculate_blob_checksum(fid):
+    """
+    Calculate a checksum over a file like object. Seeks back to the start
+    after finished. Useful to use as (a part of) a blob_id.
+    """
+    fid.seek(0)
+
+    check = hashlib.sha512()
+    #use chunking to avoid excessive memory use on large files
+    for chunk in iter(lambda: fid.read(8192), b''):
+        check.update(chunk)
+    fid.seek(0)
+    return check.hexdigest()
+
 def dereference_schema(schema_dir,schema):
     """
     Dereference JSON references.
