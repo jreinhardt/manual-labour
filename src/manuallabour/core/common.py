@@ -288,6 +288,9 @@ class Step(DataStruct):
                     check.update(obj.obj_id)
             elif key in ["duration","waiting"]:
                 check.update(str(val.total_seconds()))
+            elif key in ["assertions"]:
+                for assertion in val:
+                    check.update(assertion)
             else:
                 check.update(key)
                 check.update(val)
