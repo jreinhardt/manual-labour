@@ -85,3 +85,27 @@ class SinglePageHTMLExporter(ExporterBase):
                     steps = steps
                 )
             )
+
+    def render(self,schedule,**kwargs):
+        ExporterBase.render(self,schedule,**kwargs)
+
+        #prepare stuff for rendering
+        store = schedule.store
+        markup = HTMLMarkup(store)
+
+        parts = [ref.dereference(store) for ref in schedule.parts.values()]
+        tools = [ref.dereference(store) for ref in schedule.tools.values()]
+
+        steps = []
+        for step in schedule.steps:
+            steps.append(step.markup(store,markup))
+
+        template = self.env.get_template('template.html')
+
+        return template.render(
+            doc = kwargs,
+            schedule = schedule,
+            parts = parts,
+            tools = tools,
+            steps = steps
+            )

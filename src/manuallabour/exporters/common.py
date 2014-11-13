@@ -88,10 +88,18 @@ class ExporterBase(object):
     """
     _schema = load_schema(SCHEMA_DIR,"export_data.json")
     _validator = jsonschema.Draft4Validator(_schema)
-    def export(self,_1,_2,**kwargs):
+    def export(self,_schedule,_path,**kwargs):
         """
         Export the schedule into the format provided by the exporter and
         store the result in path. Additional data for the export is given in
+        kwargs
+        """
+        self._validator.validate(kwargs)
+
+    def render(self,_schedule,**kwargs):
+        """
+        Export the schedule into the format provided by the exporter and
+        return the result. Additional data for the export is given in
         kwargs
         """
         self._validator.validate(kwargs)
