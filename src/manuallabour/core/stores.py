@@ -22,6 +22,10 @@ class Store(object):
         blob_id is not known.
         """
         raise NotImplementedError
+    def iter_blob(self):
+        """
+        Return an iterator over all blob ids
+        """
     def has_obj(self,obj_id):
         """
         Return whether an object with the given obj_id is stored in this Store
@@ -87,6 +91,9 @@ class LocalMemoryStore(Store):
         self.steps = {}
     def has_blob(self,blob_id):
         return blob_id in self.paths
+    def iter_blob(self):
+        for blob_id in self.paths:
+            yield blob_id
     def get_blob_url(self,blob_id):
         return "file://%s" % self.paths[blob_id]
     def has_res(self,res_id):
