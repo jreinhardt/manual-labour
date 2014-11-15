@@ -102,6 +102,7 @@ class SinglePageHTMLExporter(ExporterBase):
 
         template = self.env.get_template('template.html')
 
+        #pylint: disable=E1103
         return template.render(
             doc = kwargs,
             schedule = schedule,
