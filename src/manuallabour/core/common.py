@@ -73,7 +73,10 @@ class DataStruct(object):
     """Validator for the schema of this class"""
     def __init__(self,**kwargs):
         self._validator.validate(kwargs)
+        #used to store the values as passed to the constructor
         self._kwargs = kwargs
+        #used to store calulated values, defaults and processed values,
+        #overlay _kwargs
         self._calculated = {}
         for field, schema in self._schema["properties"].iteritems():
             #check for missing defaults
@@ -84,10 +87,10 @@ class DataStruct(object):
             if (not field in kwargs) and "default" in schema:
                 self._calculated[field] = copy(schema["default"])
     def __getattr__(self,name):
-        if name in self._kwargs:
-            return self._kwargs.get(name)
-        elif name in self._calculated:
+        if name in self._calculated:
             return self._calculated.get(name)
+        elif name in self._kwargs:
+            return self._kwargs.get(name)
         else:
             raise AttributeError('Class %s has no attribute %s' %\
                 (type(self),name))
@@ -95,7 +98,7 @@ class DataStruct(object):
     def as_dict(self,full=False):
         """
         Return the content of this instance as a dict.
-        full=True includes also default and calculated values
+        full=True includes also default, calculated and processed values
         """
         if full:
             res = {}
