@@ -27,6 +27,21 @@ def calculate_blob_checksum(fid):
     fid.seek(0)
     return check.hexdigest()
 
+def calculate_kwargs_checksum(check,kwargs):
+    if isinstance(kwargs,dict):
+        for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
+            check.update(check,key)
+            calculate_kwargs_checksum(val)
+    elif isinstance(kwargs,list):
+        for val in kwargs:
+            calculate_kwargs_checksum(check,val)
+    elif isinstance(kwargs,str):
+        check.update(kwargs)
+    elif isinstance(kwargs,int):
+        check.update(str(kwargs))
+    else:
+        raise ValueError("Unknown type in checksum calculation: %s" % kwargs)
+
 def dereference_schema(schema_dir,schema):
     """
     Dereference JSON references.
