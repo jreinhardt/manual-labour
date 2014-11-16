@@ -33,7 +33,6 @@ def dereference_schema(schema_dir,schema):
 
     Only works for relative filesystem references like
     "$ref" : "sibling.json#/schemaname"
-    and can not handle recursive references.
     """
     for key,val in schema.iteritems():
         if key == "$ref":
@@ -42,6 +41,7 @@ def dereference_schema(schema_dir,schema):
                 ref_schema = json.loads(fid.read())
             schema.update(ref_schema[sname])
             schema.pop("$ref")
+            dereference_schema(schema_dir,schema)
             return
         elif isinstance(val,dict):
             dereference_schema(schema_dir,val)
@@ -53,6 +53,9 @@ def dereference_schema(schema_dir,schema):
 def load_schema(schema_dir,schema_name):
     """
     Load a jsonschema and dereferences JSON references by substitution.
+
+    This allows to utilize references for mantainability and get a complete
+    schema that can be used for e.g. default handling.
     """
     with open(join(schema_dir,schema_name)) as fid:
         schema = json.loads(fid.read())
