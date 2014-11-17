@@ -17,18 +17,34 @@
     "description" : "ID of the referenced step",
     "pattern" : "^[a-zA-Z0-9]*$"
   },
+  "step_alias" : {
+    "type" : "string",
+    "description" : "Alias for a step",
+    "pattern" : "^[a-zA-Z0-9]*$"
+  },
   "blob_id" : {
     "type" : "string",
     "description" : "ID of the referenced blob",
     "pattern" : "^[a-zA-Z0-9]*$"
+  },
+  "timedelta" : {
+    "type" : "object",
+    "description" : "A timespan",
+    "properties" : {
+      "seconds" : {"type" : "integer"},
+      "minutes" : {"type" : "integer"},
+      "hours" : {"type" : "integer"},
+      "days" : {"type" : "integer"}
+    },
+    "default" : null,
+    "additionalProperties" : false
   },
   "object_namespace" : {
     "type" : "object",
     "description" : "local names for Objects",
     "patternProperties" : {
       "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
-        "type" : "objref",
-        "description" : "Reference to an Object"
+        "$ref" : "common.json#/obj_ref"
       }
     },
     "default" : {},
@@ -39,11 +55,107 @@
     "description" : "local names for Resources",
     "patternProperties" : {
       "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
-        "type" : "resref",
-        "description" : "Reference to an Resource"
+        "$ref" : "common.json#/res_ref"
       }
     },
     "default" : {},
+    "additionalProperties" : false
+  },
+  "obj_ref" : {
+    "description" : "Description of a object reference",
+    "type" : "object",
+    "properties" : {
+      "obj_id" : {
+        "$ref" : "common.json#/obj_id"
+      },
+      "quantity" : {
+        "type" : "number",
+        "description" : "Number of instances of this object",
+        "default" : 1
+      },
+      "optional" : {
+        "type" : "boolean",
+        "description" : "Indicates if this object is strictly required",
+        "default" : false
+      },
+      "created" : {
+        "type" : "boolean",
+        "description" : "Indicates if object is created instead of consumed",
+        "default" : false
+      }
+    },
+    "required" : ["obj_id"],
+    "additionalProperties" : false
+  },
+  "bom_ref" : {
+    "description" : "Description of a Bill of Material reference",
+    "type" : "object",
+    "properties" : {
+      "obj_id" : {
+        "$ref" : "common.json#/obj_id"
+      },
+      "quantity" : {
+        "type" : "number",
+        "description" : "Number of mandatory instances of this object"
+      },
+      "optional" : {"type" : "number",
+        "description" : "Number of optional instances of this object"
+      }
+    },
+    "required" : ["obj_id","quantity","optional"],
+    "additionalProperties" : false
+  },
+  "res_ref" : {
+    "description" : "Description of a resource reference",
+    "type" : "object",
+    "properties" : {
+      "res_id" : {
+        "$ref" : "common.json#/res_id"
+      }
+    },
+    "required" : ["res_id"],
+    "additionalProperties" : false
+  },
+  "graph_step" : {
+    "description" : "Description of a step reference for graphs",
+    "type" : "object",
+    "properties" : {
+      "step_id" : {
+        "$ref" : "common.json#/step_id"
+      },
+      "requires" : {
+        "type" : "array",
+        "description" : "step_alias of prerequisite steps",
+        "items" : {
+          "$ref" : "common.json#/step_alias"
+        },
+        "default" : []
+      }
+    },
+    "required" : ["step_id"],
+    "additionalProperties" : false
+  },
+  "schedule_step" : {
+    "description" : "Description of a step reference for schedules",
+    "type" : "object",
+    "properties" : {
+      "step_id" : {
+        "$ref" : "common.json#/step_id"
+      },
+      "step_idx" : {
+        "type" : "number",
+        "description" : "Index for this step"
+      },
+      "start" : {
+        "$ref" : "common.json#/timedelta",
+        "description" : "Start time for this step"
+      },
+      "stop" : {
+        "$ref" : "common.json#/timedelta",
+        "description" : "Stop time for this step"
+      }
+    },
+    "required" : ["step_id","step_idx"],
     "additionalProperties" : false
   }
 }

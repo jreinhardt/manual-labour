@@ -1,10 +1,9 @@
 import unittest
-from datetime import timedelta
 
 from jsonschema import ValidationError
 
 import manuallabour.core.common as common
-from manuallabour.core.graph import Graph, GraphStep
+from manuallabour.core.graph import Graph
 from manuallabour.core.stores import LocalMemoryStore
 
 from manuallabour.core.schedule import *
@@ -26,7 +25,7 @@ def schedule_example(store):
     store.add_obj(common.Object(
         obj_id='pa',
         name='Part A',
-        images=[common.ResourceReference(res_id='hds')]
+        images=[dict(res_id='hds')]
     ))
     store.add_obj(common.Object(obj_id='ra',name='Result A'))
 
@@ -34,36 +33,36 @@ def schedule_example(store):
         step_id='a',
         title="First",
         description="Whack {{part(a)}} with {{tool(a)}} to get {{result(a)}}",
-        duration=timedelta(minutes=15),
-        images = {'t_imag' : common.ResourceReference(res_id='im')},
-        tools={'a' : common.ObjectReference(obj_id='ta')},
-        parts={'a' : common.ObjectReference(obj_id='pa',quantity=2)},
-        results={'a' : common.ObjectReference(obj_id='ra',created=True)}
+        duration=dict(minutes=15),
+        images = {'t_imag' : dict(res_id='im')},
+        tools={'a' : dict(obj_id='ta')},
+        parts={'a' : dict(obj_id='pa',quantity=2)},
+        results={'a' : dict(obj_id='ra',created=True)}
     ))
     store.add_step(common.Step(
         step_id='b',
         title="Second",
         description="Use all {{tool(a)}} to fix {{part(a)}} to {{part(b)}}",
-        duration=timedelta(minutes=15),
-        files = {'t_imag' : common.ResourceReference(res_id='f')},
-        tools={'a' : common.ObjectReference(obj_id='ta',quantity=3)},
+        duration=dict(minutes=15),
+        files = {'t_imag' : dict(res_id='f')},
+        tools={'a' : dict(obj_id='ta',quantity=3)},
         parts={
-            'b' : common.ObjectReference(obj_id='ra'),
-            'a' : common.ObjectReference( obj_id='pa',optional=True)
+            'b' : dict(obj_id='ra'),
+            'a' : dict( obj_id='pa',optional=True)
         }
     ))
     store.add_step(common.Step(
         step_id='c',
         title="Third",
         description="Add {{part(a)}}",
-        duration=timedelta(minutes=15),
-        parts={'a' : common.ObjectReference(obj_id='pa',quantity=3)}
+        duration=dict(minutes=15),
+        parts={'a' : dict(obj_id='pa',quantity=3)}
     ))
     store.add_step(common.Step(
         step_id='d',
         title="Third",
         description="Add {{part(a)}}",
-        parts={'a' : common.ObjectReference(obj_id='pa',quantity=3)}
+        parts={'a' : dict(obj_id='pa',quantity=3)}
     ))
 
 
@@ -82,14 +81,14 @@ class TestScheduleStep(unittest.TestCase):
             lambda: ScheduleStep(
                 step_id='a'
                 ,step_idx=0,
-                start=timedelta(hours=2)
+                start=dict(hours=2)
             )
         )
         s=ScheduleStep(
             step_id='rs9',
             step_idx=0,
-            start=timedelta(minutes=4),
-            stop=timedelta(minutes=24)
+            start=dict(minutes=4),
+            stop=dict(minutes=24)
         )
         self.assertEqual(s.start.total_seconds(),240)
     def test_dereference(self):
@@ -99,8 +98,8 @@ class TestScheduleStep(unittest.TestCase):
         step = ScheduleStep(
             step_id='a',
             step_idx=0,
-            start=timedelta(hours=2),
-            stop=timedelta(hours=2,minutes=15),
+            start=dict(hours=2),
+            stop=dict(hours=2,minutes=15),
         )
         step_dict = step.dereference(store)
         self.assertEqual(step_dict["step_idx"],0)
@@ -119,9 +118,9 @@ class TestSchedule(unittest.TestCase):
         schedule_example(store)
 
         steps = [
-            ScheduleStep(step_id='a',step_idx=0),
-            ScheduleStep(step_id='b',step_idx=1),
-            ScheduleStep(step_id='c',step_idx=2),
+            dict(step_id='a',step_idx=0),
+            dict(step_id='b',step_idx=1),
+            dict(step_id='c',step_idx=2),
         ]
 
         s = Schedule(steps,store)
@@ -137,9 +136,9 @@ class TestSchedule(unittest.TestCase):
         schedule_example(store)
 
         steps = [
-            ScheduleStep(step_id='a',step_idx=0),
-            ScheduleStep(step_id='b',step_idx=1),
-            ScheduleStep(step_id='c',step_idx=2),
+            dict(step_id='a',step_idx=0),
+            dict(step_id='b',step_idx=1),
+            dict(step_id='c',step_idx=2),
         ]
 
         s = Schedule(steps,store)
@@ -158,22 +157,22 @@ class TestSchedulers(unittest.TestCase):
         schedule_example(self.store)
 
         self.steps_timed = {
-            's1' : GraphStep(step_id='a'),
-            'b1' : GraphStep(step_id='b',requires=['s1']),
-            's2' : GraphStep(step_id='c',requires=['b1'])
+            's1' : dict(step_id='a'),
+            'b1' : dict(step_id='b',requires=['s1']),
+            's2' : dict(step_id='c',requires=['b1'])
         }
 
         self.steps_untimed = {
-            's1' : GraphStep(step_id='a'),
-            'b1' : GraphStep(step_id='b',requires=['s1']),
-            's2' : GraphStep(step_id='d',requires=['s1'])
+            's1' : dict(step_id='a'),
+            'b1' : dict(step_id='b',requires=['s1']),
+            's2' : dict(step_id='d',requires=['s1'])
         }
 
     def test_greedy_timed(self):
         g = Graph(self.steps_timed,self.store)
         steps = schedule_greedy(g)
 
-        ids = [step.step_id for step in steps]
+        ids = [step["step_id"] for step in steps]
 
         self.assertTrue(ids.index('b') > ids.index('a'))
         self.assertTrue(ids.index('c') > ids.index('b'))

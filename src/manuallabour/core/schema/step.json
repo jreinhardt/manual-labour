@@ -21,14 +21,12 @@
       "default" : ""
     },
     "duration" : {
-      "type" : "timedelta",
-      "description" : "time of activity required in this step",
-      "default" : null
+      "$ref" : "common.json#/timedelta",
+      "description" : "time of activity required in this step"
     },
     "waiting" : {
-      "type" : "timedelta",
-      "description" : "waiting time required in this step",
-      "default" : null
+      "$ref" : "common.json#/timedelta",
+      "description" : "waiting time required in this step"
     },
     "parts" : {
       "$ref" : "common.json#/object_namespace"

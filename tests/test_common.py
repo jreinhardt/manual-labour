@@ -93,7 +93,7 @@ class TestObjects(unittest.TestCase):
 
     def test_image(self):
         o = Object(obj_id='foo',name="Bar",images=[
-            ResourceReference(res_id='asdf')
+            dict(res_id='asdf')
         ])
         self.assertEqual(len(o.images),1)
 
@@ -133,16 +133,16 @@ class TestStep(unittest.TestCase):
     def test_objects(self):
         self.assertRaises(
             ValidationError,
-            lambda: Step(parts=[ObjectReference(obj_id='nut')],**self.params)
+            lambda: Step(parts=[dict(obj_id='nut')],**self.params)
         )
 
         step = Step(
             parts = {
-                'nut' : ObjectReference(obj_id='a'),
-                'bolt' : ObjectReference(obj_id='c')
+                'nut' : dict(obj_id='a'),
+                'bolt' : dict(obj_id='c')
             },
-            tools = {'wr' : ObjectReference(obj_id='b')},
-            results = {'res' : ObjectReference(obj_id='d',created=True)},
+            tools = {'wr' : dict(obj_id='b')},
+            results = {'res' : dict(obj_id='d',created=True)},
             **self.params
         )
 
@@ -155,15 +155,15 @@ class TestStep(unittest.TestCase):
             step_id='b',
             title='With objects',
             description='Step with objects',
-            files = {'l_kds' : ResourceReference(res_id='kds')},
-            images = {'l_wds' : ResourceReference(res_id='wds')}
+            files = {'l_kds' : dict(res_id='kds')},
+            images = {'l_wds' : dict(res_id='wds')}
         )
 
         self.assertEqual(len(step.files),1)
         self.assertEqual(len(step.images),1)
 
     def test_time(self):
-        step = Step(duration=timedelta(minutes=5),**self.params)
+        step = Step(duration=dict(minutes=5),**self.params)
         self.assertEqual(step.duration.total_seconds(),300)
 
         self.assertRaises(
@@ -172,14 +172,14 @@ class TestStep(unittest.TestCase):
         )
 
     def test_dict(self):
-        step = Step(duration=timedelta(minutes=5),**self.params)
+        step = Step(duration=dict(minutes=5),**self.params)
         data = step.as_dict()
 
         self.assertEqual(data,Step(**data).as_dict())
         self.assertTrue('step_id' in data)
-        self.assertEqual(data['duration'].total_seconds(),300)
+        self.assertEqual(timedelta(**data['duration']).total_seconds(),300)
         self.assertEqual(data['title'],'TestStep')
 
-        step = Step(waiting=timedelta(minutes=5),**self.params)
+        step = Step(waiting=dict(minutes=5),**self.params)
         data = step.as_dict()
-        self.assertEqual(data['waiting'].total_seconds(),300)
+        self.assertEqual(timedelta(**data['waiting']).total_seconds(),300)

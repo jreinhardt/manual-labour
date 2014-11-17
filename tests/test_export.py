@@ -3,8 +3,8 @@ from datetime import timedelta
 
 from manuallabour.exporters.html import *
 import manuallabour.core.common as common
-from manuallabour.core.graph import Graph,GraphStep
-from manuallabour.core.schedule import Schedule, ScheduleStep
+from manuallabour.core.graph import Graph
+from manuallabour.core.schedule import Schedule
 from manuallabour.core.stores import LocalMemoryStore
 
 from test_schedule import schedule_example
@@ -14,20 +14,20 @@ class TestExporter(unittest.TestCase):
         self.store = LocalMemoryStore()
         schedule_example(self.store)
 
-        t1 = timedelta()
-        t2 = timedelta(minutes=25)
-        t3 = timedelta(minutes=45)
-        t4 = timedelta(minutes=90)
+        t1 = dict()
+        t2 = dict(minutes=25)
+        t3 = dict(minutes=45)
+        t4 = dict(minutes=90)
 
         steps = [
-            ScheduleStep(step_id='a',step_idx=0),
-            ScheduleStep(step_id='b',step_idx=1),
-            ScheduleStep(step_id='c',step_idx=2)
+            dict(step_id='a',step_idx=0),
+            dict(step_id='b',step_idx=1),
+            dict(step_id='c',step_idx=2)
         ]
         steps_timed = [
-            ScheduleStep(step_id='a',step_idx=0,start=t1,stop=t2),
-            ScheduleStep(step_id='b',step_idx=1,start=t2,stop=t3),
-            ScheduleStep(step_id='c',step_idx=2,start=t3,stop=t4)
+            dict(step_id='a',step_idx=0,start=t1,stop=t2),
+            dict(step_id='b',step_idx=1,start=t2,stop=t3),
+            dict(step_id='c',step_idx=2,start=t3,stop=t4)
         ]
 
         self.schedule = Schedule(steps,self.store)

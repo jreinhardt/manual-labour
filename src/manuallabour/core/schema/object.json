@@ -17,7 +17,7 @@
       "type" : "array",
       "description" : "A list of ResourceReferences",
       "items" : {
-        "type" : "resref"
+        "$ref" : "common.json#/res_ref"
       },
       "default" : []
     }

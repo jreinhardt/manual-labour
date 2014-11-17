@@ -28,10 +28,14 @@ def calculate_blob_checksum(fid):
     return check.hexdigest()
 
 def calculate_kwargs_checksum(check,kwargs):
+    """
+    Recursively calculate a checksum for the dictionary kwargs. Sort
+    dictionary keys to get a reliable and reproducible checksum.
+    """
     if isinstance(kwargs,dict):
         for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
             check.update(check,key)
-            calculate_kwargs_checksum(val)
+            calculate_kwargs_checksum(check,val)
     elif isinstance(kwargs,list):
         for val in kwargs:
             calculate_kwargs_checksum(check,val)
@@ -91,7 +95,7 @@ class DataStruct(object):
         #used to store the values as passed to the constructor
         self._kwargs = kwargs
         #used to store calulated values, defaults and processed values,
-        #overlay _kwargs
+        #overlays _kwargs
         self._calculated = {}
         for field, schema in self._schema["properties"].iteritems():
             #check for missing defaults
@@ -110,18 +114,12 @@ class DataStruct(object):
             raise AttributeError('Class %s has no attribute %s' %\
                 (type(self),name))
 
-    def as_dict(self,full=False):
+    def as_dict(self):
         """
-        Return the content of this instance as a dict.
-        full=True includes also default, calculated and processed values
+        Return the content of this instance as a dict, that can be used to
+        recreate it.
         """
-        if full:
-            res = {}
-            res.update(self._kwargs)
-            res.update(self._calculated)
-            return res
-        else:
-            return self._kwargs
+        return self._kwargs
 
 class ReferenceBase(DataStruct):
     """
@@ -141,13 +139,15 @@ class ResourceReference(ReferenceBase):
     """
     A reference to a resource that is stored by res_id in a resource store.
     """
-    _schema = load_schema(SCHEMA_DIR,'res_ref.json')
+    _schema = load_schema(SCHEMA_DIR,'common.json')["res_ref"]
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
         ReferenceBase.__init__(self,**kwargs)
     def dereference(self,store):
-        res = self.as_dict(full=True)
+        res = {}
+        res.update(self._kwargs)
+        res.update(self._calculated)
         res.update(store.get_res(self.res_id).as_dict())
         res["url"] = store.get_res_url(self.res_id)
         return res
@@ -172,9 +172,7 @@ class Resource(DataStruct):
 
         check = hashlib.sha512()
         #sort by key to get reproducible order
-        for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
-            check.update(key)
-            check.update(val)
+        calculate_kwargs_checksum(check,kwargs)
         return check.hexdigest()
 
 class File(Resource):
@@ -207,15 +205,24 @@ class ObjectReference(ReferenceBase):
 
     A object can not be created and optional at the same time.
     """
-    _schema = load_schema(SCHEMA_DIR,'obj_ref.json')
+    _schema = load_schema(SCHEMA_DIR,'common.json')["obj_ref"]
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
         ReferenceBase.__init__(self,**kwargs)
+        if "images" in self._kwargs:
+            self._calculated["images"] = []
+            for i,img in enumerate(self._kwargs["images"]):
+                self._calculated["images"][i] = ResourceReference(**img)
         assert not (self.created and self.optional)
+
     def dereference(self,store):
-        res = self.as_dict(full=True)
-        res.update(store.get_obj(self.obj_id).as_dict(full=True))
+        res = {}
+        res.update(self._kwargs)
+        res.update(self._calculated)
+        obj = store.get_obj(self.obj_id)
+        res.update(obj._kwargs)
+        res.update(obj._calculated)
         res["images"] = [ref.dereference(store) for ref in res["images"]]
         return res
 
@@ -226,13 +233,15 @@ class Object(DataStruct):
     tool that isn't, or a result that is created in a step.
     """
     _schema = load_schema(SCHEMA_DIR,'object.json')
-    _validator = jsonschema.Draft4Validator(
-        _schema,
-        types={'resref' : (ResourceReference,)}
-    )
+    _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
+        if "images" in self._kwargs:
+            self._calculated["images"] = []
+            for img in self._kwargs["images"]:
+                self._calculated["images"].append(ResourceReference(**img))
+
     @classmethod
     def calculate_checksum(cls,**kwargs):
         """
@@ -248,14 +257,7 @@ class Object(DataStruct):
         kwargs.pop("obj_id")
 
         check = hashlib.sha512()
-        #sort by key to get reproducible order
-        for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
-            if key == "images":
-                for img in val:
-                    check.update(img.res_id)
-            else:
-                check.update(key)
-                check.update(val)
+        calculate_kwargs_checksum(check,kwargs)
         return check.hexdigest()
 
 class Step(DataStruct):
@@ -263,17 +265,26 @@ class Step(DataStruct):
     One Step of the instructions
     """
     _schema = load_schema(SCHEMA_DIR,'step.json')
-    _validator = jsonschema.Draft4Validator(
-        _schema,
-        types={
-            "timedelta" : (timedelta,),
-            "objref" : (ObjectReference,),
-            "resref" : (ResourceReference,)
-        }
-    )
+    _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
+
+        for time in ["duration","waiting"]:
+            if time in kwargs:
+                self._calculated[time] = timedelta(**kwargs[time])
+
+        for nsp in ["parts","tools","results"]:
+            if nsp in self._kwargs:
+                self._calculated[nsp] = {}
+                for alias, objref in self._kwargs[nsp].iteritems():
+                    self._calculated[nsp][alias] = ObjectReference(**objref)
+
+        for nsp in ["files","images"]:
+            if nsp in self._kwargs:
+                self._calculated[nsp] = {}
+                for alias, resref in self._kwargs[nsp].iteritems():
+                    self._calculated[nsp][alias] = ResourceReference(**resref)
 
         for res in self.results.values():
             assert res.created
@@ -293,28 +304,7 @@ class Step(DataStruct):
         kwargs.pop("step_id")
 
         check = hashlib.sha512()
-        #sort by key to get reproducible order
-        for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
-            if key == "images":
-                for alias,img in sorted(val.iteritems(),key=lambda x: x[0]):
-                    check.update(alias)
-                    check.update(img.res_id)
-            elif key == "files":
-                for alias,att in sorted(val.iteritems(),key=lambda x: x[0]):
-                    check.update(alias)
-                    check.update(att.res_id)
-            elif key in ["parts","tools","results"]:
-                for alias,obj in sorted(val.iteritems(),key=lambda x: x[0]):
-                    check.update(alias)
-                    check.update(obj.obj_id)
-            elif key in ["duration","waiting"]:
-                check.update(str(val.total_seconds()))
-            elif key in ["assertions"]:
-                for assertion in val:
-                    check.update(assertion)
-            else:
-                check.update(key)
-                check.update(val)
+        calculate_kwargs_checksum(check,kwargs)
         return check.hexdigest()
 
     def dereference(self,store):
@@ -322,7 +312,9 @@ class Step(DataStruct):
         Resolve all references and return content of step as a dict
         flattens namespaces to lists
         """
-        res = self.as_dict(full=True)
+        res = {}
+        res.update(self._kwargs)
+        res.update(self._calculated)
         for nsp in ["parts","tools","results","images","files"]:
             res[nsp] = [ref.dereference(store) for ref in res[nsp].values()]
         return res

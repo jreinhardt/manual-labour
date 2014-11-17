@@ -11,13 +11,15 @@ class GraphStep(ReferenceBase):
     """
     Reference to a Step for use in a Graph.
     """
-    _schema = load_schema(SCHEMA_DIR,'graph_step_reference.json')
+    _schema = load_schema(SCHEMA_DIR,'common.json')["graph_step"]
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
         ReferenceBase.__init__(self,**kwargs)
     def dereference(self,store):
-        res = self.as_dict(full=True)
+        res = {}
+        res.update(self._kwargs)
+        res.update(self._calculated)
         step = store.get_step(self.step_id)
         res.update(step.dereference(store))
         return res
@@ -29,7 +31,9 @@ class Graph(object):
     steps is a dictionary of alias,GraphStep tuples
     """
     def __init__(self,steps,store):
-        self.steps = steps
+        self.steps = {}
+        for alias,ref in steps.iteritems():
+            self.steps[alias] = GraphStep(**ref)
 
         self.children = {}
         """Dict mapping the alias of a step to aliases of all its children"""
@@ -39,7 +43,7 @@ class Graph(object):
         self.store = store
         """A datastructure to store object and resource data"""
 
-        for alias,ref in steps.iteritems():
+        for alias,ref in self.steps.iteritems():
             self.parents[alias] = ref.requires
 
             if not alias in self.children:

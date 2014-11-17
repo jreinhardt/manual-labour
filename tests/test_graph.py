@@ -13,8 +13,8 @@ from test_schedule import schedule_example
 class TestGraph(unittest.TestCase):
     def setUp(self):
         self.steps = {
-            'a' : GraphStep(step_id='xyz'),
-            'b' : GraphStep(step_id='yzx',requires=['a'])
+            'a' : dict(step_id='xyz'),
+            'b' : dict(step_id='yzx',requires=['a'])
         }
     def test_dependencies(self):
         g = Graph(self.steps,LocalMemoryStore())
@@ -34,10 +34,10 @@ class TestGraph(unittest.TestCase):
         schedule_example(store)
 
         steps = {
-            's1' : GraphStep(step_id='a'),
-            'b1' : GraphStep(step_id='b',requires=['s1']),
-            's2' : GraphStep(step_id='c',requires=['b1']),
-            's3' : GraphStep(step_id='d',requires=['b1'])
+            's1' : dict(step_id='a'),
+            'b1' : dict(step_id='b',requires=['s1']),
+            's2' : dict(step_id='c',requires=['b1']),
+            's3' : dict(step_id='d',requires=['b1'])
         }
         g = Graph(steps,store)
 
