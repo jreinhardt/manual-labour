@@ -5,12 +5,12 @@
   "obj_id" : {
     "type" : "string",
     "description" : "ID of the referenced object",
-    "pattern" : "^[a-zA-Z0-9_]*$"
+    "pattern" : "^[a-zA-Z0-9_-]*$"
   },
   "step_id" : {
     "type" : "string",
     "description" : "ID of the referenced step",
-    "pattern" : "^[a-zA-Z0-9]*$"
+    "pattern" : "^[a-zA-Z0-9_-]*$"
   },
   "step_alias" : {
     "type" : "string",
@@ -20,7 +20,7 @@
   "blob_id" : {
     "type" : "string",
     "description" : "ID of the referenced blob",
-    "pattern" : "^[a-zA-Z0-9]*$"
+    "pattern" : "^[a-zA-Z0-9_-]*$"
   },
   "timedelta" : {
     "type" : "object",

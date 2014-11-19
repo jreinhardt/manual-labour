@@ -5,6 +5,7 @@ This module defines common classes and interfaces for manual labour
 import json
 import pkg_resources
 import hashlib
+import base64
 from copy import copy
 from os.path import join
 from datetime import timedelta
@@ -17,7 +18,10 @@ SCHEMA_DIR =  pkg_resources.resource_filename('manuallabour.core','schema')
 def calculate_blob_checksum(fid):
     """
     Calculate a checksum over a file like object. Seeks back to the start
-    after finished. Useful to use as (a part of) a blob_id.
+    after finished. Useful to use as (a part of) a blob_id. Uses sha512
+    checksum encoded to base64.
+
+    returns a string
     """
     fid.seek(0)
 
@@ -26,7 +30,7 @@ def calculate_blob_checksum(fid):
     for chunk in iter(lambda: fid.read(8192), b''):
         check.update(chunk)
     fid.seek(0)
-    return check.hexdigest()
+    return base64.urlsafe_b64encode(check.digest())[:-2]
 
 def calculate_kwargs_checksum(check,kwargs):
     """
@@ -40,12 +44,13 @@ def calculate_kwargs_checksum(check,kwargs):
     elif isinstance(kwargs,list):
         for val in kwargs:
             calculate_kwargs_checksum(check,val)
-    elif isinstance(kwargs,str):
+    elif isinstance(kwargs,str) or isinstance(kwargs,unicode):
         check.update(kwargs)
     elif isinstance(kwargs,int):
         check.update(str(kwargs))
     else:
-        raise ValueError("Unknown type in checksum calculation: %s" % kwargs)
+        raise ValueError("Unknown type in checksum calculation: %s" % \
+            type(kwargs))
 
 def dereference_schema(schema_dir,schema):
     """
@@ -208,7 +213,7 @@ class ContentBase(DataStruct):
         """
         Utility function for calculating a sha512 checksum over the keyword
         arguments (excluding the id). This can be useful to use as an obj_id
-        or a part of if.
+        or a part of if. Uses base64 encoding.
 
         Returns a string
         """
@@ -219,7 +224,7 @@ class ContentBase(DataStruct):
 
         check = hashlib.sha512()
         calculate_kwargs_checksum(check,kwargs)
-        return check.hexdigest()
+        return base64.urlsafe_b64encode(check.digest())[:-2]
 
 class Object(ContentBase):
     """
