@@ -15,9 +15,9 @@
     },
     "images" : {
       "type" : "array",
-      "description" : "A list of ResourceReferences",
+      "description" : "A list of ImageReferences",
       "items" : {
-        "$ref" : "common.json#/res_ref"
+        "$ref" : "references.json#/img_ref"
       },
       "default" : []
     }

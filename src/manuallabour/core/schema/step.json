@@ -38,10 +38,10 @@
       "$ref" : "common.json#/object_namespace"
     },
     "images" : {
-      "$ref" : "common.json#/resource_namespace"
+      "$ref" : "common.json#/image_namespace"
     },
     "files" : {
-      "$ref" : "common.json#/resource_namespace"
+      "$ref" : "common.json#/file_namespace"
     },
     "assertions" : {
       "type" : "array",

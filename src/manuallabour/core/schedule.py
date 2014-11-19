@@ -11,7 +11,7 @@ class BOMReference(ReferenceBase):
     """
     An object with counters.
     """
-    _schema = load_schema(SCHEMA_DIR,'common.json')["bom_ref"]
+    _schema = load_schema(SCHEMA_DIR,'references.json')["bom_ref"]
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
@@ -31,7 +31,7 @@ class ScheduleStep(ReferenceBase):
     Step used in a Schedule
     """
 
-    _schema = load_schema(SCHEMA_DIR,'common.json')["schedule_step"]
+    _schema = load_schema(SCHEMA_DIR,'references.json')["schedule_step"]
     _validator = jsonschema.Draft4Validator(_schema)
     def __init__(self,**kwargs):
         ReferenceBase.__init__(self,**kwargs)

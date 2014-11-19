@@ -11,7 +11,7 @@ class GraphStep(ReferenceBase):
     """
     Reference to a Step for use in a Graph.
     """
-    _schema = load_schema(SCHEMA_DIR,'common.json')["graph_step"]
+    _schema = load_schema(SCHEMA_DIR,'references.json')["graph_step"]
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):

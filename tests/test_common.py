@@ -40,6 +40,16 @@ class DataStructTest(DataStruct):
         DataStruct.__init__(self,**kwargs)
         self._calculated["name"] = self.name.title()
 
+class MockStore(object):
+    def get_blob_url(self,blob_id):
+        return "http://url.com"
+    def get_obj(self,obj_id):
+        return Object(
+            obj_id=obj_id,
+            name="Testobject",
+            images=[dict(blob_id="asd",alt="Foo",extension=".png")]
+        )
+
 class TestDataStruct(unittest.TestCase):
     def setUp(self):
         self.one = DataStructTest(name="foo")
@@ -67,32 +77,56 @@ class TestDataStruct(unittest.TestCase):
         self.assertTrue('description' in two)
 
     def test_dereference(self):
-        one = self.one.dereference(None)
+        one = self.one.dereference(MockStore())
         self.assertEqual(one['name'],'Foo')
         self.assertEqual(one['description'],'')
 
-        two = self.two.dereference(None)
+        two = self.two.dereference(MockStore())
         self.assertEqual(two['name'],'Foo')
         self.assertEqual(two['description'],'Bar')
 
-class TestResources(unittest.TestCase):
-    def test_File(self):
-        f = File(res_id='asbd',blob_id='asafb',filename="test.file")
-        self.assertEqual(f.res_id,'asbd')
+class TestReferences(unittest.TestCase):
+    def test_file_ref(self):
+        self.assertRaises(ValidationError,
+            lambda: FileReference(blob_id='*'))
+        self.assertRaises(ValidationError,
+            lambda: FileReference(blob_id='bsd'))
+        self.assertRaises(ValidationError,
+            lambda: FileReference(blob_id='bsd',foo=2))
 
-        self.assertRaises(ValidationError,lambda: File(res_id='*'))
+        f = FileReference(blob_id='asafb',filename="test.file")
+        res = f.dereference(MockStore())
+        self.assertEqual(res["url"],"http://url.com")
+        self.assertEqual(res["filename"],"test.file")
 
-        self.assertRaises(ValidationError,lambda: File(res_id='bsd'))
-        self.assertRaises(ValidationError,lambda: File(res_id='bsd',foo=2))
+    def test_image_ref(self):
+        self.assertRaises(ValidationError,
+            lambda: ImageReference(blob_id='*'))
+        self.assertRaises(ValidationError,
+            lambda: ImageReference(blob_id='sda'))
+        self.assertRaises(ValidationError,
+            lambda: ImageReference(blob_id='sda',foo=2))
 
-    def test_Image(self):
-        i = Image(res_id='asbf',blob_id='a',alt='test image',extension='.png')
-        self.assertEqual(i.res_id,'asbf')
+        i = ImageReference(blob_id='a',alt='test image',extension='.png')
+        res = i.dereference(MockStore())
+        self.assertEqual(res["url"],'http://url.com')
+        self.assertEqual(res["alt"],"test image")
 
-        self.assertRaises(ValidationError,lambda: Image(res_id='*'))
+    def test_object_ref(self):
+        self.assertRaises(ValidationError,lambda: ObjectReference(obj_id='*'))
 
-        self.assertRaises(ValidationError, lambda: Image(res_id='sda'))
-        self.assertRaises(ValidationError, lambda: Image(res_id='sda',foo=2))
+        obr = ObjectReference(obj_id='nut')
+        self.assertEqual(obr.optional,False)
+        self.assertEqual(obr.quantity,1)
+
+        obr = ObjectReference(obj_id='nut',quantity=2,optional=True)
+        self.assertEqual(obr.optional,True)
+        self.assertEqual(obr.quantity,2)
+
+        res = obr.dereference(MockStore())
+        self.assertTrue("quantity" in res)
+        self.assertTrue("optional" in res)
+        self.assertEqual(res["images"][0]["url"],"http://url.com")
 
 class TestObjects(unittest.TestCase):
     def test_init(self):
@@ -106,31 +140,45 @@ class TestObjects(unittest.TestCase):
         self.assertEqual(o.description,"")
         self.assertEqual(o.images,[])
 
-
     def test_image(self):
         o = Object(obj_id='foo',name="Bar",images=[
-            dict(res_id='asdf')
+            dict(blob_id='asdf',extension=".png",alt="an image")
         ])
         self.assertEqual(len(o.images),1)
 
-class TestReferences(unittest.TestCase):
-    def test_obj_ref(self):
-        self.assertRaises(ValidationError,lambda: ObjectReference(obj_id='*'))
+    def test_checksum(self):
+        kwargs = dict(obj_id='foo',name="Bar")
+        check1 = Object.calculate_checksum(**kwargs)
 
-        obr = ObjectReference(obj_id='nut')
-        self.assertEqual(obr.optional,False)
-        self.assertEqual(obr.quantity,1)
+        kwargs['obj_id'] = 'Foo'
+        self.assertEqual(check1,Object.calculate_checksum(**kwargs))
 
-        obr = ObjectReference(obj_id='nut',quantity=2,optional=True)
-        self.assertEqual(obr.optional,True)
-        self.assertEqual(obr.quantity,2)
+        kwargs['name'] = 'bar'
+        check2 = Object.calculate_checksum(**kwargs)
+        self.assertNotEqual(check1,check2)
 
-    def test_res_ref(self):
-        self.assertRaises(ValidationError,
-            lambda: ResourceReference(res_id='*')
-        )
+        kwargs['description'] = 'Foobar'
+        check3 = Object.calculate_checksum(**kwargs)
+        self.assertNotEqual(check1,check3)
+        self.assertNotEqual(check2,check3)
 
-        res = ResourceReference(res_id='nut')
+        kwargs['images'] = [dict(blob_id="asd",extension='.png',alt='Foobar')]
+        check4 = Object.calculate_checksum(**kwargs)
+        self.assertNotEqual(check1,check4)
+        self.assertNotEqual(check2,check4)
+        self.assertNotEqual(check3,check4)
+
+    def tets_dereference(self):
+        o = Object(obj_id='foo',name="Bar",images=[
+            dict(blob_id='asdf',extension=".png",alt="an image")
+        ])
+
+        res = o.dereference(MockStore())
+
+        self.assertEqual(res["name"],"Bar")
+        self.assertEqual(res["images"][0]["alt"],"an image")
+        self.assertEqual(res["images"][0]["url"],"http://url.com")
+
 
 class TestStep(unittest.TestCase):
     def setUp(self):
@@ -171,8 +219,8 @@ class TestStep(unittest.TestCase):
             step_id='b',
             title='With objects',
             description='Step with objects',
-            files = {'l_kds' : dict(res_id='kds')},
-            images = {'l_wds' : dict(res_id='wds')}
+            files = {'l_kds' : dict(blob_id='kds',filename='test.file')},
+            images = {'l_wds' : dict(blob_id='ws',alt='Foo',extension='.png')}
         )
 
         self.assertEqual(len(step.files),1)
@@ -199,3 +247,47 @@ class TestStep(unittest.TestCase):
         step = Step(waiting=dict(minutes=5),**self.params)
         data = step.as_dict()
         self.assertEqual(timedelta(**data['waiting']).total_seconds(),300)
+
+    def test_checksum(self):
+        kwargs = dict(step_id="asdf",title="Foobar",description="A foo step")
+        check1 = Step.calculate_checksum(**kwargs)
+
+        kwargs["step_id"] = 'bsdf'
+        self.assertEqual(check1,Step.calculate_checksum(**kwargs))
+
+        kwargs['title'] = 'foobar'
+        check2 = Step.calculate_checksum(**kwargs)
+        self.assertNotEqual(check1,check2)
+
+        kwargs['description'] = 'A foobar step'
+        check3 = Step.calculate_checksum(**kwargs)
+        self.assertNotEqual(check1,check3)
+        self.assertNotEqual(check2,check3)
+
+        kwargs['assertions'] = ['take care']
+        check4 = Step.calculate_checksum(**kwargs)
+        self.assertNotEqual(check1,check4)
+        self.assertNotEqual(check2,check4)
+        self.assertNotEqual(check3,check4)
+
+        kwargs['duration'] = dict(minutes=2,seconds=30)
+        check5 = Step.calculate_checksum(**kwargs)
+        self.assertNotEqual(check1,check5)
+        self.assertNotEqual(check2,check5)
+        self.assertNotEqual(check3,check5)
+        self.assertNotEqual(check4,check5)
+
+    def test_dereference(self):
+        step = Step(
+            step_id='b',
+            title='With objects',
+            description='Step with objects',
+            files = {'l_kds' : dict(blob_id='kds',filename='test.file')},
+            images = {'l_wds' : dict(blob_id='ws',alt='Foo',extension='.png')}
+        )
+
+        res = step.dereference(MockStore())
+
+        self.assertEqual(res['step_id'],'b')
+        self.assertEqual(res['files']['l_kds']["filename"],'test.file')
+        self.assertEqual(res['files']['l_kds']["url"],'http://url.com')

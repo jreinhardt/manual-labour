@@ -1,0 +1,126 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title" : "References",
+  "description" : "Specifications of data of references",
+  "obj_ref" : {
+    "description" : "Description of a object reference",
+    "type" : "object",
+    "properties" : {
+      "obj_id" : {
+        "$ref" : "common.json#/obj_id"
+      },
+      "quantity" : {
+        "type" : "number",
+        "description" : "Number of instances of this object",
+        "default" : 1
+      },
+      "optional" : {
+        "type" : "boolean",
+        "description" : "Indicates if this object is strictly required",
+        "default" : false
+      },
+      "created" : {
+        "type" : "boolean",
+        "description" : "Indicates if object is created instead of consumed",
+        "default" : false
+      }
+    },
+    "required" : ["obj_id"],
+    "additionalProperties" : false
+  },
+  "bom_ref" : {
+    "description" : "Description of a Bill of Material reference",
+    "type" : "object",
+    "properties" : {
+      "obj_id" : {
+        "$ref" : "common.json#/obj_id"
+      },
+      "quantity" : {
+        "type" : "number",
+        "description" : "Number of mandatory instances of this object"
+      },
+      "optional" : {"type" : "number",
+        "description" : "Number of optional instances of this object"
+      }
+    },
+    "required" : ["obj_id","quantity","optional"],
+    "additionalProperties" : false
+  },
+  "graph_step" : {
+    "description" : "Description of a step reference for graphs",
+    "type" : "object",
+    "properties" : {
+      "step_id" : {
+        "$ref" : "common.json#/step_id"
+      },
+      "requires" : {
+        "type" : "array",
+        "description" : "step_alias of prerequisite steps",
+        "items" : {
+          "$ref" : "common.json#/step_alias"
+        },
+        "default" : []
+      }
+    },
+    "required" : ["step_id"],
+    "additionalProperties" : false
+  },
+  "schedule_step" : {
+    "description" : "Description of a step reference for schedules",
+    "type" : "object",
+    "properties" : {
+      "step_id" : {
+        "$ref" : "common.json#/step_id"
+      },
+      "step_idx" : {
+        "type" : "number",
+        "description" : "Index for this step"
+      },
+      "start" : {
+        "$ref" : "common.json#/timedelta",
+        "description" : "Start time for this step"
+      },
+      "stop" : {
+        "$ref" : "common.json#/timedelta",
+        "description" : "Stop time for this step"
+      }
+    },
+    "required" : ["step_id","step_idx"],
+    "additionalProperties" : false
+  },
+  "file_ref" : {
+    "description" : "Description of a file. ",
+    "type" : "object",
+    "properties" : {
+      "blob_id" : {
+        "$ref" : "common.json#/blob_id"
+      },
+      "filename" : {
+        "type" : "string",
+        "description" : "Filename of the file"
+      }
+    },
+    "required" : ["blob_id","filename"],
+    "additionalProperties" : false
+  },
+  "img_ref" : {
+    "description" : "Description of an Image.",
+    "type" : "object",
+    "properties" : {
+      "blob_id" : {
+        "$ref" : "common.json#/blob_id"
+      },
+      "extension" : {
+        "type" : "string",
+        "description" : "Extension of the image file."
+      },
+      "alt" : {
+        "type" : "string",
+        "description" : "Alternative description of the image."
+      }
+    },
+    "required" : ["blob_id","extension","alt"],
+    "additionalProperties" : false
+  }
+}
+

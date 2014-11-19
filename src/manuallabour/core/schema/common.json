@@ -7,11 +7,6 @@
     "description" : "ID of the referenced object",
     "pattern" : "^[a-zA-Z0-9_]*$"
   },
-  "res_id" : {
-    "type" : "string",
-    "description" : "ID of the referenced resource",
-    "pattern" : "^[a-zA-Z0-9_]*$"
-  },
   "step_id" : {
     "type" : "string",
     "description" : "ID of the referenced step",
@@ -44,118 +39,32 @@
     "description" : "local names for Objects",
     "patternProperties" : {
       "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
-        "$ref" : "common.json#/obj_ref"
+        "$ref" : "references.json#/obj_ref"
       }
     },
     "default" : {},
     "additionalProperties" : false
   },
-  "resource_namespace" : {
+  "file_namespace" : {
     "type" : "object",
-    "description" : "local names for Resources",
+    "description" : "local names for Files",
     "patternProperties" : {
       "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
-        "$ref" : "common.json#/res_ref"
+        "$ref" : "references.json#/file_ref"
       }
     },
     "default" : {},
     "additionalProperties" : false
   },
-  "obj_ref" : {
-    "description" : "Description of a object reference",
+  "image_namespace" : {
     "type" : "object",
-    "properties" : {
-      "obj_id" : {
-        "$ref" : "common.json#/obj_id"
-      },
-      "quantity" : {
-        "type" : "number",
-        "description" : "Number of instances of this object",
-        "default" : 1
-      },
-      "optional" : {
-        "type" : "boolean",
-        "description" : "Indicates if this object is strictly required",
-        "default" : false
-      },
-      "created" : {
-        "type" : "boolean",
-        "description" : "Indicates if object is created instead of consumed",
-        "default" : false
+    "description" : "local names for Images",
+    "patternProperties" : {
+      "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+        "$ref" : "references.json#/img_ref"
       }
     },
-    "required" : ["obj_id"],
-    "additionalProperties" : false
-  },
-  "bom_ref" : {
-    "description" : "Description of a Bill of Material reference",
-    "type" : "object",
-    "properties" : {
-      "obj_id" : {
-        "$ref" : "common.json#/obj_id"
-      },
-      "quantity" : {
-        "type" : "number",
-        "description" : "Number of mandatory instances of this object"
-      },
-      "optional" : {"type" : "number",
-        "description" : "Number of optional instances of this object"
-      }
-    },
-    "required" : ["obj_id","quantity","optional"],
-    "additionalProperties" : false
-  },
-  "res_ref" : {
-    "description" : "Description of a resource reference",
-    "type" : "object",
-    "properties" : {
-      "res_id" : {
-        "$ref" : "common.json#/res_id"
-      }
-    },
-    "required" : ["res_id"],
-    "additionalProperties" : false
-  },
-  "graph_step" : {
-    "description" : "Description of a step reference for graphs",
-    "type" : "object",
-    "properties" : {
-      "step_id" : {
-        "$ref" : "common.json#/step_id"
-      },
-      "requires" : {
-        "type" : "array",
-        "description" : "step_alias of prerequisite steps",
-        "items" : {
-          "$ref" : "common.json#/step_alias"
-        },
-        "default" : []
-      }
-    },
-    "required" : ["step_id"],
-    "additionalProperties" : false
-  },
-  "schedule_step" : {
-    "description" : "Description of a step reference for schedules",
-    "type" : "object",
-    "properties" : {
-      "step_id" : {
-        "$ref" : "common.json#/step_id"
-      },
-      "step_idx" : {
-        "type" : "number",
-        "description" : "Index for this step"
-      },
-      "start" : {
-        "$ref" : "common.json#/timedelta",
-        "description" : "Start time for this step"
-      },
-      "stop" : {
-        "$ref" : "common.json#/timedelta",
-        "description" : "Stop time for this step"
-      }
-    },
-    "required" : ["step_id","step_idx"],
+    "default" : {},
     "additionalProperties" : false
   }
 }

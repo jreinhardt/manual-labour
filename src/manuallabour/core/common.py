@@ -34,7 +34,7 @@ def calculate_kwargs_checksum(check,kwargs):
     """
     if isinstance(kwargs,dict):
         for key,val in sorted(kwargs.iteritems(),key=lambda x: x[0]):
-            check.update(check,key)
+            check.update(key)
             calculate_kwargs_checksum(check,val)
     elif isinstance(kwargs,list):
         for val in kwargs:
@@ -139,80 +139,43 @@ class DataStruct(object):
 class ReferenceBase(DataStruct):
     """
     A reference links to something in a store and can hold additional
-    information. It can be dereferenced.
+    information. When dereferenced, the additional data from the reference
+    and the data from the object in the store are combined.
     """
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
-    def dereference(self,store):
-        """
-        Dereference the reference and expand the referenced object and all
-        fields in the reference into a dictionary.
-        """
-        raise NotImplementedError()
 
-class ResourceReference(ReferenceBase):
+class ResourceReferenceBase(ReferenceBase):
     """
-    A reference to a resource that is stored by res_id in a resource store.
+    A reference to something with an associated blob.
     """
-    _schema = load_schema(SCHEMA_DIR,'common.json')["res_ref"]
-    _validator = jsonschema.Draft4Validator(_schema)
-
     def __init__(self,**kwargs):
         ReferenceBase.__init__(self,**kwargs)
     def dereference(self,store):
-        res = {}
-        res.update(self._kwargs)
-        res.update(self._calculated)
-        res.update(store.get_res(self.res_id).as_dict())
-        res["url"] = store.get_res_url(self.res_id)
+        res = ReferenceBase.dereference(self,store)
+        res["url"] = store.get_blob_url(self.blob_id)
         return res
 
-class Resource(DataStruct):
+class FileReference(ResourceReferenceBase):
     """
-    Base class for data that is associated with a file.
+    A File is a resource that has a only a filename as metadata.
     """
-    @classmethod
-    def calculate_checksum(cls,**kwargs):
-        """
-        Utility function for calculating a sha512 checksum over the keyword
-        arguments (excluding the res_id). This can be useful as a res_id or a
-        part of if.
-
-        Returns a string
-        """
-        if not "res_id" in kwargs:
-            kwargs["res_id"] = "dummy"
-        cls._validator.validate(kwargs)
-        kwargs.pop("res_id")
-
-        check = hashlib.sha512()
-        #sort by key to get reproducible order
-        calculate_kwargs_checksum(check,kwargs)
-        return check.hexdigest()
-
-class File(Resource):
-    """
-    File resource
-
-    A File is a resource that has a filename as metadata.
-    """
-    _schema = load_schema(SCHEMA_DIR,'file.json')
+    _schema = load_schema(SCHEMA_DIR,'references.json')['file_ref']
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
-        Resource.__init__(self,**kwargs)
+        ResourceReferenceBase.__init__(self,**kwargs)
 
-class Image(Resource):
-    """ Image resource
-
+class ImageReference(ResourceReferenceBase):
+    """
     An Image is a resource that has as metadata an alternative description
     and a filename extension indicating the format of the image.
     """
-    _schema = load_schema(SCHEMA_DIR,'image.json')
+    _schema = load_schema(SCHEMA_DIR,'references.json')['img_ref']
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
-        Resource.__init__(self,**kwargs)
+        ResourceReferenceBase.__init__(self,**kwargs)
 
 class ObjectReference(ReferenceBase):
     """
@@ -220,28 +183,44 @@ class ObjectReference(ReferenceBase):
 
     A object can not be created and optional at the same time.
     """
-    _schema = load_schema(SCHEMA_DIR,'common.json')["obj_ref"]
+    _schema = load_schema(SCHEMA_DIR,'references.json')["obj_ref"]
     _validator = jsonschema.Draft4Validator(_schema)
 
     def __init__(self,**kwargs):
         ReferenceBase.__init__(self,**kwargs)
-        if "images" in self._kwargs:
-            self._calculated["images"] = []
-            for i,img in enumerate(self._kwargs["images"]):
-                self._calculated["images"][i] = ResourceReference(**img)
         assert not (self.created and self.optional)
 
     def dereference(self,store):
-        res = {}
-        res.update(self._kwargs)
-        res.update(self._calculated)
+        res = ReferenceBase.dereference(self,store)
         obj = store.get_obj(self.obj_id)
-        res.update(obj._kwargs)
-        res.update(obj._calculated)
-        res["images"] = [ref.dereference(store) for ref in res["images"]]
+        res.update(obj.dereference(store))
         return res
 
-class Object(DataStruct):
+class ContentBase(DataStruct):
+    """
+    Base class for things that are stored in a Store and have an id to
+    identify themselves.
+    """
+    _id = None
+    @classmethod
+    def calculate_checksum(cls,**kwargs):
+        """
+        Utility function for calculating a sha512 checksum over the keyword
+        arguments (excluding the id). This can be useful to use as an obj_id
+        or a part of if.
+
+        Returns a string
+        """
+        if not cls._id in kwargs:
+            kwargs[cls._id] = "dummy"
+        cls._validator.validate(kwargs)
+        kwargs.pop(cls._id)
+
+        check = hashlib.sha512()
+        calculate_kwargs_checksum(check,kwargs)
+        return check.hexdigest()
+
+class Object(ContentBase):
     """
     An object is a physical object that is in some sense relevant to the
     assembly process. It can be either a part that is consumed in a step, a
@@ -249,41 +228,32 @@ class Object(DataStruct):
     """
     _schema = load_schema(SCHEMA_DIR,'object.json')
     _validator = jsonschema.Draft4Validator(_schema)
+    _id = "obj_id"
 
     def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
+        ContentBase.__init__(self,**kwargs)
+
         if "images" in self._kwargs:
             self._calculated["images"] = []
             for img in self._kwargs["images"]:
-                self._calculated["images"].append(ResourceReference(**img))
+                self._calculated["images"].append(ImageReference(**img))
 
-    @classmethod
-    def calculate_checksum(cls,**kwargs):
-        """
-        Utility function for calculating a sha512 checksum over the keyword
-        arguments (excluding the obj_id). This can be useful as a obj_id or a
-        part of if.
+    def dereference(self,store):
+        res = DataStruct.dereference(self,store)
+        for i,img in enumerate(res["images"]):
+            res["images"][i] = img.dereference(store)
+        return res
 
-        Returns a string
-        """
-        if not "obj_id" in kwargs:
-            kwargs["obj_id"] = "dummy"
-        cls._validator.validate(kwargs)
-        kwargs.pop("obj_id")
-
-        check = hashlib.sha512()
-        calculate_kwargs_checksum(check,kwargs)
-        return check.hexdigest()
-
-class Step(DataStruct):
+class Step(ContentBase):
     """
     One Step of the instructions
     """
     _schema = load_schema(SCHEMA_DIR,'step.json')
     _validator = jsonschema.Draft4Validator(_schema)
+    _id = "step_id"
 
     def __init__(self,**kwargs):
-        DataStruct.__init__(self,**kwargs)
+        ContentBase.__init__(self,**kwargs)
 
         for time in ["duration","waiting"]:
             if time in kwargs:
@@ -295,43 +265,24 @@ class Step(DataStruct):
                 for alias, objref in self._kwargs[nsp].iteritems():
                     self._calculated[nsp][alias] = ObjectReference(**objref)
 
-        for nsp in ["files","images"]:
-            if nsp in self._kwargs:
-                self._calculated[nsp] = {}
-                for alias, resref in self._kwargs[nsp].iteritems():
-                    self._calculated[nsp][alias] = ResourceReference(**resref)
-
         for res in self.results.values():
             assert res.created
 
-    @classmethod
-    def calculate_checksum(cls,**kwargs):
-        """
-        Utility function for calculating a sha512 checksum over the keyword
-        arguments (excluding the step_id). This can be useful as a obj_id or a
-        part of if.
+        if "files" in self._kwargs:
+            self._calculated["files"] = {}
+            for alias, resref in self._kwargs["files"].iteritems():
+                self._calculated["files"][alias] = FileReference(**resref)
 
-        Returns a string
-        """
-        if not "step_id" in kwargs:
-            kwargs["step_id"] = "dummy"
-        cls._validator.validate(kwargs)
-        kwargs.pop("step_id")
-
-        check = hashlib.sha512()
-        calculate_kwargs_checksum(check,kwargs)
-        return check.hexdigest()
+        if "images" in self._kwargs:
+            self._calculated["images"] = {}
+            for alias, resref in self._kwargs["images"].iteritems():
+                self._calculated["images"][alias] = ImageReference(**resref)
 
     def dereference(self,store):
-        """
-        Resolve all references and return content of step as a dict
-        flattens namespaces to lists
-        """
-        res = {}
-        res.update(self._kwargs)
-        res.update(self._calculated)
-        for nsp in ["parts","tools","results","images","files"]:
-            res[nsp] = [ref.dereference(store) for ref in res[nsp].values()]
+        res = DataStruct.dereference(self,store)
+        for nspace in ["images","files","parts","tools","results"]:
+            for alias,val in res[nspace].iteritems():
+                res[nspace][alias] = val.dereference(store)
         return res
 
 def graphviz_add_obj_edges(graph,s_id,objs,**kwargs):
