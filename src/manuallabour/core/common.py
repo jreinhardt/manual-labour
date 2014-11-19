@@ -8,6 +8,7 @@ import hashlib
 from copy import copy
 from os.path import join
 from datetime import timedelta
+from copy import deepcopy
 
 import jsonschema
 
@@ -126,14 +127,14 @@ class DataStruct(object):
         be used to recreate it.
         """
         return self._kwargs
-    def dereference(self,store):
+    def dereference(self,_store):
         """
         Return the content of this instance as a dict. References are
         recursively dereferenced against store.
         """
         res = {}
-        res.update(self._kwargs)
-        res.update(self._calculated)
+        res.update(deepcopy(self._kwargs))
+        res.update(deepcopy(self._calculated))
         return res
 
 class ReferenceBase(DataStruct):
@@ -294,7 +295,7 @@ def graphviz_add_obj_edges(graph,s_id,objs,**kwargs):
     opt: additional edge attributes for optional objects
     res: also add links to resources referenced by this object
     """
-    for obj in objs:
+    for obj in objs.values():
         o_id = 'o_' + obj["obj_id"]
         if obj["optional"] and "opt" in kwargs:
             kwargs["attr"].update(kwargs["opt"])
@@ -305,5 +306,5 @@ def graphviz_add_obj_edges(graph,s_id,objs,**kwargs):
             graph.add_edge(o_id,s_id,**kwargs["attr"])
         if kwargs["res"]:
             for img in obj["images"]:
-                graph.add_edge('r_' + img["res_id"],o_id)
+                graph.add_edge('r_' + img["blob_id"],o_id)
 

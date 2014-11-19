@@ -179,6 +179,8 @@ class TestObjects(unittest.TestCase):
         self.assertEqual(res["images"][0]["alt"],"an image")
         self.assertEqual(res["images"][0]["url"],"http://url.com")
 
+        self.assertTrue(isinstance(o.images[0],ImageReference))
+
 
 class TestStep(unittest.TestCase):
     def setUp(self):
