@@ -38,26 +38,42 @@ class DataStructTest(DataStruct):
     _validator = jsonschema.Draft4Validator(_schema,)
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
-        self._calculated["title"] = self.name.title()
+        self._calculated["name"] = self.name.title()
 
 class TestDataStruct(unittest.TestCase):
+    def setUp(self):
+        self.one = DataStructTest(name="foo")
+        self.two = DataStructTest(name="Foo",description="Bar")
+
     def test_init(self):
-        a = DataStructTest(name="Test")
         self.assertRaises(ValidationError,lambda: DataStructTest(mame="Test"))
         self.assertRaises(ValidationError,lambda: DataStructTest())
         self.assertRaises(ValidationError,lambda: DataStructTest(name=4))
 
     def test_defaults(self):
-        a = DataStructTest(name="Test")
-        self.assertEqual(a.description,"")
-
-        b = DataStructTest(name="Test",description="foo")
-        self.assertEqual(b.description,"foo")
+        self.assertEqual(self.one.description,"")
+        self.assertEqual(self.two.description,"Bar")
 
     def test_calculated(self):
-        a = DataStructTest(name="foo")
-        self.assertEqual(a.title,"Foo")
+        self.assertEqual(self.one.name,"Foo")
 
+    def test_as_dict(self):
+        one = self.one.as_dict()
+        self.assertEqual(one['name'],'foo')
+        self.assertFalse('description' in one)
+
+        two = self.two.as_dict()
+        self.assertEqual(two['name'],'Foo')
+        self.assertTrue('description' in two)
+
+    def test_dereference(self):
+        one = self.one.dereference(None)
+        self.assertEqual(one['name'],'Foo')
+        self.assertEqual(one['description'],'')
+
+        two = self.two.dereference(None)
+        self.assertEqual(two['name'],'Foo')
+        self.assertEqual(two['description'],'Bar')
 
 class TestResources(unittest.TestCase):
     def test_File(self):

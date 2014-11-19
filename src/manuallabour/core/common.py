@@ -83,19 +83,20 @@ def load_schema(schema_dir,schema_name):
 
 class DataStruct(object):
     """
-    A validating convenience wrapper around a dictionary. Serves as basis for
-    many of the classes holding data.
+    A container for named data. Offers validation, convenient access and
+    utility functionality. Serves as basis for many of the classes holding
+    data.
     """
     _schema = None
     """JSON schema for the input of this class"""
     _validator = None
     """Validator for the schema of this class"""
     def __init__(self,**kwargs):
-        self._validator.validate(kwargs)
+        self.validate(**kwargs)
         #used to store the values as passed to the constructor
         self._kwargs = kwargs
         #used to store calulated values, defaults and processed values,
-        #overlays _kwargs
+        #overlays _kwargs at access
         self._calculated = {}
         for field, schema in self._schema["properties"].iteritems():
             #check for missing defaults
@@ -113,13 +114,27 @@ class DataStruct(object):
         else:
             raise AttributeError('Class %s has no attribute %s' %\
                 (type(self),name))
+    def validate(self,**kwargs):
+        """
+        Validate the arguments against the schema of this class.
+        """
+        self._validator.validate(kwargs)
 
     def as_dict(self):
         """
-        Return the content of this instance as a dict, that can be used to
-        recreate it.
+        Return the constructor parameters of this instance as a dict, this can
+        be used to recreate it.
         """
         return self._kwargs
+    def dereference(self,store):
+        """
+        Return the content of this instance as a dict. References are
+        recursively dereferenced against store.
+        """
+        res = {}
+        res.update(self._kwargs)
+        res.update(self._calculated)
+        return res
 
 class ReferenceBase(DataStruct):
     """
