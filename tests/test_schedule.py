@@ -13,19 +13,11 @@ def schedule_example(store):
     store.add_blob('fb','../t.tmp')
     store.add_blob('imb2','b.png')
 
-    store.add_res(
-        common.Image(res_id='im',blob_id='imb',extension='.png',alt='Foo')
-    )
-    store.add_res(common.File(res_id='f',blob_id='fb',filename='test.tmp'))
-    store.add_res(
-        common.Image(res_id='hds',blob_id='imb2',alt="boo",extension=".png")
-    )
-
     store.add_obj(common.Object(obj_id='ta',name='Tool A'))
     store.add_obj(common.Object(
         obj_id='pa',
         name='Part A',
-        images=[dict(res_id='hds')]
+        images=[dict(blob_id='imb2',alt="boo",extension=".png")]
     ))
     store.add_obj(common.Object(obj_id='ra',name='Result A'))
 
@@ -34,7 +26,7 @@ def schedule_example(store):
         title="First",
         description="Whack {{part(a)}} with {{tool(a)}} to get {{result(a)}}",
         duration=dict(minutes=15),
-        images = {'t_imag' : dict(res_id='im')},
+        images = {'t_imag' : dict(blob_id='imb',extension='.png',alt='Foo')},
         tools={'a' : dict(obj_id='ta')},
         parts={'a' : dict(obj_id='pa',quantity=2)},
         results={'a' : dict(obj_id='ra',created=True)}
@@ -44,7 +36,7 @@ def schedule_example(store):
         title="Second",
         description="Use all {{tool(a)}} to fix {{part(a)}} to {{part(b)}}",
         duration=dict(minutes=15),
-        files = {'t_imag' : dict(res_id='f')},
+        files = {'t_imag' : dict(blob_id='fb',filename='test.tmp')},
         tools={'a' : dict(obj_id='ta',quantity=3)},
         parts={
             'b' : dict(obj_id='ra'),
@@ -102,14 +94,15 @@ class TestScheduleStep(unittest.TestCase):
             stop=dict(hours=2,minutes=15),
         )
         step_dict = step.dereference(store)
+        print step_dict
         self.assertEqual(step_dict["step_idx"],0)
         self.assertEqual(step_dict["title"],"First")
-        self.assertEqual(step_dict["images"][0]["extension"],".png")
+        self.assertEqual(step_dict["images"]["t_imag"]["extension"],".png")
 
         step = ScheduleStep(step_id='b',step_idx=2)
         step_dict = step.dereference(store)
         self.assertEqual(step_dict["step_nr"],3)
-        self.assertEqual(step_dict["images"],[])
+        self.assertEqual(step_dict["images"],{})
         self.assertTrue(step_dict["stop"] is None)
 
 class TestSchedule(unittest.TestCase):

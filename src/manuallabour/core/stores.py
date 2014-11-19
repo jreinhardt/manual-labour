@@ -41,28 +41,6 @@ class Store(object):
         Iterate over all (obj_id,obj) tuples
         """
         raise NotImplementedError
-    def has_res(self,res_id):
-        """
-        Return whether a resource with the given res_id is stored in this
-        Store.
-        """
-        raise NotImplementedError
-    def get_res(self,res_id):
-        """
-        Return the resource for this key. Raise KeyError if key is not known.
-        """
-        raise NotImplementedError
-    def get_res_url(self,res_id):
-        """
-        Return an URL for the file associated with the resource with this
-        res_id. Raise KeyError if res_id is not known.
-        """
-        raise NotImplementedError
-    def iter_res(self):
-        """
-        Iterate over all (res_id,res,url) tuples
-        """
-        raise NotImplementedError
     def has_step(self,step_id):
         """
         Return whether a step with the given step_id is stored in this Store.
@@ -86,7 +64,6 @@ class LocalMemoryStore(Store):
     """
     def __init__(self):
         self.objects = {}
-        self.resources = {}
         self.paths = {}
         self.steps = {}
     def has_blob(self,blob_id):
@@ -96,16 +73,6 @@ class LocalMemoryStore(Store):
             yield blob_id
     def get_blob_url(self,blob_id):
         return "file://%s" % self.paths[blob_id]
-    def has_res(self,res_id):
-        return res_id in self.resources
-    def get_res(self,res_id):
-        return self.resources[res_id]
-    def get_res_url(self,res_id):
-        res = self.get_res(res_id)
-        return "file://%s" % self.paths[res.blob_id]
-    def iter_res(self):
-        for res_id,res in self.resources.iteritems():
-            yield (res_id,res,self.get_res_url(res_id))
     def add_blob(self,blob_id,path):
         """
         Add a blob by its path
@@ -113,14 +80,6 @@ class LocalMemoryStore(Store):
         if blob_id in self.paths:
             raise KeyError('BlobID already found in Store: %s' % blob_id)
         self.paths[blob_id] = abspath(path)
-    def add_res(self,res):
-        """
-        Add a new resource to the store. Checks for collisions
-        """
-        res_id = res.res_id
-        if res_id in self.resources:
-            raise KeyError('ResourceID already found in Store: %s' % res_id)
-        self.resources[res_id] = res
     def has_obj(self,key):
         return key in self.objects
     def get_obj(self,key):

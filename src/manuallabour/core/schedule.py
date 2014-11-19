@@ -17,9 +17,7 @@ class BOMReference(ReferenceBase):
     def __init__(self,**kwargs):
         ReferenceBase.__init__(self,**kwargs)
     def dereference(self,store):
-        res = {}
-        res.update(self._kwargs)
-        res.update(self._calculated)
+        res = ReferenceBase.dereference(self,store)
         obj = store.get_obj(self.obj_id)
         res.update(obj._kwargs)
         res.update(obj._calculated)
@@ -44,9 +42,7 @@ class ScheduleStep(ReferenceBase):
             raise ValueError("Both or none of start and stop must be given")
 
     def dereference(self,store):
-        res = {}
-        res.update(self._kwargs)
-        res.update(self._calculated)
+        res = ReferenceBase.dereference(self,store)
         step = store.get_step(self.step_id)
         res.update(step.dereference(store))
         return res
@@ -90,7 +86,7 @@ class Schedule(object):
         parts = {}
         for step in self.steps:
             step_dict = step.dereference(self.store)
-            for tool in step_dict["tools"]:
+            for tool in step_dict["tools"].values():
                 if not tool["obj_id"] in tools:
                     tools[tool["obj_id"]] = {
                         "quantity" : 0,
@@ -111,7 +107,8 @@ class Schedule(object):
                 count["quantity"] = max(count["quantity"],count["current"])
                 count["optional"] = max(count["optional"],count["current_opt"])
 
-            for obj in step_dict["parts"] + step_dict["results"]:
+            for obj in step_dict["parts"].values()\
+                + step_dict["results"].values():
                 obj_id = obj["obj_id"]
                 if not obj_id in parts:
                     parts[obj_id] = {
@@ -159,9 +156,8 @@ class Schedule(object):
                 graph.add_node(o_id,label=obj.name,shape='rectangle')
 
         if with_resources:
-            for r_id, res, _ in self.store.iter_res():
-                r_id = 'r_' + r_id
-                graph.add_node(r_id,label=res.res_id[:6],shape='diamond')
+            for blob_id in self.store.iter_blob():
+                graph.add_node(blob_id,label=blob_id[:6],shape='diamond')
 
         #edges
         for ref in self.steps:
@@ -192,10 +188,10 @@ class Schedule(object):
                 s_id = 's_' + str(ref.step_nr)
                 step = self.store.get_step(ref.step_id)
 
-                for res in step.files.values():
-                    graph.add_edge('r_' + res.res_id,s_id,color='orange')
-                for res in step.images.values():
-                    graph.add_edge('r_' + res.res_id,s_id,color='green')
+                for fil in step.files.values():
+                    graph.add_edge('r_' + fil.blob_id,s_id,color='orange')
+                for img in step.images.values():
+                    graph.add_edge('r_' + img.blob_id,s_id,color='green')
 
         graph.draw(path,prog='dot')
 

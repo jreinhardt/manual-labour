@@ -53,7 +53,7 @@
     {% if step.parts %}
     <h3>Parts</h3>
     <ul>
-      {% for part in step.parts %}
+      {% for part in step.parts.values() %}
       <li>
       {% if part.images | length > 0 %}
       <a href="{{part.images[0].url}}">{{part.quantity}}x {{part.name}}</a>
@@ -68,7 +68,7 @@
     {% if step.tools %}
     <h3>Tools</h3>
     <ul>
-      {% for tool in step.tools %}
+      {% for tool in step.tools.values() %}
       <li>
       {% if tool.images | length > 0 %}
       <a href="{{tool.images[0].url}}">{{tool.quantity}}x {{tool.name}}</a>
@@ -101,7 +101,7 @@
     {% if step.results %}
     <h3>Results</h3>
     <ul>
-      {% for result in step.results %}
+      {% for result in step.results.values() %}
       <li>
       {% if result.images | length > 0 %}
       <a href="{{result.images[0].url}}">

@@ -76,10 +76,13 @@ class Graph(object):
 
         graph = pgv.AGraph(directed=True,strict=False)
 
-        #Nodes
+        steps = {}
         for alias,ref in self.steps.iteritems():
+            steps[alias] = ref.dereference(self.store)
+
+        #Nodes
+        for alias,step_dict in steps.iteritems():
             s_id = 's_' + alias
-            step_dict = ref.dereference(self.store)
             graph.add_node(s_id,label=step_dict["title"])
 
         if with_objects:
@@ -88,9 +91,9 @@ class Graph(object):
                 graph.add_node(o_id,label=obj.name,shape='rectangle')
 
         if with_resources:
-            for r_id, res, _ in self.store.iter_res():
-                r_id = 'r_' + r_id
-                graph.add_node(r_id,label=res.res_id[:6],shape='diamond')
+            for blob_id in self.store.iter_blob():
+                r_id = 'r_' + blob_id
+                graph.add_node(r_id,label=blob_id[:6],shape='diamond')
 
         #Edges
         for alias,children in self.children.iteritems():
@@ -98,9 +101,8 @@ class Graph(object):
                 graph.add_edge('s_' + alias,'s_' + child)
 
         if with_objects:
-            for alias,ref in self.steps.iteritems():
+            for alias,step_dict in steps.iteritems():
                 s_id = 's_' + alias
-                step_dict = ref.dereference(self.store)
 
                 args = dict(
                     attr={'color' : 'blue'},
@@ -116,13 +118,12 @@ class Graph(object):
                 graphviz_add_obj_edges(graph,s_id,step_dict["results"],**args)
 
         if with_resources:
-            for alias,ref in self.steps.iteritems():
+            for alias,step_dict in steps.iteritems():
                 s_id = 's_' + alias
-                step = self.store.get_step(ref.step_id)
 
-                for res in step.files.values():
-                    graph.add_edge('r_' + res.res_id,s_id,color='orange')
-                for res in step.images.values():
-                    graph.add_edge('r_' + res.res_id,s_id,color='green')
+                for res in step_dict["files"].values():
+                    graph.add_edge('r_' + res["blob_id"],s_id,color='orange')
+                for res in step_dict["images"].values():
+                    graph.add_edge('r_' + res["blob_id"],s_id,color='green')
 
         graph.draw(path,prog='dot')

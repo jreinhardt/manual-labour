@@ -19,7 +19,7 @@ class HTMLMarkup(MarkupBase):
         self.store = store
     def _handle_obj(self,obj,text):
         if obj["images"]:
-            url = self.store.get_res_url(obj["images"][0]["res_id"])
+            url = self.store.get_blob_url(obj["images"][0]["blob_id"])
             return "<a href='%s'>%s</a>" % (url,text or obj["name"])
         else:
             return text or obj["name"]
