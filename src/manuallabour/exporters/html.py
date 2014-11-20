@@ -2,7 +2,7 @@
 This module defines exporters for export of schedules to HTML and other
 classes related to this task.
 """
-from manuallabour.exporters.common import ExporterBase, MarkupBase
+from manuallabour.exporters.common import ScheduleExporterBase, MarkupBase
 from jinja2 import Environment, PackageLoader
 from os.path import join,  exists
 from shutil import rmtree,copytree
@@ -34,12 +34,12 @@ class HTMLMarkup(MarkupBase):
     def file(self,res,text):
         return "<a href='%s'>%s</a>" % (res["url"],text or res["filename"])
 
-class SinglePageHTMLExporter(ExporterBase):
+class SinglePageHTMLExporter(ScheduleExporterBase):
     """
     Exporter to export schedules into a single HTML page.
     """
     def __init__(self,layout):
-        ExporterBase.__init__(self)
+        ScheduleExporterBase.__init__(self)
         self.layout = layout
         self.env = Environment(
             loader=PackageLoader(
@@ -48,8 +48,8 @@ class SinglePageHTMLExporter(ExporterBase):
             )
         )
 
-    def export(self,schedule,path,**kwargs):
-        ExporterBase.export(self,schedule,path,**kwargs)
+    def export(self,schedule,store,path,**kwargs):
+        ScheduleExporterBase.export(self,schedule,store,path,**kwargs)
         #clean up output dir
         if exists(join(path)):
             rmtree(join(path))
@@ -62,11 +62,11 @@ class SinglePageHTMLExporter(ExporterBase):
         remove(join(path,'template.html'))
 
         #prepare stuff for rendering
-        store = schedule.store
         markup = HTMLMarkup(store)
 
-        parts = [ref.dereference(store) for ref in schedule.parts.values()]
-        tools = [ref.dereference(store) for ref in schedule.tools.values()]
+        bom = schedule.collect_bom(store)
+        parts = [ref.dereference(store) for ref in bom["parts"].values()]
+        tools = [ref.dereference(store) for ref in bom["tools"].values()]
 
         steps = []
         for step in schedule.steps:
@@ -86,11 +86,10 @@ class SinglePageHTMLExporter(ExporterBase):
                 )
             )
 
-    def render(self,schedule,**kwargs):
-        ExporterBase.render(self,schedule,**kwargs)
+    def render(self,schedule,store,**kwargs):
+        ExporterBase.render(self,schedule,store,**kwargs)
 
         #prepare stuff for rendering
-        store = schedule.store
         markup = HTMLMarkup(store)
 
         parts = [ref.dereference(store) for ref in schedule.parts.values()]

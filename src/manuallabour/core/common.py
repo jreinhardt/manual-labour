@@ -296,26 +296,3 @@ class Step(ContentBase):
             for alias,val in res[nspace].iteritems():
                 res[nspace][alias] = val.dereference(store)
         return res
-
-def graphviz_add_obj_edges(graph,s_id,objs,**kwargs):
-    """
-    add objects in the list objs to graph.
-
-    kwargs:
-    attr: dict of edge attributes
-    opt: additional edge attributes for optional objects
-    res: also add links to resources referenced by this object
-    """
-    for obj in objs.values():
-        o_id = 'o_' + obj["obj_id"]
-        if obj["optional"] and "opt" in kwargs:
-            kwargs["attr"].update(kwargs["opt"])
-        kwargs["attr"]["label"] = obj["quantity"]
-        if obj["created"]:
-            graph.add_edge(s_id,o_id,**kwargs["attr"])
-        else:
-            graph.add_edge(o_id,s_id,**kwargs["attr"])
-        if kwargs["res"]:
-            for img in obj["images"]:
-                graph.add_edge('r_' + img["blob_id"],o_id)
-

@@ -115,33 +115,15 @@ class TestSchedule(unittest.TestCase):
             dict(step_id='c',step_idx=2),
         ]
 
-        s = Schedule(steps,store)
-        self.assertEqual(s.tools['ta'].quantity,3)
-        self.assertEqual(s.tools['ta'].optional,0)
+        s = Schedule(sched_id="foobar",steps=steps)
+        bom = s.collect_bom(store)
 
-        self.assertFalse('ra' in s.parts)
-        self.assertEqual(s.parts['pa'].quantity,5)
-        self.assertEqual(s.parts['pa'].optional,1)
+        self.assertEqual(bom["tools"]['ta'].quantity,3)
+        self.assertEqual(bom["tools"]['ta'].optional,0)
 
-    def test_svg(self):
-        store = LocalMemoryStore()
-        schedule_example(store)
-
-        steps = [
-            dict(step_id='a',step_idx=0),
-            dict(step_id='b',step_idx=1),
-            dict(step_id='c',step_idx=2),
-        ]
-
-        s = Schedule(steps,store)
-
-        s.to_svg('tests/output/schedule.svg')
-        s.to_svg('tests/output/schedule_obj.svg',with_objects=True)
-        s.to_svg('tests/output/schedule_res.svg',with_resources=True)
-        s.to_svg('tests/output/schedule_all.svg',
-            with_objects=True,
-            with_resources=True
-        )
+        self.assertFalse('ra' in bom["parts"])
+        self.assertEqual(bom["parts"]['pa'].quantity,5)
+        self.assertEqual(bom["parts"]['pa'].optional,1)
 
 class TestSchedulers(unittest.TestCase):
     def setUp(self):
@@ -162,15 +144,15 @@ class TestSchedulers(unittest.TestCase):
 
     def test_greedy_timed(self):
         g = Graph(graph_id="foobar",steps=self.steps_timed)
-        steps = schedule_greedy(g)
+        steps = schedule_greedy(g,self.store)
 
         ids = [step["step_id"] for step in steps]
 
         self.assertTrue(ids.index('b') > ids.index('a'))
         self.assertTrue(ids.index('c') > ids.index('b'))
 
-        Schedule(steps,self.store)
+        Schedule(sched_id="boofar",steps=steps)
 
     def test_greedy_untimed(self):
         g = Graph(graph_id="foobar",steps=self.steps_untimed)
-        self.assertRaises(ValueError,lambda: schedule_greedy(g))
+        self.assertRaises(ValueError,lambda: schedule_greedy(g, self.store))

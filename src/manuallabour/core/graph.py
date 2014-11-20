@@ -5,7 +5,7 @@ This module defines the Graph class and related classes
 import jsonschema
 
 from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
-    graphviz_add_obj_edges, ContentBase
+    ContentBase
 
 class GraphStep(ReferenceBase):
     """
@@ -105,64 +105,3 @@ class Graph(ContentBase):
             res.add(parent)
             res.update(self.all_ancestors(parent))
         return res
-
-
-    def to_svg(self,path,with_objects=False,with_resources=False):
-        """
-        Render graph structure to svg file
-        """
-        import pygraphviz as pgv
-
-        graph = pgv.AGraph(directed=True,strict=False)
-
-        steps = {}
-        for alias,ref in self.steps.iteritems():
-            steps[alias] = ref.dereference(self.store)
-
-        #Nodes
-        for alias,step_dict in steps.iteritems():
-            s_id = 's_' + alias
-            graph.add_node(s_id,label=step_dict["title"])
-
-        if with_objects:
-            for o_id, obj in self.store.iter_obj():
-                o_id = 'o_' + o_id
-                graph.add_node(o_id,label=obj.name,shape='rectangle')
-
-        if with_resources:
-            for blob_id in self.store.iter_blob():
-                r_id = 'r_' + blob_id
-                graph.add_node(r_id,label=blob_id[:6],shape='diamond')
-
-        #Edges
-        for alias,children in self.children.iteritems():
-            for child in children:
-                graph.add_edge('s_' + alias,'s_' + child)
-
-        if with_objects:
-            for alias,step_dict in steps.iteritems():
-                s_id = 's_' + alias
-
-                args = dict(
-                    attr={'color' : 'blue'},
-                    opt={'style' : 'dashed'},
-                    res=with_resources
-                )
-                graphviz_add_obj_edges(graph,s_id,step_dict["parts"],**args)
-
-                args["attr"] = {'color' : 'red'}
-                graphviz_add_obj_edges(graph,s_id,step_dict["tools"],**args)
-
-                args["attr"] = {'color' : 'brown'}
-                graphviz_add_obj_edges(graph,s_id,step_dict["results"],**args)
-
-        if with_resources:
-            for alias,step_dict in steps.iteritems():
-                s_id = 's_' + alias
-
-                for res in step_dict["files"].values():
-                    graph.add_edge('r_' + res["blob_id"],s_id,color='orange')
-                for res in step_dict["images"].values():
-                    graph.add_edge('r_' + res["blob_id"],s_id,color='green')
-
-        graph.draw(path,prog='dot')

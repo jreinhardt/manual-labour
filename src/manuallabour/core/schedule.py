@@ -5,7 +5,7 @@ import jsonschema
 from datetime import timedelta
 
 from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
-    graphviz_add_obj_edges
+    ContentBase
 
 class BOMReference(ReferenceBase):
     """
@@ -61,143 +61,83 @@ class ScheduleStep(ReferenceBase):
         res["attention"] = markup.markup(step,store,res["attention"])
         return res
 
-class Schedule(object):
+class Schedule(ContentBase):
     """
     Container to hold a sequence of steps
     """
-    def __init__(self,steps,store):
-        """
-        Initialize the Schedule with a sequence of ScheduleSteps and a store
-        for all steps, objects and resources.
-        """
-        self.store = store
+    _schema = load_schema(SCHEMA_DIR,'schedule.json')
+    _validator = jsonschema.Draft4Validator(_schema)
+    _id = "sched_id"
 
-        self.steps = []
-        for step in steps:
-            self.steps.append(ScheduleStep(**step))
+    def __init__(self,**kwargs):
+        ContentBase.__init__(self,**kwargs)
 
-        self.tools = {}
-        self.parts = {}
-        self._create_bom()
+        self._calculated["steps"] = []
+        for step in kwargs["steps"]:
+            self._calculated["steps"].append(ScheduleStep(**step))
 
-    def _create_bom(self):
+    def collect_bom(self,store):
         """
-        Assemble the list of required parts and tools
+        Collect the list of required materials and tools for this schedule.
+        The resulting dicts are suitable to create BOMReferences.
         """
         tools = {}
         parts = {}
-        for step in self.steps:
-            step_dict = step.dereference(self.store)
-            for tool in step_dict["tools"].values():
-                if not tool["obj_id"] in tools:
-                    tools[tool["obj_id"]] = {
-                        "quantity" : 0,
-                        "optional" : 0,
-                        "current" : 0,
-                        "current_opt" : 0,
-                    }
-                count = tools[tool["obj_id"]]
-                if tool["created"]:
-                    count["current"] -= tool["quantity"]
-                    count["current_opt"] -= tool["quantity"]
+        for ref in self.steps:
+            step = store.get_step(ref.step_id)
+            for tool in step.tools.values():
+                count = tools.setdefault(tool.obj_id,{
+                    "obj_id" : tool.obj_id,
+                    "quantity" : 0,
+                    "optional" : 0,
+                    "current" : 0,
+                    "current_opt" : 0,
+                })
+
+                if tool.created:
+                    count["current"] -= tool.quantity
+                    count["current_opt"] -= tool.quantity
                 else:
-                    if tool["optional"]:
-                        count["current_opt"] = + tool["quantity"]
+                    if tool.optional:
+                        count["current_opt"] = + tool.quantity
                     else:
-                        count["current"] = + tool["quantity"]
-                        count["current_opt"] = + tool["quantity"]
+                        count["current"] = + tool.quantity
+                        count["current_opt"] = + tool.quantity
                 count["quantity"] = max(count["quantity"],count["current"])
                 count["optional"] = max(count["optional"],count["current_opt"])
 
-            for obj in step_dict["parts"].values()\
-                + step_dict["results"].values():
-                obj_id = obj["obj_id"]
-                if not obj_id in parts:
-                    parts[obj_id] = {
-                        "optional" : 0,
-                        "quantity" : 0
-                    }
+            for obj in step.parts.values() + step.results.values():
+                count = parts.setdefault(obj.obj_id,{
+                    "obj_id" : obj.obj_id,
+                    "optional" : 0,
+                    "quantity" : 0
+                })
 
-                if obj["created"]:
-                    parts[obj_id]["quantity"] -= obj["quantity"]
+                if obj.created:
+                    count["quantity"] -= obj.quantity
                 else:
-                    if obj["optional"]:
-                        parts[obj_id]["optional"] += obj["quantity"]
+                    if obj.optional:
+                        count["optional"] += obj.quantity
                     else:
-                        parts[obj_id]["quantity"] += obj["quantity"]
+                        count["quantity"] += obj.quantity
+
+        result = {"parts" : {}, "tools" : {}}
 
         for obj_id,count in tools.iteritems():
             count.pop("current")
             count.pop("current_opt")
             count["optional"] -= count["quantity"]
-            self.tools[obj_id] = BOMReference(obj_id=obj_id,**count)
-
-        for obj_id,count in parts.iteritems():
             if count["quantity"] > 0 or count["optional"] > 0:
-                self.parts[obj_id] = BOMReference(obj_id=obj_id,**count)
+                result["tools"][obj_id] = BOMReference(**count)
 
-    def to_svg(self,path,with_objects=False,with_resources=False):
-        """
-        Render schedule structure to svg file
-        """
-        import pygraphviz as pgv
+        for obj_id,count in parts.items():
+            if count["quantity"] > 0 or count["optional"] > 0:
+                result["parts"][obj_id] = BOMReference(**count)
 
-        graph = pgv.AGraph(directed=True)
+        return result
 
-        #Nodes
-        for ref in self.steps:
-            s_id = 's_' + str(ref.step_nr)
-            step_dict = ref.dereference(self.store)
-            graph.add_node(s_id,label=step_dict["title"])
-            if ref.step_nr > 1:
-                graph.add_edge('s_' + str(ref.step_nr - 1),s_id)
 
-        if with_objects:
-            for o_id, obj in self.store.iter_obj():
-                o_id = 'o_' + o_id
-                graph.add_node(o_id,label=obj.name,shape='rectangle')
-
-        if with_resources:
-            for blob_id in self.store.iter_blob():
-                graph.add_node(blob_id,label=blob_id[:6],shape='diamond')
-
-        #edges
-        for ref in self.steps:
-            s_id = 's_' + str(ref.step_nr)
-            if ref.step_nr > 1:
-                graph.add_edge('s_' + str(ref.step_nr - 1),s_id)
-
-        if with_objects:
-            for ref in self.steps:
-                s_id = 's_' + str(ref.step_nr)
-                step_dict = ref.dereference(self.store)
-
-                args = dict(
-                    attr={'color' : 'blue'},
-                    opt={'style' : 'dashed'},
-                    res=with_resources
-                )
-                graphviz_add_obj_edges(graph,s_id,step_dict["parts"],**args)
-
-                args["attr"] = {'color' : 'red'}
-                graphviz_add_obj_edges(graph,s_id,step_dict["tools"],**args)
-
-                args["attr"] = {'color' : 'brown'}
-                graphviz_add_obj_edges(graph,s_id,step_dict["results"],**args)
-
-        if with_resources:
-            for ref in self.steps:
-                s_id = 's_' + str(ref.step_nr)
-                step = self.store.get_step(ref.step_id)
-
-                for fil in step.files.values():
-                    graph.add_edge('r_' + fil.blob_id,s_id,color='orange')
-                for img in step.images.values():
-                    graph.add_edge('r_' + img.blob_id,s_id,color='green')
-
-        graph.draw(path,prog='dot')
-
-def schedule_greedy(graph, targets = None):
+def schedule_greedy(graph, store, targets = None):
     """
     Scheduler that always chooses the next step such that its finish time
     is minimized. Does not take into account limited availability of tools.
@@ -216,7 +156,7 @@ def schedule_greedy(graph, targets = None):
         steps = dict((key,graph.steps[key]) for key in steps)
 
     for step in steps.values():
-        step_dict = step.dereference(graph.store)
+        step_dict = step.dereference(store)
         if step_dict["duration"] is None:
             raise ValueError(
                 "This graph can not be scheduled greedily due to "
@@ -247,7 +187,7 @@ def schedule_greedy(graph, targets = None):
             for dep in graph.parents[alias]:
                 if dep in waiting and waiting[dep] > cand_start:
                     cand_start = waiting[dep]
-            cand_dict = cand.dereference(graph.store)
+            cand_dict = cand.dereference(store)
             print cand_dict
             cand_stop = cand_start + cand_dict["duration"].total_seconds()
             if best_cand is None or cand_stop < best_cand[3]:

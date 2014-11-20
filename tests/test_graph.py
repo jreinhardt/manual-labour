@@ -28,28 +28,6 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(g.all_ancestors('a'),set([]))
         self.assertEqual(g.all_ancestors('b'),set(['a']))
 
-    def test_svg(self):
-        store = LocalMemoryStore()
-
-        schedule_example(store)
-
-        steps = {
-            's1' : dict(step_id='a'),
-            'b1' : dict(step_id='b',requires=['s1']),
-            's2' : dict(step_id='c',requires=['b1']),
-            's3' : dict(step_id='d',requires=['b1'])
-        }
-        g = Graph(graph_id="foobar",steps=steps)
-
-        g.to_svg('tests/output/graph.svg')
-        g.to_svg('tests/output/graph_obj.svg',with_objects=True)
-        g.to_svg('tests/output/graph_res.svg',with_resources=True)
-        g.to_svg(
-            'tests/output/graph_all.svg',
-            with_objects=True,
-            with_resources=True
-        )
-
     def test_collect_ids(self):
         store = LocalMemoryStore()
 

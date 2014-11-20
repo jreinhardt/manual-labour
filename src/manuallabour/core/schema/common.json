@@ -27,6 +27,11 @@
     "description" : "ID of the referenced graph",
     "pattern" : "^[a-zA-Z0-9_-]*$"
   },
+  "schedule_id" : {
+    "type" : "string",
+    "description" : "ID of the referenced schedule",
+    "pattern" : "^[a-zA-Z0-9_-]*$"
+  },
   "timedelta" : {
     "type" : "object",
     "description" : "A timespan",
