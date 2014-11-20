@@ -67,7 +67,7 @@ class Graph(ContentBase):
         Collect the step_ids, obj_ids  and blob_ids that are directly or
         indirectly referenced by this graph
 
-        returns a dict of sets
+        returns a dict of lists
         """
         #Sets of steps, objects, and blobs used in this graph
         res = {}
@@ -97,6 +97,9 @@ class Graph(ContentBase):
             obj = store.get_obj(obj_id)
             for img in obj.images:
                 res["blob_ids"].add(img.blob_id)
+
+        for ids in res:
+            res[ids] = list(res[ids])
 
         return res
 

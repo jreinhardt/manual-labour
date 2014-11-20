@@ -43,6 +43,6 @@ class TestGraph(unittest.TestCase):
 
         res = g.collect_ids(store)
 
-        self.assertEqual(res["step_ids"],set(["a","b","c","d"]))
-        self.assertEqual(res["obj_ids"],set(["ta","pa","ra"]))
-        self.assertEqual(res["blob_ids"],set(["imb","fb","imb2"]))
+        self.assertEqual(set(res["step_ids"]),set(["a","b","c","d"]))
+        self.assertEqual(set(res["obj_ids"]),set(["ta","pa","ra"]))
+        self.assertEqual(set(res["blob_ids"]),set(["imb","fb","imb2"]))
