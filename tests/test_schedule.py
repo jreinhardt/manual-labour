@@ -94,7 +94,6 @@ class TestScheduleStep(unittest.TestCase):
             stop=dict(hours=2,minutes=15),
         )
         step_dict = step.dereference(store)
-        print step_dict
         self.assertEqual(step_dict["step_idx"],0)
         self.assertEqual(step_dict["title"],"First")
         self.assertEqual(step_dict["images"]["t_imag"]["extension"],".png")
