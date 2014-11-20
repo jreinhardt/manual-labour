@@ -70,7 +70,7 @@ class TestDataStruct(unittest.TestCase):
     def test_as_dict(self):
         one = self.one.as_dict()
         self.assertEqual(one['name'],'foo')
-        self.assertFalse('description' in one)
+        self.assertTrue('description' in one)
 
         two = self.two.as_dict()
         self.assertEqual(two['name'],'Foo')

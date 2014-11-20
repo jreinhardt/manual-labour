@@ -6,7 +6,6 @@ import json
 import pkg_resources
 import hashlib
 import base64
-from copy import copy
 from os.path import join
 from datetime import timedelta
 from copy import deepcopy
@@ -111,7 +110,7 @@ class DataStruct(object):
                 raise ValueError("No default given for %s" % field)
             #apply defaults
             if (not field in kwargs) and "default" in schema:
-                self._calculated[field] = copy(schema["default"])
+                self._calculated[field] = deepcopy(schema["default"])
     def __getattr__(self,name):
         if name in self._calculated:
             return self._calculated.get(name)
@@ -128,10 +127,14 @@ class DataStruct(object):
 
     def as_dict(self):
         """
-        Return the constructor parameters of this instance as a dict, this can
-        be used to recreate it.
+        Return the constructor parameters (including defaults) of this instance
+        as a dict, this can be used to recreate it.
         """
-        return self._kwargs
+        res = deepcopy(self._kwargs)
+        for field, schema in self._schema["properties"].iteritems():
+            if (not field in res) and "default" in schema:
+                res[field] = deepcopy(schema["default"])
+        return res
     def dereference(self,_store):
         """
         Return the content of this instance as a dict. References are
@@ -262,8 +265,10 @@ class Step(ContentBase):
         ContentBase.__init__(self,**kwargs)
 
         for time in ["duration","waiting"]:
-            if time in kwargs:
+            if time in kwargs and kwargs[time]:
                 self._calculated[time] = timedelta(**kwargs[time])
+            else:
+                self._calculated[time] = None
 
         for nsp in ["parts","tools","results"]:
             if nsp in self._kwargs:

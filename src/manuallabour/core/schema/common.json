@@ -31,7 +31,7 @@
       "hours" : {"type" : "integer"},
       "days" : {"type" : "integer"}
     },
-    "default" : null,
+    "default" : {},
     "additionalProperties" : false
   },
   "object_namespace" : {

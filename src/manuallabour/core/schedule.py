@@ -36,8 +36,10 @@ class ScheduleStep(ReferenceBase):
 
         self._calculated["step_nr"] = self.step_idx + 1
         for time in ["start","stop"]:
-            if time in kwargs:
+            if time in kwargs and kwargs[time]:
                 self._calculated[time] = timedelta(**kwargs[time])
+            else:
+                self._calculated[time] = None
         if ("start" in kwargs) != ("stop" in kwargs):
             raise ValueError("Both or none of start and stop must be given")
 
