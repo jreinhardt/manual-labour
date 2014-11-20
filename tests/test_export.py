@@ -7,6 +7,7 @@ from manuallabour.core.schedule import Schedule
 from manuallabour.core.stores import LocalMemoryStore
 
 from manuallabour.exporters.html import SinglePageHTMLExporter
+from manuallabour.exporters.svg import GraphSVGExporter, ScheduleSVGExporter
 
 from test_schedule import schedule_example
 
@@ -55,6 +56,57 @@ class TestExporter(unittest.TestCase):
             self.schedule_timed,
             self.store,
             'tests/output/html_single_timed',
+            **self.data
+        )
+
+    def test_graph_svg(self):
+        GraphSVGExporter().export(
+            self.graph,
+            self.store,
+            'tests/output/graph.svg',
+            **self.data
+        )
+
+        GraphSVGExporter(with_objects=True).export(
+            self.graph,
+            self.store,
+            'tests/output/graph_obj.svg',
+            **self.data
+        )
+
+        GraphSVGExporter(with_resources=True).export(
+            self.graph,
+            self.store,
+            'tests/output/graph_res.svg',
+            **self.data
+        )
+
+        GraphSVGExporter(with_objects=True,with_resources=True).export(
+            self.graph,
+            self.store,
+            'tests/output/graph_all.svg',
+            **self.data
+        )
+
+    def test_schedule_svg(self):
+        ScheduleSVGExporter().export(
+            self.schedule,
+            self.store,
+            'tests/output/schedule.svg',
+            **self.data
+        )
+
+        ScheduleSVGExporter(with_objects=True).export(
+            self.schedule_timed,
+            self.store,
+            'tests/output/schedule_obj.svg',
+            **self.data
+        )
+
+        ScheduleSVGExporter(with_resources=True).export(
+            self.schedule_timed,
+            self.store,
+            'tests/output/schedule_res.svg',
             **self.data
         )
 
