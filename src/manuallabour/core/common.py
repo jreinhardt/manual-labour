@@ -119,11 +119,12 @@ class DataStruct(object):
         else:
             raise AttributeError('Class %s has no attribute %s' %\
                 (type(self),name))
-    def validate(self,**kwargs):
+    @classmethod
+    def validate(cls,**kwargs):
         """
         Validate the arguments against the schema of this class.
         """
-        self._validator.validate(kwargs)
+        cls._validator.validate(kwargs)
 
     def as_dict(self):
         """
