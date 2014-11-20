@@ -5,7 +5,7 @@ This module defines the Graph class and related classes
 import jsonschema
 
 from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
-    graphviz_add_obj_edges
+    graphviz_add_obj_edges, ContentBase
 
 class GraphStep(ReferenceBase):
     """
@@ -24,36 +24,42 @@ class GraphStep(ReferenceBase):
         res.update(step.dereference(store))
         return res
 
-class Graph(object):
+class Graph(ContentBase):
     """
     Container to hold a set of dependent steps
 
-    steps is a dictionary of alias,GraphStep tuples
+    steps:
+        Dict with aliases and GraphSteps
+    children:
+        Dict mapping the alias of a step to aliases of all its children
+    parents:
+        Dict mapping the alias of a step to aliases of its parent
     """
-    def __init__(self,steps,store):
-        self.steps = {}
-        for alias,ref in steps.iteritems():
-            self.steps[alias] = GraphStep(**ref)
+    _schema = load_schema(SCHEMA_DIR,'graph.json')
+    _validator = jsonschema.Draft4Validator(_schema)
+    _id = "graph_id"
 
-        self.children = {}
-        """Dict mapping the alias of a step to aliases of all its children"""
-        self.parents = {}
-        """Dict mapping the alias of a step to aliases of its parent"""
+    def __init__(self,**kwargs):
+        ContentBase.__init__(self,**kwargs)
 
-        self.store = store
-        """A datastructure to store object and resource data"""
+        self._calculated["steps"] = {}
+        for alias,ref in kwargs["steps"].iteritems():
+            self._calculated["steps"][alias] = GraphStep(**ref)
+
+        self._calculated["children"] = {}
+        self._calculated["parents"] = {}
 
         for alias,ref in self.steps.iteritems():
-            self.parents[alias] = ref.requires
+            self._calculated["parents"][alias] = ref.requires
 
             if not alias in self.children:
-                self.children[alias] = []
+                self._calculated["children"][alias] = []
 
             for req in ref.requires:
                 if not req in self.children:
-                    self.children[req] = [alias]
+                    self._calculated["children"][req] = [alias]
                 else:
-                    self.children[req].append(alias)
+                    self._calculated["children"][req].append(alias)
 
     def all_ancestors(self,alias):
         """ Return set of all ancestor steps

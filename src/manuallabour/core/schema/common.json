@@ -22,6 +22,11 @@
     "description" : "ID of the referenced blob",
     "pattern" : "^[a-zA-Z0-9_-]*$"
   },
+  "graph_id" : {
+    "type" : "string",
+    "description" : "ID of the referenced graph",
+    "pattern" : "^[a-zA-Z0-9_-]*$"
+  },
   "timedelta" : {
     "type" : "object",
     "description" : "A timespan",

@@ -17,13 +17,13 @@ class TestGraph(unittest.TestCase):
             'b' : dict(step_id='yzx',requires=['a'])
         }
     def test_dependencies(self):
-        g = Graph(self.steps,LocalMemoryStore())
+        g = Graph(graph_id="foobar",steps=self.steps)
 
         self.assertEqual(g.children['a'],['b'])
         self.assertEqual(g.parents['b'],['a'])
 
     def test_ancestors(self):
-        g = Graph(self.steps,LocalMemoryStore())
+        g = Graph(graph_id="foobar",steps=self.steps)
 
         self.assertEqual(g.all_ancestors('a'),set([]))
         self.assertEqual(g.all_ancestors('b'),set(['a']))
@@ -39,7 +39,7 @@ class TestGraph(unittest.TestCase):
             's2' : dict(step_id='c',requires=['b1']),
             's3' : dict(step_id='d',requires=['b1'])
         }
-        g = Graph(steps,store)
+        g = Graph(graph_id="foobar",steps=steps)
 
         g.to_svg('tests/output/graph.svg')
         g.to_svg('tests/output/graph_obj.svg',with_objects=True)

@@ -161,7 +161,7 @@ class TestSchedulers(unittest.TestCase):
         }
 
     def test_greedy_timed(self):
-        g = Graph(self.steps_timed,self.store)
+        g = Graph(graph_id="foobar",steps=self.steps_timed)
         steps = schedule_greedy(g)
 
         ids = [step["step_id"] for step in steps]
@@ -172,5 +172,5 @@ class TestSchedulers(unittest.TestCase):
         Schedule(steps,self.store)
 
     def test_greedy_untimed(self):
-        g = Graph(self.steps_untimed,self.store)
+        g = Graph(graph_id="foobar",steps=self.steps_untimed)
         self.assertRaises(ValueError,lambda: schedule_greedy(g))

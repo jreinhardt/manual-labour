@@ -3,12 +3,21 @@
   "title" : "Graph steps reference schema",
   "description" : "Description of the steps for initialising a Graph.",
   "type" : "object",
-  "patternProperties" : {
-    "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
-      "$ref" : "common.json#/graph_step"
+  "properties" : {
+    "graph_id" : {
+      "$ref" : "common.json#/graph_id"
+    },
+    "steps" : {
+      "type" : "object",
+      "patternProperties" : {
+        "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
+          "$ref" : "references.json#/graph_step"
+        }
+      },
+      "additionalProperties" : false
     }
   },
-  "default" : {},
+  "required" : ["graph_id", "steps"],
   "additionalProperties" : false
 }
 
