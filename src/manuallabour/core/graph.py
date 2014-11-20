@@ -63,6 +63,12 @@ class Graph(ContentBase):
                     self._calculated["children"][req].append(alias)
 
     def collect_ids(self,store):
+        """
+        Collect the step_ids, obj_ids  and blob_ids that are directly or
+        indirectly referenced by this graph
+
+        returns a dict of sets
+        """
         #Sets of steps, objects, and blobs used in this graph
         res = {}
         res["step_ids"] = set([])

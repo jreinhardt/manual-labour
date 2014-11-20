@@ -99,7 +99,7 @@ class GraphSVGExporter(common.GraphExporterBase):
     def render(self,graph,store,**kwargs):
         common.GraphExporterBase.render(self,graph,store,**kwargs)
 
-        fh,filename = tempfile.mkstemp(suffix=".svg")
+        _filehandle,filename = tempfile.mkstemp(suffix=".svg")
         self.export(graph,store,filename,**kwargs)
         result = open(filename).read()
         os.remove(filename)

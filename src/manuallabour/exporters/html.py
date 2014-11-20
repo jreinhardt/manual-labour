@@ -87,7 +87,7 @@ class SinglePageHTMLExporter(ScheduleExporterBase):
             )
 
     def render(self,schedule,store,**kwargs):
-        ExporterBase.render(self,schedule,store,**kwargs)
+        ScheduleExporterBase.render(self,schedule,store,**kwargs)
 
         #prepare stuff for rendering
         markup = HTMLMarkup(store)
