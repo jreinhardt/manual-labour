@@ -50,3 +50,21 @@ class TestGraph(unittest.TestCase):
             with_resources=True
         )
 
+    def test_collect_ids(self):
+        store = LocalMemoryStore()
+
+        schedule_example(store)
+
+        steps = {
+            's1' : dict(step_id='a'),
+            'b1' : dict(step_id='b',requires=['s1']),
+            's2' : dict(step_id='c',requires=['b1']),
+            's3' : dict(step_id='d',requires=['b1'])
+        }
+        g = Graph(graph_id="foobar",steps=steps)
+
+        res = g.collect_ids(store)
+
+        self.assertEqual(res["step_ids"],set(["a","b","c","d"]))
+        self.assertEqual(res["obj_ids"],set(["ta","pa","ra"]))
+        self.assertEqual(res["blob_ids"],set(["imb","fb","imb2"]))

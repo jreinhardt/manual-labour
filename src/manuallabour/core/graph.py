@@ -46,6 +46,7 @@ class Graph(ContentBase):
         for alias,ref in kwargs["steps"].iteritems():
             self._calculated["steps"][alias] = GraphStep(**ref)
 
+        #Dependency information
         self._calculated["children"] = {}
         self._calculated["parents"] = {}
 
@@ -60,6 +61,38 @@ class Graph(ContentBase):
                     self._calculated["children"][req] = [alias]
                 else:
                     self._calculated["children"][req].append(alias)
+
+    def collect_ids(self,store):
+        #Sets of steps, objects, and blobs used in this graph
+        res = {}
+        res["step_ids"] = set([])
+        res["obj_ids"] = set([])
+        res["blob_ids"] = set([])
+
+        for ref in self.steps.values():
+            res["step_ids"].add(ref.step_id)
+
+        for step_id in list(res["step_ids"]):
+            step = store.get_step(step_id)
+
+            for img in step.images.values():
+                res["blob_ids"].add(img.blob_id)
+            for fil in step.files.values():
+                res["blob_ids"].add(fil.blob_id)
+
+            for tool in step.tools.values():
+                res["obj_ids"].add(tool.obj_id)
+            for part in step.parts.values():
+                res["obj_ids"].add(part.obj_id)
+            for result in step.results.values():
+                res["obj_ids"].add(result.obj_id)
+
+        for obj_id in list(res["obj_ids"]):
+            obj = store.get_obj(obj_id)
+            for img in obj.images:
+                res["blob_ids"].add(img.blob_id)
+
+        return res
 
     def all_ancestors(self,alias):
         """ Return set of all ancestor steps
