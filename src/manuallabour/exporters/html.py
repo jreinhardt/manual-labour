@@ -61,30 +61,8 @@ class SinglePageHTMLExporter(ScheduleExporterBase):
         copytree(layout_path,path)
         remove(join(path,'template.html'))
 
-        #prepare stuff for rendering
-        markup = HTMLMarkup(store)
-
-        bom = schedule.collect_bom(store)
-        parts = [ref.dereference(store) for ref in bom["parts"].values()]
-        tools = [ref.dereference(store) for ref in bom["tools"].values()]
-
-        steps = []
-        for step in schedule.steps:
-            steps.append(step.markup(store,markup))
-
-        template = self.env.get_template('template.html')
-
         with open(join(path,'out.html'),'w','utf8') as fid:
-            fid.write(
-                #pylint: disable=E1103
-                template.render(
-                    doc = kwargs,
-                    schedule = schedule,
-                    parts = parts,
-                    tools = tools,
-                    steps = steps
-                )
-            )
+            fid.write(self.render(schedule,store,**kwargs))
 
     def render(self,schedule,store,**kwargs):
         ScheduleExporterBase.render(self,schedule,store,**kwargs)
@@ -92,8 +70,9 @@ class SinglePageHTMLExporter(ScheduleExporterBase):
         #prepare stuff for rendering
         markup = HTMLMarkup(store)
 
-        parts = [ref.dereference(store) for ref in schedule.parts.values()]
-        tools = [ref.dereference(store) for ref in schedule.tools.values()]
+        bom = schedule.collect_bom(store)
+        parts = [ref.dereference(store) for ref in bom["parts"].values()]
+        tools = [ref.dereference(store) for ref in bom["tools"].values()]
 
         steps = []
         for step in schedule.steps:
