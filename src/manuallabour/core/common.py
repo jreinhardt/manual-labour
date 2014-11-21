@@ -221,13 +221,19 @@ class ContentBase(DataStruct):
 
         Returns a string
         """
-        if not cls._id in kwargs:
-            kwargs[cls._id] = "dummy"
-        cls._validator.validate(kwargs)
-        kwargs.pop(cls._id)
+        #Add the defaults, to make the result for kwargs be the same as for
+        #the dict returned by calculate_checksum(ContentBase.as_dict())
+        res = deepcopy(kwargs)
+        for field, schema in cls._schema["properties"].iteritems():
+            if (not field in res) and "default" in schema:
+                res[field] = deepcopy(schema["default"])
+        if not cls._id in res:
+            res[cls._id] = "dummy"
+        cls._validator.validate(res)
+        res.pop(cls._id)
 
         check = hashlib.sha512()
-        calculate_kwargs_checksum(check,kwargs)
+        calculate_kwargs_checksum(check,res)
         return base64.urlsafe_b64encode(check.digest())[:-2]
 
 class Object(ContentBase):
