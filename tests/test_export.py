@@ -22,12 +22,12 @@ class TestExporter(unittest.TestCase):
         t3 = dict(minutes=45)
         t4 = dict(minutes=90)
 
-        steps_graph = {
-            's1' : dict(step_id='a'),
-            'b1' : dict(step_id='b',requires=['s1']),
-            's2' : dict(step_id='c',requires=['b1']),
-            's3' : dict(step_id='d',requires=['b1'])
-        }
+        steps_graph = [
+            dict(step_id='a'),
+            dict(step_id='b',requires=['a']),
+            dict(step_id='c',requires=['b']),
+            dict(step_id='d',requires=['b'])
+        ]
         self.graph = Graph(graph_id="foobar",steps=steps_graph)
 
         steps = [

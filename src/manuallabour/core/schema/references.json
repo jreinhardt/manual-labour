@@ -57,7 +57,7 @@
         "type" : "array",
         "description" : "step_alias of prerequisite steps",
         "items" : {
-          "$ref" : "common.json#/step_alias"
+          "$ref" : "common.json#/step_id"
         },
         "default" : []
       }

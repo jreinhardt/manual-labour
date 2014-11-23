@@ -12,11 +12,6 @@
     "description" : "ID of the referenced step",
     "pattern" : "^[a-zA-Z0-9_-]*$"
   },
-  "step_alias" : {
-    "type" : "string",
-    "description" : "Alias for a step",
-    "pattern" : "^[a-zA-Z0-9]*$"
-  },
   "blob_id" : {
     "type" : "string",
     "description" : "ID of the referenced blob",

@@ -155,7 +155,7 @@ def schedule_greedy(graph, store, targets = None):
             steps.update(graph.all_ancestors(target))
         steps = dict((key,graph.steps[key]) for key in steps)
 
-    for step in steps.values():
+    for step in steps:
         step_dict = step.dereference(store)
         if step_dict["duration"] is None:
             raise ValueError(
@@ -170,37 +170,37 @@ def schedule_greedy(graph, store, targets = None):
 
     while len(scheduled) < len(steps):
         #find possible next steps
-        for alias,step in steps.iteritems():
-            if alias in scheduled:
+        for step in steps:
+            if step.step_id in scheduled:
                 continue
-            for dep in graph.parents[alias]:
+            for dep in graph.parents[step.step_id]:
                 if not dep in scheduled:
                     break
             else:
-                possible[alias] = step
+                possible[step.step_id] = step
 
         #from these find the step with minimal end time
         best_cand = None
-        for alias,cand in possible.iteritems():
+        for step_id,cand in possible.iteritems():
             cand_start = time
             #find earliest possible starting time
-            for dep in graph.parents[alias]:
+            for dep in graph.parents[step_id]:
                 if dep in waiting and waiting[dep] > cand_start:
                     cand_start = waiting[dep]
             cand_dict = cand.dereference(store)
             cand_stop = cand_start + cand_dict["duration"].total_seconds()
             if best_cand is None or cand_stop < best_cand[3]:
-                best_cand = (alias,cand,cand_start,cand_stop)
+                best_cand = (cand,cand_start,cand_stop)
 
         #schedule it
         # pylint: disable=W0633
-        alias,cand,cand_start,cand_stop = best_cand
-        scheduled[alias] = dict(
+        cand,cand_start,cand_stop = best_cand
+        scheduled[cand.step_id] = dict(
             step_id=cand.step_id,
             start = dict(seconds=int(cand_start)),
             stop = dict(seconds=int(cand_stop)),
             step_idx = len(scheduled)
         )
-        possible.pop(alias)
+        possible.pop(cand.step_id)
 
     return sorted(scheduled.values(),key=lambda x: x["step_idx"])

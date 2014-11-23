@@ -42,25 +42,25 @@ class Graph(ContentBase):
     def __init__(self,**kwargs):
         ContentBase.__init__(self,**kwargs)
 
-        self._calculated["steps"] = {}
-        for alias,ref in kwargs["steps"].iteritems():
-            self._calculated["steps"][alias] = GraphStep(**ref)
+        self._calculated["steps"] = []
+        for ref in kwargs["steps"]:
+            self._calculated["steps"].append(GraphStep(**ref))
 
         #Dependency information
         self._calculated["children"] = {}
         self._calculated["parents"] = {}
 
-        for alias,ref in self.steps.iteritems():
-            self._calculated["parents"][alias] = ref.requires
+        for ref in self.steps:
+            self._calculated["parents"][ref.step_id] = ref.requires
 
-            if not alias in self.children:
-                self._calculated["children"][alias] = []
+            if not ref.step_id in self.children:
+                self._calculated["children"][ref.step_id] = []
 
             for req in ref.requires:
                 if not req in self.children:
-                    self._calculated["children"][req] = [alias]
+                    self._calculated["children"][req] = [ref.step_id]
                 else:
-                    self._calculated["children"][req].append(alias)
+                    self._calculated["children"][req].append(ref.step_id)
 
     def collect_ids(self,store):
         """
@@ -75,7 +75,7 @@ class Graph(ContentBase):
         res["obj_ids"] = set([])
         res["blob_ids"] = set([])
 
-        for ref in self.steps.values():
+        for ref in self.steps:
             res["step_ids"].add(ref.step_id)
 
         for step_id in list(res["step_ids"]):

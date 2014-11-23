@@ -45,8 +45,8 @@ class GraphSVGExporter(common.GraphExporterBase):
         result = pgv.AGraph(directed=True)
 
         steps = {}
-        for alias,ref in graph.steps.iteritems():
-            steps[alias] = ref.dereference(store)
+        for ref in graph.steps:
+            steps[ref.step_id] = ref.dereference(store)
 
         #Nodes
         for alias,step_dict in steps.iteritems():

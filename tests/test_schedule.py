@@ -130,17 +130,17 @@ class TestSchedulers(unittest.TestCase):
         self.store = LocalMemoryStore()
         schedule_example(self.store)
 
-        self.steps_timed = {
-            's1' : dict(step_id='a'),
-            'b1' : dict(step_id='b',requires=['s1']),
-            's2' : dict(step_id='c',requires=['b1'])
-        }
+        self.steps_timed = [
+            dict(step_id='a'),
+            dict(step_id='b',requires=['a']),
+            dict(step_id='c',requires=['b'])
+        ]
 
-        self.steps_untimed = {
-            's1' : dict(step_id='a'),
-            'b1' : dict(step_id='b',requires=['s1']),
-            's2' : dict(step_id='d',requires=['s1'])
-        }
+        self.steps_untimed = [
+            dict(step_id='a'),
+            dict(step_id='b',requires=['a']),
+            dict(step_id='d',requires=['a'])
+        ]
 
     def test_greedy_timed(self):
         g = Graph(graph_id="foobar",steps=self.steps_timed)

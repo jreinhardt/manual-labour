@@ -12,33 +12,33 @@ from test_schedule import schedule_example
 
 class TestGraph(unittest.TestCase):
     def setUp(self):
-        self.steps = {
-            'a' : dict(step_id='xyz'),
-            'b' : dict(step_id='yzx',requires=['a'])
-        }
+        self.steps = [
+            dict(step_id='xyz'),
+            dict(step_id='yzx',requires=['xyz'])
+        ]
     def test_dependencies(self):
         g = Graph(graph_id="foobar",steps=self.steps)
 
-        self.assertEqual(g.children['a'],['b'])
-        self.assertEqual(g.parents['b'],['a'])
+        self.assertEqual(g.children['xyz'],['yzx'])
+        self.assertEqual(g.parents['yzx'],['xyz'])
 
     def test_ancestors(self):
         g = Graph(graph_id="foobar",steps=self.steps)
 
-        self.assertEqual(g.all_ancestors('a'),set([]))
-        self.assertEqual(g.all_ancestors('b'),set(['a']))
+        self.assertEqual(g.all_ancestors('xyz'),set([]))
+        self.assertEqual(g.all_ancestors('yzx'),set(['xyz']))
 
     def test_collect_ids(self):
         store = LocalMemoryStore()
 
         schedule_example(store)
 
-        steps = {
-            's1' : dict(step_id='a'),
-            'b1' : dict(step_id='b',requires=['s1']),
-            's2' : dict(step_id='c',requires=['b1']),
-            's3' : dict(step_id='d',requires=['b1'])
-        }
+        steps = [
+            dict(step_id='a'),
+            dict(step_id='b',requires=['a']),
+            dict(step_id='c',requires=['b']),
+            dict(step_id='d',requires=['a'])
+        ]
         g = Graph(graph_id="foobar",steps=steps)
 
         res = g.collect_ids(store)
