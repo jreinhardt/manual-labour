@@ -16,6 +16,7 @@ class HTMLMarkup(MarkupBase):
     Markup for HTML export
     """
     def __init__(self,store):
+        MarkupBase.__init__(self)
         self.store = store
     def _handle_obj(self,obj,text):
         if obj["images"]:
