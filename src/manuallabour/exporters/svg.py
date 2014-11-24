@@ -42,7 +42,7 @@ class GraphSVGExporter(common.GraphExporterBase):
     def export(self,graph,store,path,**kwargs):
         common.GraphExporterBase.export(self,graph,store,path,**kwargs)
 
-        result = pgv.AGraph(directed=True)
+        result = pgv.AGraph(directed=True,strict=False)
 
         steps = {}
         for ref in graph.steps:
@@ -118,7 +118,7 @@ class ScheduleSVGExporter(common.ScheduleExporterBase):
     def export(self,schedule,store,path,**kwargs):
         common.ScheduleExporterBase.export(self,schedule,store,path,**kwargs)
 
-        result = pgv.AGraph(directed=True)
+        result = pgv.AGraph(directed=True,strict=False)
 
         #Nodes
         for ref in schedule.steps:
