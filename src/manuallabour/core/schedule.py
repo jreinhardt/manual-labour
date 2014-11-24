@@ -189,7 +189,7 @@ def schedule_greedy(graph, store, targets = None):
                     cand_start = waiting[dep]
             cand_dict = cand.dereference(store)
             cand_stop = cand_start + cand_dict["duration"].total_seconds()
-            if best_cand is None or cand_stop < best_cand[3]:
+            if best_cand is None or cand_stop < best_cand[2]:
                 best_cand = (cand,cand_start,cand_stop)
 
         #schedule it
