@@ -103,14 +103,14 @@ class Graph(ContentBase):
 
         return res
 
-    def all_ancestors(self,alias):
+    def all_ancestors(self,step_id):
         """ Return set of all ancestor steps
 
         Returns a set with aliases of all steps that are a direct or indirect
         prerequisite for the step with the alias alias.
         """
         res = set([])
-        for parent in self.parents[alias]:
+        for parent in self.parents[step_id]:
             res.add(parent)
             res.update(self.all_ancestors(parent))
         return res
