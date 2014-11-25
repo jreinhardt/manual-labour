@@ -84,7 +84,7 @@
     {% if step.files %}
     <h3>Files</h3>
     <ul>
-      {% for file in step.files %}
+      {% for file in step.files.values() %}
       <li> <a href="{{file.url}}">{{file.filename}}</a></li>
       {% endfor %}
     </ul>
