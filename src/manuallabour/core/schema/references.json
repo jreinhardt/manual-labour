@@ -83,6 +83,10 @@
       "stop" : {
         "$ref" : "common.json#/timedelta",
         "description" : "Stop time for this step"
+      },
+      "waiting" : {
+        "$ref" : "common.json#/timedelta",
+        "description" : "Stop time of waiting for this step"
       }
     },
     "required" : ["step_id","step_idx"],

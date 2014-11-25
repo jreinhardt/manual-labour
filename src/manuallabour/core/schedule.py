@@ -35,7 +35,7 @@ class ScheduleStep(ReferenceBase):
         ReferenceBase.__init__(self,**kwargs)
 
         self._calculated["step_nr"] = self.step_idx + 1
-        for time in ["start","stop"]:
+        for time in ["start","stop","waiting"]:
             if time in kwargs and kwargs[time]:
                 self._calculated[time] = timedelta(**kwargs[time])
             else:
@@ -189,18 +189,25 @@ def schedule_greedy(graph, store, targets = None):
                     cand_start = waiting[dep]
             cand_dict = cand.dereference(store)
             cand_stop = cand_start + cand_dict["duration"].total_seconds()
+            if cand_dict["waiting"] is None:
+                cand_wait = cand_stop
+            else:
+                cand_wait = cand_stop + cand_dict["waiting"].total_seconds()
             if best_cand is None or cand_stop < best_cand[2]:
-                best_cand = (cand,cand_start,cand_stop)
+                best_cand = (cand,cand_start,cand_stop,cand_wait)
 
         #schedule it
         # pylint: disable=W0633
-        cand,cand_start,cand_stop = best_cand
+        cand,cand_start,cand_stop,cand_wait = best_cand
         scheduled[cand.step_id] = dict(
             step_id=cand.step_id,
             start = dict(seconds=int(cand_start)),
             stop = dict(seconds=int(cand_stop)),
+            waiting = dict(seconds=int(cand_wait)),
             step_idx = len(scheduled)
         )
+        time = cand_stop
+        waiting[cand.step_id] = cand_wait
         possible.pop(cand.step_id)
 
     return sorted(scheduled.values(),key=lambda x: x["step_idx"])

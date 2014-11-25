@@ -7,6 +7,13 @@ from manuallabour.core.graph import Graph
 from manuallabour.core.stores import LocalMemoryStore
 
 from manuallabour.core.schedule import *
+from itertools import tee, izip
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = tee(iterable)
+    next(b, None)
+    return izip(a, b)
 
 def schedule_example(store):
     store.add_blob('imb','foo.png')
@@ -141,17 +148,29 @@ class TestSchedulers(unittest.TestCase):
             dict(step_id='b',requires=['a']),
             dict(step_id='d',requires=['a'])
         ]
+        self.result_timed = None
+        self.result_untimed = None
+
+    def tearDown(self):
+        if not self.result_timed is None:
+            ids = [step["step_id"] for step in self.result_timed]
+            self.assertTrue(ids.index('b') > ids.index('a'))
+            self.assertTrue(ids.index('c') > ids.index('b'))
+
+            for s1,s2 in pairwise(self.result_timed):
+                self.assertTrue(timedelta(**s1["stop"]) <= timedelta(**s2["start"]))
+            Schedule(sched_id="boofar",steps=self.result_timed)
+        elif not self.result_untimed is None:
+            ids = [step["step_id"] for step in self.result_untimed]
+            self.assertTrue(ids.index('b') > ids.index('a'))
+            self.assertTrue(ids.index('d') > ids.index('b'))
+
+            Schedule(sched_id="boofar",steps=self.result_untimed)
+
 
     def test_greedy_timed(self):
         g = Graph(graph_id="foobar",steps=self.steps_timed)
-        steps = schedule_greedy(g,self.store)
-
-        ids = [step["step_id"] for step in steps]
-
-        self.assertTrue(ids.index('b') > ids.index('a'))
-        self.assertTrue(ids.index('c') > ids.index('b'))
-
-        Schedule(sched_id="boofar",steps=steps)
+        self.result_timed = schedule_greedy(g,self.store)
 
     def test_greedy_untimed(self):
         g = Graph(graph_id="foobar",steps=self.steps_untimed)
