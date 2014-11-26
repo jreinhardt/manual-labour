@@ -1,5 +1,6 @@
 import unittest
 from datetime import timedelta
+import pkg_resources
 
 import manuallabour.core.common as common
 from manuallabour.core.graph import Graph
@@ -44,7 +45,10 @@ class TestExporter(unittest.TestCase):
         self.schedule = Schedule(sched_id="foobar",steps=steps)
         self.schedule_timed = Schedule(sched_id="foobar",steps=steps_timed)
     def test_html_single(self):
-        e = SinglePageHTMLExporter('basic')
+        layout_path = pkg_resources.resource_filename(
+            'manuallabour.layouts.html_single.basic',
+            'template')
+        e = SinglePageHTMLExporter(layout_path)
 
         e.export(
             self.schedule,

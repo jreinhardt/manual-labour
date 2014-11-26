@@ -3,13 +3,12 @@ This module defines exporters for export of schedules to HTML and other
 classes related to this task.
 """
 from manuallabour.exporters.common import ScheduleExporterBase, MarkupBase
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, FileSystemLoader
 from os.path import join,  exists
 from shutil import rmtree,copytree
 from os import remove
 # pylint: disable=W0622
 from codecs import open
-import pkg_resources
 
 class HTMLMarkup(MarkupBase):
     """
@@ -39,15 +38,10 @@ class SinglePageHTMLExporter(ScheduleExporterBase):
     """
     Exporter to export schedules into a single HTML page.
     """
-    def __init__(self,layout):
+    def __init__(self,layout_path):
         ScheduleExporterBase.__init__(self)
-        self.layout = layout
-        self.env = Environment(
-            loader=PackageLoader(
-                'manuallabour.layouts.html_single.%s' % layout,
-                package_path='template'
-            )
-        )
+        self.layout_path = layout_path
+        self.env = Environment(loader=FileSystemLoader(layout_path))
 
     def export(self,schedule,store,path,**kwargs):
         ScheduleExporterBase.export(self,schedule,store,path,**kwargs)
@@ -56,10 +50,7 @@ class SinglePageHTMLExporter(ScheduleExporterBase):
             rmtree(join(path))
 
         #copy over stuff
-        layout_path = pkg_resources.resource_filename(
-            'manuallabour.layouts.html_single.%s' % self.layout,
-            'template')
-        copytree(layout_path,path)
+        copytree(self.layout_path,path)
         remove(join(path,'template.html'))
 
         with open(join(path,'out.html'),'w','utf8') as fid:
