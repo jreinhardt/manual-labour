@@ -62,6 +62,12 @@ class Graph(ContentBase):
                 else:
                     self._calculated["children"][req].append(ref.step_id)
 
+    def dereference(self,store):
+        res = ContentBase.dereference(self,store)
+        for i, step in enumerate(res["steps"]):
+            res[i] = step.dereference(store)
+        return res
+
     def collect_ids(self,store):
         """
         Collect the step_ids, obj_ids  and blob_ids that are directly or
