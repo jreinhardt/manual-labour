@@ -136,6 +136,73 @@ class Schedule(ContentBase):
 
         return result
 
+def schedule_topological(graph, store, targets = None):
+    """
+    Scheduler that arbitrarily chooses a step order that satisfies the
+    dependencies.
+    """
+    #find set of steps required for target
+    if targets is None:
+        steps = graph.steps
+    else:
+        steps = set([])
+        for target in targets:
+            steps.add(target)
+            steps.update(graph.all_ancestors(target))
+        steps = dict((key,graph.steps[key]) for key in steps)
+
+    timed = True
+    for step in steps:
+        step_dict = step.dereference(store)
+        if step_dict["duration"] is None:
+            timed = False
+
+    possible = {}
+    scheduled = {}
+    time = 0
+
+    while len(scheduled) < len(steps):
+        #find possible next steps
+        for step in steps:
+            if step.step_id in scheduled:
+                continue
+            for dep in graph.parents[step.step_id]:
+                if not dep in scheduled:
+                    break
+            else:
+                possible[step.step_id] = step
+
+        #from these take one and schedule it
+        step_id, step = possible.popitem()
+        if timed:
+            step_dict = step.dereference(store)
+            stop = time + step_dict["duration"].total_seconds()
+            if step_dict["waiting"] is None:
+                scheduled[step_id] = dict(
+                    step_id=step_id,
+                    start = dict(seconds=int(time)),
+                    stop = dict(seconds=int(stop)),
+                    step_idx = len(scheduled)
+                )
+                time = stop
+            else:
+                wait = stop + step_dict["waiting"].total_seconds()
+                scheduled[step_id] = dict(
+                    step_id=step_id,
+                    start = dict(seconds=int(time)),
+                    stop = dict(seconds=int(stop)),
+                    waiting = dict(seconds=int(wait)),
+                    step_idx = len(scheduled)
+                )
+                time = wait
+        else:
+            scheduled[step_id] = dict(
+                step_id=step_id,
+                step_idx = len(scheduled)
+            )
+
+    return sorted(scheduled.values(),key=lambda x: x["step_idx"])
+
 
 def schedule_greedy(graph, store, targets = None):
     """

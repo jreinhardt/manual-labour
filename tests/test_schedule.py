@@ -167,7 +167,6 @@ class TestSchedulers(unittest.TestCase):
 
             Schedule(sched_id="boofar",steps=self.result_untimed)
 
-
     def test_greedy_timed(self):
         g = Graph(graph_id="foobar",steps=self.steps_timed)
         self.result_timed = schedule_greedy(g,self.store)
@@ -175,3 +174,11 @@ class TestSchedulers(unittest.TestCase):
     def test_greedy_untimed(self):
         g = Graph(graph_id="foobar",steps=self.steps_untimed)
         self.assertRaises(ValueError,lambda: schedule_greedy(g, self.store))
+
+    def test_topo_timed(self):
+        g = Graph(graph_id="foobar",steps=self.steps_timed)
+        self.result_timed = schedule_topological(g,self.store)
+
+    def test_topo_untimed(self):
+        g = Graph(graph_id="foobar",steps=self.steps_untimed)
+        self.result_untimed = schedule_topological(g,self.store)
