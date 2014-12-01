@@ -39,6 +39,13 @@
       {% endfor %}
     </ul>
 
+    <h2>Sourcefiles</h2>
+    <ul>
+      {% for file in sourcefiles %}
+      <li><a href="{{file.url}}">{{file.filename}}</a></li>
+      {% endfor %}
+    </ul>
+
     {% for step in steps %}
     <h2>Step {{step.step_nr}}: {{step.title}}</h2>
     {% if step.duration %}

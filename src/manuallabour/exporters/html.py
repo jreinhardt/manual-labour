@@ -63,6 +63,7 @@ class SinglePageHTMLExporter(ScheduleExporterBase):
         markup = HTMLMarkup(store)
 
         bom = schedule.collect_bom(store)
+        sourcefiles = schedule.collect_sourcefiles(store)
         parts = [ref.dereference(store) for ref in bom["parts"].values()]
         tools = [ref.dereference(store) for ref in bom["tools"].values()]
 
@@ -76,6 +77,7 @@ class SinglePageHTMLExporter(ScheduleExporterBase):
         return template.render(
             doc = kwargs,
             schedule = schedule,
+            sourcefiles = sourcefiles,
             parts = parts,
             tools = tools,
             steps = steps
