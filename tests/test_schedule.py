@@ -131,6 +131,22 @@ class TestSchedule(unittest.TestCase):
         self.assertFalse('ra' in bom["parts"])
         self.assertEqual(bom["parts"]['pa'].quantity,5)
         self.assertEqual(bom["parts"]['pa'].optional,1)
+    def test_collect_ids(self):
+        store = LocalMemoryStore()
+        schedule_example(store)
+
+        steps = [
+            dict(step_id='a',step_idx=0),
+            dict(step_id='b',step_idx=1),
+        ]
+
+        s = Schedule(sched_id="foobar",steps=steps)
+
+        res = s.collect_ids(store)
+        self.assertEqual(len(res["sched_ids"]),1)
+        self.assertEqual(len(res["step_ids"]),2)
+        self.assertEqual(len(res["blob_ids"]),3)
+        self.assertEqual(len(res["obj_ids"]),3)
 
 class TestSchedulers(unittest.TestCase):
     def setUp(self):

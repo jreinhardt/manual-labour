@@ -5,7 +5,7 @@ This module defines the Graph class and related classes
 import jsonschema
 
 from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
-    ContentBase
+    ContentBase, add_ids
 
 class GraphStep(ReferenceBase):
     """
@@ -23,6 +23,9 @@ class GraphStep(ReferenceBase):
         step = store.get_step(self.step_id)
         res.update(step.dereference(store))
         return res
+    def collect_ids(self,store):
+        step = store.get_step(self.step_id)
+        return step.collect_ids(store)
 
 class Graph(ContentBase):
     """
@@ -69,44 +72,9 @@ class Graph(ContentBase):
         return res
 
     def collect_ids(self,store):
-        """
-        Collect the step_ids, obj_ids  and blob_ids that are directly or
-        indirectly referenced by this graph
-
-        returns a dict of lists
-        """
-        #Sets of steps, objects, and blobs used in this graph
-        res = {}
-        res["step_ids"] = set([])
-        res["obj_ids"] = set([])
-        res["blob_ids"] = set([])
-
+        res = dict(graph_ids=set([self.graph_id]))
         for ref in self.steps:
-            res["step_ids"].add(ref.step_id)
-
-        for step_id in list(res["step_ids"]):
-            step = store.get_step(step_id)
-
-            for img in step.images.values():
-                res["blob_ids"].add(img.blob_id)
-            for fil in step.files.values():
-                res["blob_ids"].add(fil.blob_id)
-
-            for tool in step.tools.values():
-                res["obj_ids"].add(tool.obj_id)
-            for part in step.parts.values():
-                res["obj_ids"].add(part.obj_id)
-            for result in step.results.values():
-                res["obj_ids"].add(result.obj_id)
-
-        for obj_id in list(res["obj_ids"]):
-            obj = store.get_obj(obj_id)
-            for img in obj.images:
-                res["blob_ids"].add(img.blob_id)
-
-        for ids in res:
-            res[ids] = list(res[ids])
-
+            add_ids(res,ref.collect_ids(store))
         return res
 
     def all_ancestors(self,step_id):

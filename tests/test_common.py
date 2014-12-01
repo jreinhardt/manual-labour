@@ -85,6 +85,12 @@ class TestDataStruct(unittest.TestCase):
         self.assertEqual(two['name'],'Foo')
         self.assertEqual(two['description'],'Bar')
 
+    def test_collect_ids(self):
+        self.assertRaises(
+            NotImplementedError,
+            lambda: self.one.collect_ids(MockStore())
+        )
+
 class TestReferences(unittest.TestCase):
     def test_file_ref(self):
         self.assertRaises(ValidationError,
@@ -110,6 +116,9 @@ class TestReferences(unittest.TestCase):
         res = f.dereference(MockStore())
         self.assertEqual(len(res['sourcefiles']),2)
         self.assertEqual(res['sourcefiles'][1]['url'],'http://url.com')
+
+        res = f.collect_ids(MockStore())
+        self.assertEqual(len(res["blob_ids"]),3)
 
     def test_image_ref(self):
         self.assertRaises(ValidationError,
@@ -137,6 +146,9 @@ class TestReferences(unittest.TestCase):
         self.assertEqual(len(res['sourcefiles']),2)
         self.assertEqual(res['sourcefiles'][1]['url'],'http://url.com')
 
+        res = i.collect_ids(MockStore())
+        self.assertEqual(len(res["blob_ids"]),3)
+
     def test_object_ref(self):
         self.assertRaises(ValidationError,lambda: ObjectReference(obj_id='*'))
 
@@ -152,6 +164,10 @@ class TestReferences(unittest.TestCase):
         self.assertTrue("quantity" in res)
         self.assertTrue("optional" in res)
         self.assertEqual(res["images"][0]["url"],"http://url.com")
+
+        res = obr.collect_ids(MockStore())
+        self.assertTrue('nut' in res["obj_ids"])
+        self.assertTrue('asd' in res["blob_ids"])
 
 class TestObjects(unittest.TestCase):
     def test_init(self):
@@ -213,6 +229,17 @@ class TestObjects(unittest.TestCase):
 
         self.assertTrue(isinstance(o.images[0],ImageReference))
 
+    def test_collect_ids(self):
+        o = Object(obj_id='foo',name="Bar",images=[
+            dict(blob_id='asdf',extension=".png",alt="an image",sourcefiles=
+                [dict(blob_id='bsdf',filename='test.file')]
+            )
+        ])
+
+        res = o.collect_ids(MockStore())
+        self.assertTrue('asdf' in res["blob_ids"])
+        self.assertTrue('bsdf' in res["blob_ids"])
+        self.assertTrue('foo' in res["obj_ids"])
 
 class TestStep(unittest.TestCase):
     def setUp(self):
@@ -325,3 +352,18 @@ class TestStep(unittest.TestCase):
         self.assertEqual(res['step_id'],'b')
         self.assertEqual(res['files']['l_kds']["filename"],'test.file')
         self.assertEqual(res['files']['l_kds']["url"],'http://url.com')
+
+    def test_collect_ids(self):
+        step = Step(
+            step_id='b',
+            title='With objects',
+            description='Step with objects',
+            parts = {'sd' : dict(obj_id='sd')},
+            files = {'l_kds' : dict(blob_id='kds',filename='test.file')},
+            images = {'l_wds' : dict(blob_id='ws',alt='Foo',extension='.png')}
+        )
+
+        res = step.collect_ids(MockStore())
+        self.assertEqual(len(res["blob_ids"]),3)
+        self.assertEqual(len(res["step_ids"]),1)
+        self.assertEqual(len(res["obj_ids"]),1)

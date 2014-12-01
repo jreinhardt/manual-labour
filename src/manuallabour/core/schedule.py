@@ -5,11 +5,11 @@ import jsonschema
 from datetime import timedelta
 
 from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
-    ContentBase
+    ContentBase,add_ids
 
 class BOMReference(ReferenceBase):
     """
-    An object with counters.
+    An object with quantities.
     """
     _schema = load_schema(SCHEMA_DIR,'references.json')["bom_ref"]
     _validator = jsonschema.Draft4Validator(_schema)
@@ -23,6 +23,9 @@ class BOMReference(ReferenceBase):
         res.update(obj._calculated)
         res["images"] = [ref.dereference(store) for ref in res["images"]]
         return res
+    def collect_ids(self,store):
+        obj = store.get_obj(self.obj_id)
+        return obj.collect_ids(store)
 
 class ScheduleStep(ReferenceBase):
     """
@@ -48,6 +51,10 @@ class ScheduleStep(ReferenceBase):
         step = store.get_step(self.step_id)
         res.update(step.dereference(store))
         return res
+
+    def collect_ids(self,store):
+        step = store.get_step(self.step_id)
+        return step.collect_ids(store)
 
     def markup(self,store,markup):
         """
@@ -135,6 +142,12 @@ class Schedule(ContentBase):
                 result["parts"][obj_id] = BOMReference(**count)
 
         return result
+
+    def collect_ids(self,store):
+        res = dict(sched_ids=set([self.sched_id]))
+        for ref in self.steps:
+            add_ids(res,ref.collect_ids(store))
+        return res
 
 def schedule_topological(graph, store, targets = None):
     """

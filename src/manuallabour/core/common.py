@@ -86,6 +86,17 @@ def load_schema(schema_dir,schema_name):
     dereference_schema(schema_dir,schema)
     return schema
 
+def add_ids(ids1,ids2):
+    """
+    add ids2 to ids1, where they are both dicts of sets used to collect ids
+    for access to stored items.
+    """
+    for key,val in ids2.iteritems():
+        if key in ids1:
+            ids1[key].update(val)
+        else:
+            ids1[key] = val
+
 class DataStruct(object):
     """
     A container for named data. Offers validation, convenient access and
@@ -145,6 +156,12 @@ class DataStruct(object):
         res.update(deepcopy(self._kwargs))
         res.update(deepcopy(self._calculated))
         return res
+    def collect_ids(self,_store):
+        """
+        Return a dictionary with sets of ids of steps,objects,graphs,blobs
+        and schedules
+        """
+        raise NotImplementedError
 
 class ReferenceBase(DataStruct):
     """
@@ -154,6 +171,8 @@ class ReferenceBase(DataStruct):
     """
     def __init__(self,**kwargs):
         DataStruct.__init__(self,**kwargs)
+    def collect_ids(self,_store):
+        raise NotImplementedError
 
 class ResourceReferenceBase(ReferenceBase):
     """
@@ -166,6 +185,12 @@ class ResourceReferenceBase(ReferenceBase):
         res["url"] = store.get_blob_url(self.blob_id)
         for src in res["sourcefiles"]:
             src["url"] = store.get_blob_url(src["blob_id"])
+        return res
+    def collect_ids(self,_store):
+        res = dict(blob_ids=set([]))
+        res["blob_ids"].add(self.blob_id)
+        for src in self.sourcefiles:
+            res["blob_ids"].add(src["blob_id"])
         return res
 
 class FileReference(ResourceReferenceBase):
@@ -208,6 +233,14 @@ class ObjectReference(ReferenceBase):
         res.update(obj.dereference(store))
         return res
 
+    def collect_ids(self,store):
+        res = dict(obj_ids=set([]))
+        res["obj_ids"].add(self.obj_id)
+        obj = store.get_obj(self.obj_id)
+        for img in obj.images:
+            add_ids(res,img.collect_ids(store))
+        return res
+
 class ContentBase(DataStruct):
     """
     Base class for things that are stored in a Store and have an id to
@@ -237,6 +270,8 @@ class ContentBase(DataStruct):
         check = hashlib.sha512()
         calculate_kwargs_checksum(check,res)
         return base64.urlsafe_b64encode(check.digest())[:-2]
+    def collect_ids(self,_store):
+        raise NotImplementedError
 
 class Object(ContentBase):
     """
@@ -260,6 +295,12 @@ class Object(ContentBase):
         res = DataStruct.dereference(self,store)
         for i,img in enumerate(res["images"]):
             res["images"][i] = img.dereference(store)
+        return res
+
+    def collect_ids(self,store):
+        res = dict(obj_ids=set([self.obj_id]))
+        for img in self.images:
+            add_ids(res,img.collect_ids(store))
         return res
 
 class Step(ContentBase):
@@ -303,4 +344,15 @@ class Step(ContentBase):
         for nspace in ["images","files","parts","tools","results"]:
             for alias,val in res[nspace].iteritems():
                 res[nspace][alias] = val.dereference(store)
+        return res
+
+    def collect_ids(self,store):
+        res = dict(step_ids=set([self.step_id]))
+        for img in self.images.values():
+            add_ids(res,img.collect_ids(store))
+        for fil in self.files.values():
+            add_ids(res,fil.collect_ids(store))
+        for objs in [self.parts,self.tools,self.results]:
+            for part in objs.values():
+                add_ids(res,part.collect_ids(store))
         return res
