@@ -200,7 +200,7 @@ class TestObjects(unittest.TestCase):
         self.assertNotEqual(check3,check5)
         self.assertNotEqual(check4,check5)
 
-    def tets_dereference(self):
+    def test_dereference(self):
         o = Object(obj_id='foo',name="Bar",images=[
             dict(blob_id='asdf',extension=".png",alt="an image")
         ])
