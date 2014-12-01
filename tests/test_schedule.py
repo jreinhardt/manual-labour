@@ -16,9 +16,11 @@ def pairwise(iterable):
     return izip(a, b)
 
 def schedule_example(store):
+    #bogus file names, store doesn't check
     store.add_blob('imb','foo.png')
     store.add_blob('fb','../t.tmp')
     store.add_blob('imb2','b.png')
+    store.add_blob('rwth','source.src')
 
     store.add_obj(common.Object(obj_id='ta',name='Tool A'))
     store.add_obj(common.Object(
@@ -33,7 +35,13 @@ def schedule_example(store):
         title="First",
         description="Whack {{part(a)}} with {{tool(a)}} to get {{result(a)}}",
         duration=dict(minutes=15),
-        images = {'t_imag' : dict(blob_id='imb',extension='.png',alt='Foo')},
+        images = {'t_imag' : dict(
+            blob_id='imb',
+            extension='.png',
+            alt='Foo',
+            sourcefiles=[dict(blob_id='rwth',filename='source.src')]
+            )
+        },
         tools={'a' : dict(obj_id='ta')},
         parts={'a' : dict(obj_id='pa',quantity=2)},
         results={'a' : dict(obj_id='ra',created=True)}
@@ -145,8 +153,24 @@ class TestSchedule(unittest.TestCase):
         res = s.collect_ids(store)
         self.assertEqual(len(res["sched_ids"]),1)
         self.assertEqual(len(res["step_ids"]),2)
-        self.assertEqual(len(res["blob_ids"]),3)
+        self.assertEqual(len(res["blob_ids"]),4)
         self.assertEqual(len(res["obj_ids"]),3)
+
+    def test_collect_sourcefiles(self):
+        store = LocalMemoryStore()
+        schedule_example(store)
+
+        steps = [
+            dict(step_id='a',step_idx=0),
+            dict(step_id='b',step_idx=1),
+        ]
+        s = Schedule(sched_id="foobar",steps=steps)
+
+        res = s.collect_sourcefiles(store)
+        self.assertEqual(len(res),1)
+        self.assertEqual(res[0]["blob_id"],'rwth')
+        self.assertEqual(res[0]["filename"],'source.src')
+        self.assertTrue("url" in res[0])
 
 class TestSchedulers(unittest.TestCase):
     def setUp(self):

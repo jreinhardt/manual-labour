@@ -143,6 +143,35 @@ class Schedule(ContentBase):
 
         return result
 
+    def collect_sourcefiles(self,store):
+        """
+        Collect a list of all files marked as sourcefiles for anything in this
+        schedule.
+
+        Returns a list of dicts with blob_id,url and filename
+        """
+        sourcefiles = []
+        for step_ref in self.steps:
+            step = store.get_step(step_ref.step_id)
+
+            for res_ref in step.images.values() + step.files.values():
+                for src in res_ref.sourcefiles:
+                    if not src in sourcefiles:
+                        sourcefiles.append(src)
+
+            for objs in [step.parts,step.tools,step.results]:
+                for obj_ref in objs.values():
+                    obj = store.get_obj(obj_ref.obj_id)
+                    for res_ref in obj.images:
+                        for src in res_ref.sourcefiles:
+                            if not src in sourcefiles:
+                                sourcefiles.append(src)
+
+        for src in sourcefiles:
+            src["url"] = store.get_blob_url(src["blob_id"])
+
+        return sourcefiles
+
     def collect_ids(self,store):
         res = dict(sched_ids=set([self.sched_id]))
         for ref in self.steps:

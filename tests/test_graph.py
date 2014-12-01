@@ -46,4 +46,4 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(res["graph_ids"],set(["foobar"]))
         self.assertEqual(res["step_ids"],set(["a","b","c","d"]))
         self.assertEqual(res["obj_ids"],set(["ta","pa","ra"]))
-        self.assertEqual(res["blob_ids"],set(["imb","fb","imb2"]))
+        self.assertEqual(res["blob_ids"],set(["imb","fb","imb2","rwth"]))
