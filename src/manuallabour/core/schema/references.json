@@ -92,12 +92,34 @@
     "required" : ["step_id","step_idx"],
     "additionalProperties" : false
   },
+  "source_file_ref" : {
+    "description" : "Reference to a file from which others are generated.",
+    "type" : "object",
+    "properties" : {
+      "blob_id" : {
+        "$ref" : "common.json#/blob_id"
+      },
+      "filename" : {
+        "type" : "string",
+        "description" : "Filename of the file"
+      }
+    },
+    "required" : ["blob_id","filename"],
+    "additionalProperties" : false
+  },
   "file_ref" : {
     "description" : "Description of a file. ",
     "type" : "object",
     "properties" : {
       "blob_id" : {
         "$ref" : "common.json#/blob_id"
+      },
+      "sourcefiles" : {
+        "type" : "array",
+        "items" : {
+          "$ref" : "references.json#/source_file_ref"
+        },
+        "default" : []
       },
       "filename" : {
         "type" : "string",
@@ -113,6 +135,13 @@
     "properties" : {
       "blob_id" : {
         "$ref" : "common.json#/blob_id"
+      },
+      "sourcefiles" : {
+        "type" : "array",
+        "items" : {
+          "$ref" : "references.json#/source_file_ref"
+        },
+        "default" : []
       },
       "extension" : {
         "type" : "string",

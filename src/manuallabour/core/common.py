@@ -164,6 +164,8 @@ class ResourceReferenceBase(ReferenceBase):
     def dereference(self,store):
         res = ReferenceBase.dereference(self,store)
         res["url"] = store.get_blob_url(self.blob_id)
+        for src in res["sourcefiles"]:
+            src["url"] = store.get_blob_url(src["blob_id"])
         return res
 
 class FileReference(ResourceReferenceBase):

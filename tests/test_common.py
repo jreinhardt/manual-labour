@@ -99,6 +99,18 @@ class TestReferences(unittest.TestCase):
         self.assertEqual(res["url"],"http://url.com")
         self.assertEqual(res["filename"],"test.file")
 
+        f = FileReference(
+            blob_id='asda',
+            filename='test.file',
+            sourcefiles=[
+                dict(blob_id='bsda',filename='best.file'),
+                dict(blob_id='csda',filename='dest.file')
+            ]
+        )
+        res = f.dereference(MockStore())
+        self.assertEqual(len(res['sourcefiles']),2)
+        self.assertEqual(res['sourcefiles'][1]['url'],'http://url.com')
+
     def test_image_ref(self):
         self.assertRaises(ValidationError,
             lambda: ImageReference(blob_id='*'))
@@ -111,6 +123,19 @@ class TestReferences(unittest.TestCase):
         res = i.dereference(MockStore())
         self.assertEqual(res["url"],'http://url.com')
         self.assertEqual(res["alt"],"test image")
+
+        i = ImageReference(
+            blob_id='a',
+            alt='test image',
+            extension='.png',
+            sourcefiles=[
+                dict(blob_id='bsda',filename='best.file'),
+                dict(blob_id='csda',filename='dest.file')
+            ]
+        )
+        res = i.dereference(MockStore())
+        self.assertEqual(len(res['sourcefiles']),2)
+        self.assertEqual(res['sourcefiles'][1]['url'],'http://url.com')
 
     def test_object_ref(self):
         self.assertRaises(ValidationError,lambda: ObjectReference(obj_id='*'))
