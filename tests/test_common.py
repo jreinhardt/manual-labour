@@ -193,6 +193,13 @@ class TestObjects(unittest.TestCase):
         self.assertNotEqual(check2,check4)
         self.assertNotEqual(check3,check4)
 
+        kwargs['images'].append(dict(blob_id="dsd",extension='.png',alt='bar'))
+        check5 = Object.calculate_checksum(**kwargs)
+        self.assertNotEqual(check1,check5)
+        self.assertNotEqual(check2,check5)
+        self.assertNotEqual(check3,check5)
+        self.assertNotEqual(check4,check5)
+
     def tets_dereference(self):
         o = Object(obj_id='foo',name="Bar",images=[
             dict(blob_id='asdf',extension=".png",alt="an image")
