@@ -18,7 +18,8 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../src'))
 
 # -- General configuration ------------------------------------------------
 
@@ -37,6 +38,8 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
+    'sphinx.ext.inheritance_diagram',
+    'jsonschema_autodoc'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -205,8 +208,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'ManualLabour.tex', u'Manual Labour Documentation',
-   u'Johannes Reinhardt', 'manual'),
+    ('index', 'ManualLabour.tex', u'Manual Labour Documentation',
+     u'Johannes Reinhardt', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -249,9 +252,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'ManualLabour', u'Manual Labour Documentation',
-   u'Johannes Reinhardt', 'ManualLabour', 'One line description of project.',
-   'Miscellaneous'),
+   ('index', 'ManualLabour', u'Manual Labour Documentation',
+     u'Johannes Reinhardt', 'ManualLabour', 'One line description of project.',
+    'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -268,4 +271,11 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {'python' : ('http://docs.python.org/',None)}
+
+inheritance_graph_attrs = dict(rankdir="TB", ratio='fill', size='""')
+
+# JSON schema autodoc extension
+json_schema_dir = '../src/manuallabour/core/schema'
+
+
