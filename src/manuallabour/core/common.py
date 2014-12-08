@@ -102,6 +102,9 @@ class DataStruct(object):
     A container for named data. Offers validation, convenient access and
     utility functionality. Serves as basis for many of the classes holding
     data.
+
+    DataStructs and all derived classes are initialized by providing the data
+    as key-value arguments which are automatically validated.
     """
     _schema = None
     """JSON schema for the input of this class"""
@@ -139,8 +142,8 @@ class DataStruct(object):
 
     def as_dict(self):
         """
-        Return the constructor parameters (including defaults) of this instance
-        as a dict, this can be used to recreate it.
+        Return the constructor parameters (including defaults) of this
+        instance as a dict, this can be used to recreate the instance.
         """
         res = deepcopy(self._kwargs)
         for field, schema in self._schema["properties"].iteritems():
@@ -158,8 +161,11 @@ class DataStruct(object):
         return res
     def collect_ids(self,_store):
         """
-        Return a dictionary with sets of ids of steps,objects,graphs,blobs
-        and schedules
+        Return a dictionary with sets of ids of blobs,
+        :class:`~manuallabour.core.common.Step`,
+        :class:`~manuallabour.core.common.Object`,
+        :class:`~manuallabour.core.common.Graph`, and
+        :class:`~manuallabour.core.common.Schedule`.
         """
         raise NotImplementedError
 
@@ -196,6 +202,8 @@ class ResourceReferenceBase(ReferenceBase):
 class FileReference(ResourceReferenceBase):
     """
     A File is a resource that has a only a filename as metadata.
+
+    {{references.json#/file_ref}}
     """
     _schema = load_schema(SCHEMA_DIR,'references.json')['file_ref']
     _validator = jsonschema.Draft4Validator(_schema)
@@ -207,6 +215,8 @@ class ImageReference(ResourceReferenceBase):
     """
     An Image is a resource that has as metadata an alternative description
     and a filename extension indicating the format of the image.
+
+    {{references.json#/img_ref}}
     """
     _schema = load_schema(SCHEMA_DIR,'references.json')['img_ref']
     _validator = jsonschema.Draft4Validator(_schema)
@@ -219,6 +229,8 @@ class ObjectReference(ReferenceBase):
     A reference to an object that is stored by its obj_id in an object store.
 
     A object can not be created and optional at the same time.
+
+    {{references.json#/obj_ref}}
     """
     _schema = load_schema(SCHEMA_DIR,'references.json')["obj_ref"]
     _validator = jsonschema.Draft4Validator(_schema)
@@ -278,6 +290,8 @@ class Object(ContentBase):
     An object is a physical object that is in some sense relevant to the
     assembly process. It can be either a part that is consumed in a step, a
     tool that isn't, or a result that is created in a step.
+
+    {{object.json}}
     """
     _schema = load_schema(SCHEMA_DIR,'object.json')
     _validator = jsonschema.Draft4Validator(_schema)
@@ -306,6 +320,8 @@ class Object(ContentBase):
 class Step(ContentBase):
     """
     One Step of the instructions
+
+    {{step.json}}
     """
     _schema = load_schema(SCHEMA_DIR,'step.json')
     _validator = jsonschema.Draft4Validator(_schema)

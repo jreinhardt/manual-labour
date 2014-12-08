@@ -4,32 +4,38 @@
   "description" : "Components that are reused using JSON References",
   "obj_id" : {
     "type" : "string",
-    "description" : "ID of the referenced object",
+    "title" : "Object ID",
+    "description" : "ID of an object",
     "pattern" : "^[a-zA-Z0-9_-]*$"
   },
   "step_id" : {
     "type" : "string",
-    "description" : "ID of the referenced step",
+    "title" : "Step ID",
+    "description" : "ID of a step",
     "pattern" : "^[a-zA-Z0-9_-]*$"
   },
   "blob_id" : {
     "type" : "string",
-    "description" : "ID of the referenced blob",
+    "title" : "Blob ID",
+    "description" : "ID of a blob",
     "pattern" : "^[a-zA-Z0-9_-]*$"
   },
   "graph_id" : {
     "type" : "string",
-    "description" : "ID of the referenced graph",
+    "title" : "Graph ID",
+    "description" : "ID of a graph",
     "pattern" : "^[a-zA-Z0-9_-]*$"
   },
   "schedule_id" : {
     "type" : "string",
-    "description" : "ID of the referenced schedule",
+    "title" : "Schedule ID",
+    "description" : "ID of a schedule",
     "pattern" : "^[a-zA-Z0-9_-]*$"
   },
   "timedelta" : {
     "type" : "object",
-    "description" : "A timespan",
+    "title" : "Timedelta",
+    "description" : "Data for representing a timespan.",
     "properties" : {
       "seconds" : {"type" : "integer"},
       "minutes" : {"type" : "integer"},
@@ -41,7 +47,8 @@
   },
   "object_namespace" : {
     "type" : "object",
-    "description" : "local names for Objects",
+    "title" : "Object Namespace",
+    "description" : "A mapping of local names to Object References",
     "patternProperties" : {
       "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
         "$ref" : "references.json#/obj_ref"
@@ -52,7 +59,8 @@
   },
   "file_namespace" : {
     "type" : "object",
-    "description" : "local names for Files",
+    "title" : "File Namespace",
+    "description" : "A mapping of local names to File References",
     "patternProperties" : {
       "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
         "$ref" : "references.json#/file_ref"
@@ -63,7 +71,8 @@
   },
   "image_namespace" : {
     "type" : "object",
-    "description" : "local names for Images",
+    "title" : "Image Namespace",
+    "description" : "A mapping of local names to Image References",
     "patternProperties" : {
       "^([a-zA-Z][0-9a-zA-Z_]*)$" : {
         "$ref" : "references.json#/img_ref"

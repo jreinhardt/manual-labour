@@ -1,6 +1,6 @@
 {
   "$schema":"http://json-schema.org/draft-04/schema#",
-  "title" : "Step schema",
+  "title" : "Step",
   "description" : "Description of a single step of the instructions",
   "type" : "object",
   "properties" : {

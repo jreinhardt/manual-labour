@@ -3,8 +3,9 @@
   "title" : "References",
   "description" : "Specifications of data of references",
   "obj_ref" : {
-    "description" : "Description of a object reference",
     "type" : "object",
+    "title" : "Object Reference",
+    "description" : "Description of a object reference",
     "properties" : {
       "obj_id" : {
         "$ref" : "common.json#/obj_id"
@@ -29,8 +30,9 @@
     "additionalProperties" : false
   },
   "bom_ref" : {
-    "description" : "Description of a Bill of Material reference",
     "type" : "object",
+    "title" : "BOM Reference",
+    "description" : "Description of a Bill of Material reference",
     "properties" : {
       "obj_id" : {
         "$ref" : "common.json#/obj_id"
@@ -47,8 +49,9 @@
     "additionalProperties" : false
   },
   "graph_step" : {
-    "description" : "Description of a step reference for graphs",
     "type" : "object",
+    "title" : "Graph Step",
+    "description" : "Description of a step reference for graphs",
     "properties" : {
       "step_id" : {
         "$ref" : "common.json#/step_id"
@@ -66,8 +69,9 @@
     "additionalProperties" : false
   },
   "schedule_step" : {
-    "description" : "Description of a step reference for schedules",
     "type" : "object",
+    "title" : "Schedule Step",
+    "description" : "Description of a step reference for schedules",
     "properties" : {
       "step_id" : {
         "$ref" : "common.json#/step_id"
@@ -93,8 +97,9 @@
     "additionalProperties" : false
   },
   "source_file_ref" : {
-    "description" : "Reference to a file from which others are generated.",
     "type" : "object",
+    "title" : "Source File Reference",
+    "description" : "Reference to a file from which others are generated.",
     "properties" : {
       "blob_id" : {
         "$ref" : "common.json#/blob_id"
@@ -108,8 +113,9 @@
     "additionalProperties" : false
   },
   "file_ref" : {
-    "description" : "Description of a file. ",
     "type" : "object",
+    "title" : "File Reference",
+    "description" : "Description of a file. ",
     "properties" : {
       "blob_id" : {
         "$ref" : "common.json#/blob_id"
@@ -130,8 +136,9 @@
     "additionalProperties" : false
   },
   "img_ref" : {
-    "description" : "Description of an Image.",
     "type" : "object",
+    "title" : "Image Reference",
+    "description" : "Description of a reference to an image",
     "properties" : {
       "blob_id" : {
         "$ref" : "common.json#/blob_id"
