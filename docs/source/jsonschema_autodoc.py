@@ -27,7 +27,7 @@ def load_schema(schema_dir,schema_name):
 SCHEMA_RE = re.compile(r"{{([^}]*)}}")
 
 def preprocess_source(app,docname, source):
-    lines = substitute_schema(app,source[0].splitlines(),'Members',add_title=True,add_description=True)
+    lines = substitute_schema(app,source[0].splitlines(),'Members',add_title=True,add_description=True,add_type=True)
     source[0] = "\n".join(lines)
 
 def preprocess_autodoc(app,what,name,obj,options,lines):
@@ -52,7 +52,7 @@ def translate_type(schema):
         return ":class:`list` of %s" % translate_type(schema["items"])
 
 
-def substitute_schema(app,lines,designation,add_title=False,add_description=False):
+def substitute_schema(app,lines,designation,add_title=False,add_description=False,add_type=False):
     result = []
     for line in lines[:]:
         match = SCHEMA_RE.match(line.strip())
@@ -78,7 +78,8 @@ def substitute_schema(app,lines,designation,add_title=False,add_description=Fals
                 result.append("")
 
             if schema["type"] == "object":
-                result.append(":Type: :class:`dict`")
+                if add_type:
+                    result.append(":Type: :class:`dict`")
                 result.append(":%s:" % designation)
                 for name, sschema in schema.get('properties',{}).iteritems():
                     type = translate_type(sschema)
@@ -97,7 +98,8 @@ def substitute_schema(app,lines,designation,add_title=False,add_description=Fals
                     result.append("  * *%s* (%s)" % (pattern,type))
                     result.append("")
             elif schema["type"] == "string":
-                result.append(":Type: %s" % schema["type"])
+                if add_type:
+                    result.append(":Type: %s" % schema["type"])
                 result.append(":Pattern: `%s`" % schema["pattern"])
 
             result.append("")
