@@ -19,9 +19,7 @@ class BOMReference(ReferenceBase):
     def dereference(self,store):
         res = ReferenceBase.dereference(self,store)
         obj = store.get_obj(self.obj_id)
-        res.update(obj._kwargs)
-        res.update(obj._calculated)
-        res["images"] = [ref.dereference(store) for ref in res["images"]]
+        res.update(obj.dereference(store))
         return res
     def collect_ids(self,store):
         obj = store.get_obj(self.obj_id)
