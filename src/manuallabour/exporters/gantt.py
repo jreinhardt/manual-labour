@@ -29,6 +29,8 @@ class GanttExporter(ScheduleExporterBase):
         )
         pl.ylim((-1,len(schedule.steps)))
 
+        pl.xlabel('t [s]')
+
         pl.savefig(path,format='svg',bbox_inches='tight',pad_inches=0.5)
 
     def render(self,schedule,store,**kwargs):
@@ -48,6 +50,8 @@ class GanttExporter(ScheduleExporterBase):
             [step.dereference(store)["title"] for step in schedule.steps]
         )
         pl.ylim((-1,len(schedule.steps)+1))
+
+        pl.xlabel('t [s]')
 
         out = StringIO()
 
