@@ -38,5 +38,6 @@ setup(
     author="Johannes Reinhardt",
     author_email="jreinhardt@ist-dein-freund.de",
     license="LGPL 2.1+",
-    keywords="step-by-step instructions"
+    keywords="step-by-step instructions",
+    url="https://github.com/jreinhardt/manual-labour"
 )
