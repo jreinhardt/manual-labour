@@ -79,7 +79,7 @@
       },
       "step_idx" : {
         "type" : "integer",
-        "description" : "Index for this step"
+        "description" : "Index of this step, starting from zero"
       },
       "start" : {
         "$ref" : "common.json#/timedelta",

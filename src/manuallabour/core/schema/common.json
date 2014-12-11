@@ -35,7 +35,7 @@
   "timedelta" : {
     "type" : "object",
     "title" : "Timedelta",
-    "description" : "Data for representing a timespan.",
+    "description" : "Data representing a timespan.",
     "properties" : {
       "seconds" : {"type" : "integer"},
       "minutes" : {"type" : "integer"},

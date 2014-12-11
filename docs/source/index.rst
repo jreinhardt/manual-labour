@@ -23,7 +23,14 @@ Contents:
 
    introduction
    quickstart
+   design
    api
+
+
+TODO
+====
+
+.. todolist::
 
 
 Indices and tables

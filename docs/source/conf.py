@@ -34,7 +34,6 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
-    'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
@@ -273,7 +272,9 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'python' : ('http://docs.python.org/',None)}
 
-inheritance_graph_attrs = dict(rankdir="TB", ratio='fill', size='""')
+inheritance_graph_attrs = dict(ratio='fill', size='""')
+
+todo_include_todos=True
 
 # JSON schema autodoc extension
 json_schema_dir = '../src/manuallabour/core/schema'

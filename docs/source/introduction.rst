@@ -55,10 +55,11 @@ Store
 -----
 
 :ref:`Blobs <blob>`, :ref:`Objects <object>` and :ref:`Steps <step>` all
-have unique ids by which they can be refered to. The functionality to map
-these ids to the objects they refer to is provided by a store. The store
-provides access to all the blobs, objects and steps for all algorithms (e.g.
-:ref:`scheduling` or :ref:`exporting`).
+have unique ids by which they can be refered to (see also :ref:`content
+addressing <content-addressing>`). The functionality to map these ids to the
+objects they refer to is provided by a store. The store provides access to all
+the blobs, objects and steps for all algorithms (e.g.  :ref:`scheduling` or
+:ref:`exporting`).
 
 :API: :ref:`store_api`
 
@@ -69,6 +70,8 @@ Scheduling
 
 Scheduling is the transformation of a :ref:`graph` to a :ref:`schedule`. Usually there is no unique schedule to a graph, but many different possibilities. Manual labour offers different scheduling functions that try to optimize different properties of the resulting schedule.
 
+:API: :ref:`scheduling_api`
+
 .. _exporting:
 
 Exporting
@@ -77,3 +80,5 @@ Exporting
 Exporting is the transformation of a :ref:`schedule` or :ref:`graph` to another form, for example to a nicely formatted HTML or PDF. Manual labour provides a number of exporters to various output formats.
 
 Some of these allow even more control about the appearance of the end result by supporting layouts.
+
+

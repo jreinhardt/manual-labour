@@ -20,7 +20,9 @@ def calculate_blob_checksum(fid):
     after finished. Useful to use as (a part of) a blob_id. Uses sha512
     checksum encoded to base64.
 
-    returns a string
+    :param File fid: open file descriptor of the blob
+    :return: the blob id
+    :rtype: str
     """
     fid.seek(0)
 
@@ -137,13 +139,17 @@ class DataStruct(object):
     def validate(cls,**kwargs):
         """
         Validate the arguments against the schema of this class.
+
+        :raises: :class:`jsonschema.ValidationError`
         """
         cls._validator.validate(kwargs)
 
     def as_dict(self):
         """
         Return the constructor parameters (including defaults) of this
-        instance as a dict, this can be used to recreate the instance.
+        instance, this can be used to recreate the instance.
+
+        :rtype: :class:`dict`
         """
         res = deepcopy(self._kwargs)
         for field, schema in self._schema["properties"].iteritems():
@@ -152,8 +158,10 @@ class DataStruct(object):
         return res
     def dereference(self,_store):
         """
-        Return the content of this instance as a dict. References are
+        Collect the content of this element as a dict. References are
         recursively dereferenced against store.
+
+        :rtype: :class:`dict`
         """
         res = {}
         res.update(deepcopy(self._kwargs))
@@ -161,11 +169,9 @@ class DataStruct(object):
         return res
     def collect_ids(self,_store):
         """
-        Return a dictionary with sets of ids of blobs,
-        :class:`~manuallabour.core.common.Step`,
-        :class:`~manuallabour.core.common.Object`,
-        :class:`~manuallabour.core.common.Graph`, and
-        :class:`~manuallabour.core.common.Schedule`.
+        Recursively collect the ids of all elements required for this one
+
+        :rtype: :class:`dict`
         """
         raise NotImplementedError
 
@@ -226,9 +232,8 @@ class ImageReference(ResourceReferenceBase):
 
 class ObjectReference(ReferenceBase):
     """
-    A reference to an object that is stored by its obj_id in an object store.
-
-    A object can not be created and optional at the same time.
+    A reference to an object. An object can not be created and optional at
+    the same time.
 
     {{references.json#/obj_ref}}
     """
@@ -287,11 +292,17 @@ class ContentBase(DataStruct):
 
 class Object(ContentBase):
     """
-    An object is a physical object that is in some sense relevant to the
+    Description of physical object that is in some sense relevant to the
     assembly process. It can be either a part that is consumed in a step, a
     tool that isn't, or a result that is created in a step.
 
     {{object.json}}
+
+    :Calculated:
+        * images (:class:`list` of
+          :class:`~manuallabour.core.common.ImageReference`),
+          A list of images that illustrate this object
+
     """
     _schema = load_schema(SCHEMA_DIR,'object.json')
     _validator = jsonschema.Draft4Validator(_schema)
@@ -319,9 +330,31 @@ class Object(ContentBase):
 
 class Step(ContentBase):
     """
-    One Step of the instructions
+    Description of the action required to transform parts into
+    results with the help of tools.
 
     {{step.json}}
+
+    :Calculated:
+        * duration (:class:`~datetime.timedelta`),
+          Time of acivity required for this step
+        * waiting (:class:`~datetime.timedelta`),
+          Waiting time necessary for this step
+        * parts (:class:`dict` of
+          :class:`~manuallabour.core.common.ObjectReference`),
+          Local aliases of parts used in this step
+        * tools (:class:`dict` of
+          :class:`~manuallabour.core.common.ObjectReference`),
+          Local aliases of tools used in this step
+        * results (:class:`dict` of
+          :class:`~manuallabour.core.common.ObjectReference`),
+          Local aliases of results used in this step
+        * files (:class:`dict` of
+          :class:`~manuallabour.core.common.FileReference`),
+          Local aliases of files used in this step
+        * images (:class:`dict` of
+          :class:`~manuallabour.core.common.ImageReference`),
+          Local aliases of images used in this step
     """
     _schema = load_schema(SCHEMA_DIR,'step.json')
     _validator = jsonschema.Draft4Validator(_schema)

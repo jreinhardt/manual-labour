@@ -31,12 +31,17 @@ class Graph(ContentBase):
     """
     Container to hold a set of dependent steps
 
-    steps:
-        Dict with aliases and GraphSteps
-    children:
-        Dict mapping the alias of a step to aliases of all its children
-    parents:
-        Dict mapping the alias of a step to aliases of its parent
+    {{graph.json}}
+
+    :Calculated:
+        * steps (:class:`dict` of :class:`~manuallabour.core.graph.GraphStep`)
+          Dict mapping step_ids to GraphSteps
+        * children (:class:`dict` of :class:`str`)
+          Dict mapping the id of a step to the id of its children
+        * parents (:class:`dict` of :class:`str`)
+          Dict mapping the id of a step to id of its parents
+
+
     """
     _schema = load_schema(SCHEMA_DIR,'graph.json')
     _validator = jsonschema.Draft4Validator(_schema)
@@ -78,10 +83,10 @@ class Graph(ContentBase):
         return res
 
     def all_ancestors(self,step_id):
-        """ Return set of all ancestor steps
+        """ Return set with ids of all ancestor steps of step_id, i.e. all
+        steps that are a direct or indirect prerequisite.
 
-        Returns a set with aliases of all steps that are a direct or indirect
-        prerequisite for the step with the alias alias.
+        :rtype: :class:`set` of :ref:`jsonschema-members-common-json-step_id`
         """
         res = set([])
         for parent in self.parents[step_id]:

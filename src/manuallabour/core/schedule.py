@@ -10,6 +10,8 @@ from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
 class BOMReference(ReferenceBase):
     """
     An object with quantities.
+
+    {{references.json#/bom_ref}}
     """
     _schema = load_schema(SCHEMA_DIR,'references.json')["bom_ref"]
     _validator = jsonschema.Draft4Validator(_schema)
@@ -28,6 +30,18 @@ class BOMReference(ReferenceBase):
 class ScheduleStep(ReferenceBase):
     """
     Step used in a Schedule
+
+    {{references.json#/schedule_step}}
+
+    :Calculated:
+        * step_nr (:class:`int`)
+          Number of this step, starting from one
+        * start (:class:`datetime.timedelta`)
+          Starting time of this step
+        * stop (:class:`datetime.timedelta`)
+          Ending time of this step
+        * waiting (:class:`datetime.timedelta`)
+          End of the waiting time of this step
     """
 
     _schema = load_schema(SCHEMA_DIR,'references.json')["schedule_step"]
@@ -69,6 +83,13 @@ class ScheduleStep(ReferenceBase):
 class Schedule(ContentBase):
     """
     Container to hold a sequence of steps
+
+    {{schedule.json}}
+
+    :Calculated:
+        * steps (:class:`list` of 
+          :class:`~manuallabour.core.schedule.ScheduleStep`)
+          List of steps
     """
     _schema = load_schema(SCHEMA_DIR,'schedule.json')
     _validator = jsonschema.Draft4Validator(_schema)
@@ -84,7 +105,8 @@ class Schedule(ContentBase):
     def collect_bom(self,store):
         """
         Collect the list of required materials and tools for this schedule.
-        The resulting dicts are suitable to create BOMReferences.
+
+        :rtype: :class:`dict` of :ref:`jsonschema-members-common-json-obj_id` and :ref:`jsonschema-members-references-json-bom_ref`
         """
         tools = {}
         parts = {}
@@ -146,7 +168,7 @@ class Schedule(ContentBase):
         Collect a list of all files marked as sourcefiles for anything in this
         schedule.
 
-        Returns a list of dicts with blob_id,url and filename
+        :rtype: :class:`list` of :class:`dict`
         """
         sourcefiles = []
         for step_ref in self.steps:
