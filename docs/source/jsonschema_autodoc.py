@@ -87,7 +87,7 @@ def substitute_schema(app,lines,designation,add_title=False,add_description=Fals
 
             if add_title:
                 result.append(schema['title'])
-                result.append("^"*len(schema['title']))
+                result.append('"'*len(schema['title']))
 
             if add_description:
                 result.append("")
