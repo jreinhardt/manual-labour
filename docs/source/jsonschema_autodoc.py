@@ -27,16 +27,29 @@ def load_schema(schema_dir,schema_name):
 SCHEMA_RE = re.compile(r"{{([^}]*)}}")
 
 def preprocess_source(app,docname, source):
-    lines = substitute_schema(app,source[0].splitlines(),'Members',add_title=True,add_description=True,add_type=True)
+    lines = substitute_schema(
+        app,
+        source[0].splitlines(),
+        'Members',
+        add_title=True,
+        add_description=True,
+        add_type=True,
+        label_prefix="jsonschema-members"
+    )
     source[0] = "\n".join(lines)
 
 def preprocess_autodoc(app,what,name,obj,options,lines):
-    lines[:] = substitute_schema(app,lines,'KW Arguments')
+    lines[:] = substitute_schema(
+        app,
+        lines,
+        'KW Arguments',
+        label_prefix="jsonschema-args"
+    )
 
-def translate_type(schema):
+def translate_type(schema,prefix):
     if "$ref" in schema:
         parts = schema["$ref"].split("#/")
-        target = 'jsonschema-' + '_'.join(parts).replace('.','-')
+        target = prefix + '-' + '-'.join(parts).replace('.','-')
         if len(parts) == 2:
             label = parts[1]
         else:
@@ -49,10 +62,14 @@ def translate_type(schema):
     elif schema["type"] == "string":
         return ":class:`str`"
     elif schema["type"] == "array":
-        return ":class:`list` of %s" % translate_type(schema["items"])
+        return ":class:`list` of %s" % translate_type(
+            schema["items"],'jsonschema-members')
+    elif schema["type"] == "boolean":
+        return ":class:`bool`"
 
 
-def substitute_schema(app,lines,designation,add_title=False,add_description=False,add_type=False):
+
+def substitute_schema(app,lines,designation,add_title=False,add_description=False,add_type=False,label_prefix=""):
     result = []
     for line in lines[:]:
         match = SCHEMA_RE.match(line.strip())
@@ -63,7 +80,7 @@ def substitute_schema(app,lines,designation,add_title=False,add_description=Fals
             if len(parts) == 2:
                 schema = schema[parts[1]]
 
-            label = 'jsonschema-' + '_'.join(parts).replace('.','-')
+            label = label_prefix + '-' + '-'.join(parts).replace('.','-')
 
             result.append(".. _%s:" % label)
             result.append("")
@@ -82,19 +99,19 @@ def substitute_schema(app,lines,designation,add_title=False,add_description=Fals
                     result.append(":Type: :class:`dict`")
                 result.append(":%s:" % designation)
                 for name, sschema in schema.get('properties',{}).iteritems():
-                    type = translate_type(sschema)
+                    type = translate_type(sschema,'jsonschema-members')
                     if name in schema.get('required',[]):
                         opt = 'mandatory'
                         result.append("  * %s (%s), %s (%s)" % (name,type,sschema.get('description'),opt))
                         result.append("")
                 for name, sschema in schema.get('properties',{}).iteritems():
-                    type = translate_type(sschema)
+                    type = translate_type(sschema,'jsonschema-members')
                     if not name in schema.get('required',[]):
                         opt = 'optional'
                         result.append("  * %s (%s), %s (%s)" % (name,type,sschema.get('description'),opt))
                         result.append("")
                 for pattern, sschema in schema.get('patternProperties',{}).iteritems():
-                    type = translate_type(sschema)
+                    type = translate_type(sschema,'jsonschema-members')
                     result.append("  * *%s* (%s)" % (pattern,type))
                     result.append("")
             elif schema["type"] == "string":
