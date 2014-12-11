@@ -18,13 +18,15 @@ def graphviz_add_obj_edges(graph,s_id,objs,**kwargs):
     """
     for obj in objs.values():
         o_id = 'o_' + obj["obj_id"]
+        attrs = {}
+        attrs.update(kwargs["attr"])
         if obj["optional"] and "opt" in kwargs:
-            kwargs["attr"].update(kwargs["opt"])
-        kwargs["attr"]["label"] = obj["quantity"]
+            attrs.update(kwargs["opt"])
+        attrs["label"] = obj["quantity"]
         if obj["created"]:
-            graph.add_edge(s_id,o_id,**kwargs["attr"])
+            graph.add_edge(s_id,o_id,**attrs)
         else:
-            graph.add_edge(o_id,s_id,**kwargs["attr"])
+            graph.add_edge(o_id,s_id,**attrs)
         if kwargs["res"]:
             for img in obj["images"]:
                 graph.add_edge('r_' + img["blob_id"],o_id)
