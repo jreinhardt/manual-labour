@@ -1,21 +1,57 @@
 Design Considerations
 =====================
 
-Inspiration
------------
+In the following sections topics are covered in a bit more detail that have no
+other natural place.
 
-.. todo:: Mail from Matt Maier with a few ideas
+History and Acknowledgements
+----------------------------
 
-nophead Mendel90 scripts
+Besides proprietary websites like `Thingiverse <http://www.thingiverse.com/>`_,
+`Instructables <http://www.instructables.com/index>` or `Youmagine
+<https://www.youmagine.com/>`_ there have been a few attempts to make the
+documentation of hardware projects easier:
 
-alternatives: https://github.com/alephobjects/ohai-kit
-https://github.com/kakaroto/ohai-kit
-thingdoc
-sphinx
-git
-nixos
-ipfs
-http://0pointer.net/blog/revisiting-how-we-put-together-linux-systems.html
+* `skdb <http://gnusha.org/skdb/>`_
+* `thingdoc <https://github.com/josefprusa/ThingDoc>`_
+* `OHAI <https://github.com/alephobjects/ohai-kit>`_
+
+but none of these got a lot of traction. However, I believe that it is very
+important for the maker, 3D printing and open hardware community to have means
+of efficiently documenting projects. For software, documentation is a
+precondition for code reuse, as writing code oneselves is often more effective
+than understanding undocumented code to reuse it. For hardware projects, the
+situation is very similar.
+
+nophead has demonstrated several important ideas for effective documentation
+with his `Mendel90 3D printer <https://github.com/nophead/Mendel90>`_. There
+the bill of materials and illustrations of parts and assembly steps are
+automatically generated from 3D Models. This has been a big inspiration for
+manual labour.
+
+The development of manual labour started, when I got a mail from Matt Maier
+with a few ideas about how documentation of hardware projects could be handled.
+He propsed to use a graph structure with state nodes and change nodes. A few
+mails went back and forth and I got so interested in this problem that I worked
+on it more seriously. I replaced state and change nodes by
+:class:`~manuallabour.core.common.Object~` and
+:class:`~manuallabour.core.common.Step` and tried to get everything
+sufficiently well defined to be automatically processable.
+
+I wanted to be able to have input in various forms, e.g. a GUI tool or a
+written specification of the instructions. I also realized that there are
+interesting synergies with my other projects `BOLTS
+<http://www.bolts-library.org>`_ and `Cadinet
+<https://github.com/jreinhardt/CADinet>`_, so I tried to design the code with
+the requirement to work also in the context of a web app. Another requirement
+for the fundamental data structure was to allow for easy and efficient
+derivatives of a project, as this is something that happens a lot. Someone
+makes a small improvement, which only affects a few parts. The goal was to be
+able to get complete assembly instructions by only modifying a few steps. These
+requirements eventually led to the current design and the use of
+:ref:`content-addressing`. This has been used in a number of cases with very
+similar requirements, most notably the `version control system git
+<http://git-scm.org>`_.
 
 .. _content-addressing:
 
