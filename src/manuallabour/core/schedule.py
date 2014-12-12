@@ -23,7 +23,7 @@ import jsonschema
 from datetime import timedelta
 
 from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
-    ContentBase,add_ids
+    ComponentBase,add_ids
 
 class BOMReference(ReferenceBase):
     """
@@ -98,14 +98,14 @@ class ScheduleStep(ReferenceBase):
         res["attention"] = markup.markup(step,store,res["attention"])
         return res
 
-class Schedule(ContentBase):
+class Schedule(ComponentBase):
     """
     Container to hold a sequence of steps
 
     {{schedule.json}}
 
     :Calculated:
-        * steps (:class:`list` of 
+        * steps (:class:`list` of
           :class:`~manuallabour.core.schedule.ScheduleStep`)
           List of steps
     """
@@ -114,7 +114,7 @@ class Schedule(ContentBase):
     _id = "sched_id"
 
     def __init__(self,**kwargs):
-        ContentBase.__init__(self,**kwargs)
+        ComponentBase.__init__(self,**kwargs)
 
         self._calculated["steps"] = []
         for step in kwargs["steps"]:
@@ -124,7 +124,8 @@ class Schedule(ContentBase):
         """
         Collect the list of required materials and tools for this schedule.
 
-        :rtype: :class:`dict` of :ref:`jsonschema-members-common-json-obj_id` and :ref:`jsonschema-members-references-json-bom_ref`
+        :rtype: :class:`dict` of :ref:`jsonschema-members-common-json-obj_id`
+                and :ref:`jsonschema-members-references-json-bom_ref`
         """
         tools = {}
         parts = {}

@@ -182,14 +182,14 @@ DataStructs get initialized with keyword arguments, which are validated and can 
 .. autoclass:: manuallabour.core.common.DataStruct
    :members:
 
-ContentBase
-^^^^^^^^^^^
+ComponentBase
+^^^^^^^^^^^^^
 
-All Content elements that are stored in a :ref:`store_api` (except the
+All elements that are stored in a :ref:`store_api` (except the
 :ref:`blob_api`) and have a unique id are derived from the base class
-:class:`~manuallabour.core.common.ContentBase`
+:class:`~manuallabour.core.common.ComponentBase`
 
-.. autoclass:: manuallabour.core.common.ContentBase
+.. autoclass:: manuallabour.core.common.ComponentBase
    :members:
 
 References

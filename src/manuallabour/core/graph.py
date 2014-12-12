@@ -23,7 +23,7 @@ This module defines the Graph class and related classes
 import jsonschema
 
 from manuallabour.core.common import ReferenceBase, load_schema, SCHEMA_DIR,\
-    ContentBase, add_ids
+    ComponentBase, add_ids
 
 class GraphStep(ReferenceBase):
     """
@@ -45,7 +45,7 @@ class GraphStep(ReferenceBase):
         step = store.get_step(self.step_id)
         return step.collect_ids(store)
 
-class Graph(ContentBase):
+class Graph(ComponentBase):
     """
     Container to hold a set of dependent steps
 
@@ -66,7 +66,7 @@ class Graph(ContentBase):
     _id = "graph_id"
 
     def __init__(self,**kwargs):
-        ContentBase.__init__(self,**kwargs)
+        ComponentBase.__init__(self,**kwargs)
 
         self._calculated["steps"] = []
         for ref in kwargs["steps"]:
@@ -89,7 +89,7 @@ class Graph(ContentBase):
                     self._calculated["children"][req].append(ref.step_id)
 
     def dereference(self,store):
-        res = ContentBase.dereference(self,store)
+        res = ComponentBase.dereference(self,store)
         for i, step in enumerate(res["steps"]):
             res[i] = step.dereference(store)
         return res

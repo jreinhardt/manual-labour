@@ -276,9 +276,9 @@ class ObjectReference(ReferenceBase):
             add_ids(res,img.collect_ids(store))
         return res
 
-class ContentBase(DataStruct):
+class ComponentBase(DataStruct):
     """
-    Base class for things that are stored in a Store and have an id to
+    Base class for compontents that are stored in a Store and have an id to
     identify themselves.
     """
     _id = None
@@ -292,7 +292,7 @@ class ContentBase(DataStruct):
         Returns a string
         """
         #Add the defaults, to make the result for kwargs be the same as for
-        #the dict returned by calculate_checksum(ContentBase.as_dict())
+        #the dict returned by calculate_checksum(ComponentBase.as_dict())
         res = deepcopy(kwargs)
         for field, schema in cls._schema["properties"].iteritems():
             if (not field in res) and "default" in schema:
@@ -308,7 +308,7 @@ class ContentBase(DataStruct):
     def collect_ids(self,_store):
         raise NotImplementedError
 
-class Object(ContentBase):
+class Object(ComponentBase):
     """
     Description of physical object that is in some sense relevant to the
     assembly process. It can be either a part that is consumed in a step, a
@@ -327,7 +327,7 @@ class Object(ContentBase):
     _id = "obj_id"
 
     def __init__(self,**kwargs):
-        ContentBase.__init__(self,**kwargs)
+        ComponentBase.__init__(self,**kwargs)
 
         if "images" in self._kwargs:
             self._calculated["images"] = []
@@ -346,7 +346,7 @@ class Object(ContentBase):
             add_ids(res,img.collect_ids(store))
         return res
 
-class Step(ContentBase):
+class Step(ComponentBase):
     """
     Description of the action required to transform parts into
     results with the help of tools.
@@ -379,7 +379,7 @@ class Step(ContentBase):
     _id = "step_id"
 
     def __init__(self,**kwargs):
-        ContentBase.__init__(self,**kwargs)
+        ComponentBase.__init__(self,**kwargs)
 
         for time in ["duration","waiting"]:
             if time in kwargs and kwargs[time]:
