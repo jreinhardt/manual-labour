@@ -1,6 +1,22 @@
 Design Considerations
 =====================
 
+Inspiration
+-----------
+
+.. todo:: Mail from Matt Maier with a few ideas
+
+nophead Mendel90 scripts
+
+alternatives: https://github.com/alephobjects/ohai-kit
+https://github.com/kakaroto/ohai-kit
+thingdoc
+sphinx
+git
+nixos
+ipfs
+http://0pointer.net/blog/revisiting-how-we-put-together-linux-systems.html
+
 .. _content-addressing:
 
 Content Addressing
@@ -103,6 +119,6 @@ For a blob use
 .. testoutput:: blob
    :hide:
 
-   5OKPRNaESlhoGK169860YDRQAXgIM8vTu57ESGANIz6QXelyNZ6gboLafku_X7QuaBhXJ6iaDQE8Ip_-nOQGmQ
+   X9qPGeRPZ33UUB_CY2jeM4ctWkCSVlqlBV-Pt0EhimkNGm9_mYuzz91iHgBiDHQtAYiCalTAx_ohzMGnM50PMw
 
 
