@@ -22,6 +22,7 @@ Contents:
    :maxdepth: 2
 
    introduction
+   install
    quickstart
    design
    api
